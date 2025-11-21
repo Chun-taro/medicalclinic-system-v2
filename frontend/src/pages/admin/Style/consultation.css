@@ -1,0 +1,326 @@
+/* ============================== */
+/*   CONSULTATION STYLES (TOP)  */
+/* ============================== */
+
+.consultation-container {
+  padding: 2rem;
+  font-family: 'Segoe UI', sans-serif;
+  color: #2c3e50;
+  background-color: #f7f9fc;
+  min-height: 100vh;
+}
+
+h2 {
+  font-size: 1.6rem;
+  margin-bottom: 1rem;
+  color: #007bff;
+}
+
+.appointments-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 2rem;
+  background-color: #fff;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.appointments-table th,
+.appointments-table td {
+  padding: 0.75rem;
+  text-align: left;
+  border-bottom: 1px solid #eee;
+}
+
+.appointments-table th {
+  background-color: #f0f4f8;
+  color: #34495e;
+  font-weight: 600;
+}
+
+.appointments-table tr:hover {
+  background-color: #f1f9ff;
+}
+
+.action-cell {
+  text-align: center;
+}
+
+.consultation-form {
+  background-color: #ffffff;
+  padding: 1.5rem;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.consultation-form input,
+.consultation-form textarea,
+.consultation-form select {
+  width: 100%;
+  padding: 0.6rem 0.8rem;
+  margin-bottom: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  font-family: inherit;
+}
+
+.consultation-form textarea {
+  resize: vertical;
+}
+
+.section-label {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: #2c3e50;
+  margin-top: 16px;
+  margin-bottom: 4px;
+}
+
+.section-note {
+  font-size: 0.85rem;
+  color: #555;
+  margin-bottom: 12px;
+}
+
+.medicine-autocomplete {
+  margin-bottom: 12px;
+  padding: 6px 10px;
+  font-size: 1rem;
+  width: 100%;
+  max-width: 300px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+}
+
+.autocomplete-suggestions {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  max-width: 300px;
+  background-color: #fff;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  position: absolute;
+  z-index: 10;
+}
+
+.autocomplete-suggestions li {
+  padding: 8px 12px;
+  cursor: pointer;
+  border-bottom: 1px solid #eee;
+}
+
+.autocomplete-suggestions li:hover {
+  background-color: #eaf4ff;
+}
+
+.prescribed-list {
+  margin-top: 1rem;
+  background-color: #f9f9f9;
+  padding: 1rem;
+  border-radius: 8px;
+  box-shadow: inset 0 0 4px rgba(0,0,0,0.05);
+}
+
+.prescribed-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+  padding: 0.75rem;
+  background-color: #fff;
+  border: 1px solid #e1e5e9;
+  border-radius: 6px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.medicine-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.medicine-name {
+  font-weight: 600;
+  color: #2c3e50;
+  font-size: 0.95rem;
+}
+
+.expiry-date {
+  font-size: 0.8rem;
+  color: #6c757d;
+}
+
+.quantity-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 150px;
+}
+
+.quantity-controls label {
+  font-size: 0.85rem;
+  color: #495057;
+  font-weight: 500;
+}
+
+.quantity-input {
+  width: 60px;
+  padding: 4px 6px;
+  font-size: 0.9rem;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  text-align: center;
+}
+
+.capsules-label {
+  font-size: 0.8rem;
+  color: #6c757d;
+  font-weight: 500;
+}
+
+.remove-medicine {
+  background-color: #dc3545;
+  color: #fff;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: background-color 0.2s;
+}
+
+.remove-medicine:hover {
+  background-color: #c82333;
+}
+
+button[type="submit"] {
+  background-color: #007bff;
+  color: #fff;
+  border: none;
+  padding: 10px 16px;
+  font-size: 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  margin-top: 1rem;
+}
+
+button[type="submit"]:hover {
+  background-color: #0056b3;
+}
+.consultation-modal {
+  background: #ffffff;
+  padding: 2rem 2.5rem;
+  border-radius: 10px;
+  max-width: 800px;
+  width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.25);
+  font-family: 'Segoe UI', sans-serif;
+  position: relative;
+}
+
+.modal-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  color: #007bff;
+  border-bottom: 2px solid #007bff;
+  padding-bottom: 6px;
+}
+
+.form-section {
+  margin-bottom: 2rem;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  color: #2c3e50;
+}
+
+/* ============================== */
+/* MEDICAL RECORD FORM STYLES */
+/* ============================== */
+
+.clickable-name {
+  color: #007bff;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  overflow: hidden;
+}
+
+.modal-content {
+  background: #fff;
+  padding: 24px 32px;
+  border-radius: 8px;
+  width: 600px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 0 12px rgba(0, 0, 0, 0.2);
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  position: relative;
+}
+
+.close-button {
+  position: absolute;
+  top: 12px;
+  right: 16px;
+  background: transparent;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+}
+
+.modal-content h3 {
+  margin-bottom: 16px;
+  font-size: 1.4rem;
+  font-weight: 600;
+  border-bottom: 2px solid #007bff;
+  padding-bottom: 6px;
+  color: #007bff;
+}
+
+.mrf-section {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+}
+
+.mrf-section p {
+  margin: 4px 0;
+  font-size: 0.95rem;
+  line-height: 1.4;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 4px;
+}
+
+.mrf-section strong {
+  display: inline-block;
+  width: 160px;
+  font-weight: 600;
+  color: #333;
+}

@@ -1,0 +1,65 @@
+.notification-dropdown {
+  position: absolute;
+  top: 50px; /* adjust based on bell icon position */
+  right: 0;
+  width: 320px;
+  max-height: 400px;
+  overflow-y: auto;
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  z-index: 9999;
+  padding: 12px;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.notification-dropdown::before {
+  content: '';
+  position: absolute;
+  top: -10px;
+  right: 20px;
+  border-width: 0 10px 10px 10px;
+  border-style: solid;
+  border-color: transparent transparent #fff transparent;
+}
+
+.dropdown-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.dropdown-item {
+  padding: 10px;
+  border-bottom: 1px solid #eee;
+  background-color: #fefefe;
+  border-radius: 6px;
+  margin-bottom: 6px;
+}
+
+.dropdown-item.unread {
+  background-color: #f0f4ff;
+}
+
+.dropdown-message {
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+
+.dropdown-meta {
+  font-size: 12px;
+  color: #666;
+  display: flex;
+  justify-content: space-between;
+}
+
+.mark-read-btn {
+  margin-top: 6px;
+  font-size: 12px;
+  background: #007bff;
+  color: white;
+  border: none;
+  padding: 4px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+}

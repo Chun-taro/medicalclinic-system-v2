@@ -1,0 +1,29 @@
+# Node modules (backend & frontend)
+node_modules/
+
+# Environment files (root, backend, frontend)
+.env
+backend/.env
+frontend/.env
+**/.env
+
+# Logs
+*.log
+logs/
+npm-debug.log*
+
+# OS files
+.DS_Store
+
+# Build artifacts
+dist/
+build/
+frontend/build/
+
+# Coverage reports
+coverage/
+
+# Temporary files
+tmp/
+
+

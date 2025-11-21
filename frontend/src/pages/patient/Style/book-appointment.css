@@ -1,0 +1,153 @@
+/* ------------------------------
+   CONTAINER STYLING
+--------------------------------*/
+.doctor-form-container {
+  max-width: 700px;
+  margin: 4rem auto;
+  padding: 2.5rem 3rem;
+  background-color: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  font-family: 'Segoe UI', 'Roboto', sans-serif;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  animation: fadeIn 0.4s ease-in-out;
+}
+
+/* Smooth fade-in animation */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ------------------------------
+   HEADINGS
+--------------------------------*/
+.doctor-form-container h2 {
+  margin-bottom: 0.25rem;
+  color: #1e293b;
+  font-size: 2rem;
+  text-align: center;
+  font-weight: 600;
+}
+
+.doctor-form-container p {
+  margin-bottom: 2rem;
+  color: #64748b;
+  font-size: 1rem;
+  text-align: center;
+  line-height: 1.5;
+}
+
+/* ------------------------------
+   FORM GRID LAYOUT
+--------------------------------*/
+.doctor-form {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.25rem 1.5rem; 
+  align-items: start;
+}
+
+
+.doctor-form textarea,
+.doctor-form input[type="date"],
+.doctor-form input[name="address"],
+.doctor-form .schedule-button {
+  grid-column: span 2;
+}
+
+/* ------------------------------
+   INPUT STYLING
+--------------------------------*/
+.doctor-form input,
+.doctor-form textarea {
+  width: 100%;
+  padding: 0.85rem 1rem;
+  font-size: 1rem;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  background-color: #f9fafb;
+  transition: border-color 0.25s ease, box-shadow 0.25s ease, background-color 0.25s ease;
+  resize: none;
+  box-sizing: border-box; 
+}
+
+.doctor-form input:focus,
+.doctor-form textarea:focus {
+  border-color: #0077cc;
+  box-shadow: 0 0 0 4px rgba(0, 119, 204, 0.15);
+  background-color: #ffffff;
+  outline: none;
+}
+
+.doctor-form input::placeholder,
+.doctor-form textarea::placeholder {
+  color: #9ca3af;
+}
+
+/* ------------------------------
+   BUTTON STYLING
+--------------------------------*/
+.schedule-button {
+  background-color: #0077cc;
+  color: white;
+  padding: 0.9rem 1rem;
+  font-size: 1.05rem;
+  font-weight: 500;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.schedule-button:hover {
+  background-color: #005fa3;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(0, 95, 163, 0.3);
+}
+
+.schedule-button:disabled {
+  background-color: #b0b0b0;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* ------------------------------
+   RESPONSIVE DESIGN
+--------------------------------*/
+@media (max-width: 700px) {
+  .doctor-form-container {
+    padding: 2rem 1.5rem;
+    margin: 2rem 1rem;
+  }
+
+  .doctor-form {
+    grid-template-columns: 1fr; 
+    gap: 1rem;
+  }
+
+  .doctor-form-container h2 {
+    font-size: 1.6rem;
+  }
+
+  .doctor-form-container p {
+    font-size: 0.95rem;
+  }
+
+  .schedule-button {
+    font-size: 1rem;
+    padding: 0.8rem;
+  }
+}

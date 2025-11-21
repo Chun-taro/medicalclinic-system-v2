@@ -1,0 +1,284 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+:root {
+  --primary: #0077cc;
+  --primary-dark: #005fa3;
+  --background: #f5f8fc;
+  --text-dark: #1a1a1a;
+  --text-light: #555;
+  --card-bg: #ffffff;
+  --radius: 12px;
+}
+
+/* ===== Overall Container ===== */
+.fb-profile-container {
+  font-family: 'Inter', sans-serif;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2rem;
+  background: var(--background);
+  min-height: calc(100vh - 80px);
+}
+
+/* ===== Header Section ===== */
+.fb-header-bar {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  background: var(--card-bg);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+  border-radius: var(--radius);
+  padding: 2rem;
+  width: 100%;
+  max-width: 800px;
+  margin-bottom: 2rem;
+}
+
+.fb-avatar-wrap {
+  position: relative;
+  width: 120px;
+  height: 120px;
+}
+
+.fb-avatar {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid var(--primary);
+}
+
+.fb-avatar-edit {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background: rgba(0, 119, 204, 0.9);
+  color: white;
+  text-align: center;
+  font-size: 0.8rem;
+  padding: 0.4rem 0;
+  border-radius: 0 0 var(--radius) var(--radius);
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.fb-avatar-edit:hover {
+  background: var(--primary-dark);
+}
+
+.fb-header-info {
+  flex: 1;
+}
+
+.fb-name {
+  margin: 0;
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--text-dark);
+}
+
+.fb-subtitle {
+  color: var(--text-light);
+  margin-top: 0.3rem;
+  margin-bottom: 1rem;
+}
+
+.fb-actions {
+  display: flex;
+  gap: 1rem;
+}
+
+.fb-button {
+  background: var(--primary);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 0.6rem 1.2rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.fb-button:hover {
+  background: var(--primary-dark);
+  transform: translateY(-2px);
+}
+
+/* ===== About Section ===== */
+.fb-content {
+  width: 100%;
+  max-width: 800px;
+}
+
+.fb-card {
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  padding: 2rem;
+}
+
+.fb-card h3 {
+  font-size: 1.3rem;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+  color: var(--primary-dark);
+}
+
+.fb-about-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1rem 2rem;
+}
+
+.fb-about-grid div {
+  display: flex;
+  justify-content: space-between;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 0.4rem;
+}
+
+.fb-label {
+  color: var(--text-light);
+  font-weight: 500;
+}
+
+.fb-value {
+  font-weight: 600;
+  color: var(--text-dark);
+}
+
+/* ===== Modal ===== */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: white;
+  padding: 2rem;
+  border-radius: var(--radius);
+  width: 90%;
+  max-width: 500px;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.25);
+}
+
+.modal-content h3 {
+  margin-bottom: 1.5rem;
+  color: var(--primary-dark);
+  font-weight: 600;
+}
+
+.form-group {
+  margin-bottom: 1rem;
+}
+
+.form-group label {
+  display: block;
+  font-weight: 500;
+  color: var(--text-dark);
+  margin-bottom: 0.4rem;
+}
+
+.form-group input,
+.form-group select {
+  width: 100%;
+  padding: 0.6rem;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-family: inherit;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.save-button {
+  background: var(--primary);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 0.6rem 1.2rem;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.save-button:hover {
+  background: var(--primary-dark);
+}
+
+.cancel-button {
+  background: #ccc;
+  border: none;
+  border-radius: 8px;
+  padding: 0.6rem 1.2rem;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.cancel-button:hover {
+  background: #aaa;
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 768px) {
+  .fb-header-bar {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .fb-about-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .fb-avatar {
+    width: 100px;
+    height: 100px;
+  }
+
+  .fb-avatar-wrap {
+    width: 100px;
+    height: 100px;
+  }
+}
+
+
+/* Logout Button */
+.logout-button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.7rem 1rem;
+  font-weight: 500;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background: #fff;
+  cursor: pointer;
+  color: #333;
+  transition: 0.2s all ease;
+}
+
+.logout-button:hover {
+  background: #cc2626;
+  border-color: #994545;
+  color: #fff;}
+
+.logout-icon {
+  font-size: 1.2rem;
+}

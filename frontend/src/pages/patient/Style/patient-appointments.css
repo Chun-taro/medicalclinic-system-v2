@@ -1,0 +1,151 @@
+/* Container for the appointments section */
+.patient-appointments-container {
+  max-width: 1200px;
+  margin: 2rem auto;
+  padding: 2rem;
+  background-color: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+}
+
+/* Table wrapper */
+.table-container {
+  width: 100%;
+  margin-top: 1rem;
+  overflow-x: auto; /* Enables horizontal scroll on small screens */
+}
+
+/* Table base */
+.appointments-table {
+  width: 100%;
+  min-width: 600px; /* Prevents table from collapsing too much */
+  border-collapse: collapse;
+  background-color: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  table-layout: auto;
+}
+
+/* Table headers and cells */
+.appointments-table th,
+.appointments-table td {
+  padding: 1rem 1.25rem;
+  font-size: 1.1rem;
+  text-align: left;
+  border-bottom: 1px solid #e0e0e0;
+  vertical-align: middle;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  white-space: normal;
+}
+
+.appointments-table th {
+  background-color: #0077cc;
+  color: #fff;
+  font-weight: 600;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  white-space: nowrap;
+}
+
+/* Zebra striping and hover */
+.appointments-table tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
+
+.appointments-table tr:hover {
+  background-color: #f0f8ff;
+}
+
+/* Action buttons */
+.appointments-table td:last-child {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.appointments-table td button {
+  background: none;
+  border: none;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: transform 0.2s ease, color 0.2s ease;
+}
+
+.appointments-table td button:hover {
+  transform: scale(1.2);
+}
+
+.appointments-table td button:first-child {
+  color: #0077cc;
+}
+
+.appointments-table td button:last-child {
+  color: #cc0000;
+}
+
+.navbar-group {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.fb-name {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0;
+  white-space: nowrap;
+}
+
+.navbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .patient-appointments-container {
+    padding: 1rem;
+    margin: 1rem;
+  }
+
+  .appointments-table th,
+  .appointments-table td {
+    padding: 0.75rem;
+    font-size: 0.95rem;
+  }
+
+  .appointments-table td button {
+    font-size: 0.9rem;
+  }
+}
+
+
+@media (max-width: 480px) {
+  .patient-appointments-container {
+    padding: 1rem;
+    margin: 0.5rem;
+  }
+
+  .appointments-table th,
+  .appointments-table td {
+    padding: 0.5rem;
+    font-size: 0.85rem;
+  }
+
+  .appointments-table td button {
+    font-size: 0.85rem;
+  }
+
+  .appointments-table td:last-child {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
