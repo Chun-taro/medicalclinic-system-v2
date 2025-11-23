@@ -133,16 +133,16 @@ const getAllAppointments = async (req, res) => {
 const updateAppointmentStatus = async (req, res) => {
   try {
     const { appointmentId } = req.params;
-    const { status } = req.body;
+    const { status, version } = req.body;
 
-    const appointment = await Appointment.findByIdAndUpdate(
-      appointmentId,
-      { status },
+    const appointment = await Appointment.findOneAndUpdate(
+      { _id: appointmentId, version: version },
+      { status, $inc: { version: 1 } },
       { new: true }
     ).populate('patientId');
 
     if (!appointment) {
-      return res.status(404).json({ error: 'Appointment not found' });
+      return res.status(409).json({ error: 'Appointment version conflict or not found' });
     }
 
     const patient = appointment.patientId;
@@ -158,7 +158,7 @@ const updateAppointmentStatus = async (req, res) => {
       `
     });
 
-    res.json({ message: `Appointment ${status} and email sent.` });
+    res.json({ message: `Appointment ${status} and email sent.`, version: appointment.version });
   } catch (err) {
     console.error('Update appointment error:', err.message);
     res.status(500).json({ error: 'Failed to update appointment' });
@@ -190,7 +190,8 @@ const approveAppointment = async (req, res) => {
       userId: patient._id,
       status: 'approved',
       message: `Your appointment on ${updated.appointmentDate.toDateString()} has been approved.`,
-      recipientType: 'patient'
+      recipientType: 'patient',
+      appointmentId: updated._id
     });
 
     // Email notification
@@ -344,7 +345,7 @@ const completeConsultation = async (req, res) => {
     const updateFields = {
       ...req.body,
       status: 'completed',
-      consultationCompletedAt: req.body.consultationCompletedAt || new Date()
+      consultationCompletedAt: new Date() // Always set to current time when completing
     };
 
     const appointment = await Appointment.findByIdAndUpdate(

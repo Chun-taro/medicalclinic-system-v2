@@ -5,7 +5,7 @@ const getNotifications = async (req, res) => {
   try {
     let query = {};
 
-    if (req.user.role === 'admin') {
+    if (req.user.role === 'admin' || req.user.role === 'superadmin') {
       query.recipientType = 'admin';
     } else {
       query.userId = req.user.userId;
@@ -27,7 +27,7 @@ const getUnreadCount = async (req, res) => {
   try {
     let query = { read: false };
 
-    if (req.user.role === 'admin') {
+    if (req.user.role === 'admin' || req.user.role === 'superadmin') {
       query.recipientType = 'admin';
     } else {
       query.userId = req.user.userId;

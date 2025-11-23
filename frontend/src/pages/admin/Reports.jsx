@@ -201,7 +201,7 @@ export default function Reports() {
                         </p>
                         <p className="consult-date">
                           <strong>Date:</strong>{' '}
-                          {formatDateTime(c.appointmentDate)}
+                          {formatDateTime(c.consultationCompletedAt || c.appointmentDate)}
                         </p>
                         <p className="consult-diagnosis">{activeTab === 'consultations' ? c.diagnosis : 'Medical Certificate'}</p>
                       </div>

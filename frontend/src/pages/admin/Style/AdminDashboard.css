@@ -331,54 +331,47 @@
 /* Desktop */
 @media (min-width: 769px) and (max-width: 1024px) {
   .dashboard-container {
-    flex-direction: column;
+    flex-direction: row;
   }
 
   .sidebar {
+    width: 180px;
+    height: calc(100vh - 60px);
     position: fixed;
-    top: 0;
+    top: 60px;
     left: 0;
-    right: 0;
-    width: 100%;
-    height: 60px;
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-around;
-    padding: var(--spacing-sm);
-    box-shadow: var(--shadow);
     z-index: 25;
+    flex-direction: column;
+    padding: var(--spacing-lg) var(--spacing-md);
   }
 
   .sidebar-title {
-    display: none;
+    display: block;
   }
 
   .menu-list {
-    display: flex;
-    gap: var(--spacing-sm);
-    flex-wrap: wrap;
+    display: block;
   }
 
-  .menu-list li span.menu-text {
-    display: none;
+  .menu-list li span {
+    display: inline;
   }
 
   .logout-button {
-    padding: var(--spacing-sm);
-    gap: 5px;
-    margin-top: 0;
+    margin-top: auto;
   }
 
   .navbar {
-    top: 60px;
+    top: 0;
   }
 
   .main-content {
-    margin-left: 0;
+    margin-left: 10px;
+    margin-top: 0;
   }
 
   .page-content {
-    padding-top: 0;
+    padding-top: calc(var(--spacing-lg) + 60px);
   }
 
   .stats-grid {

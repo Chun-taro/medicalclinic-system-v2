@@ -22,7 +22,10 @@ const medicineSchema = new mongoose.Schema({
       dispensedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
       source: String
     }
-  ]
+  ],
+
+  // Version for optimistic concurrency control
+  version: { type: Number, default: 0 }
 }, { timestamps: true });
 
 module.exports = mongoose.model('Medicine', medicineSchema);

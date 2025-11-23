@@ -1,15 +1,18 @@
-# TODO: Separate Medical Certificates from Consultations in Reports
+# TODO: Implement Notification to Google Calendar Sync
 
-## Backend Changes
-- [x] Modify `getConsultations` in `appointmentController.js` to only fetch appointments with non-null `diagnosis`
-- [x] Create new `getMedicalCertificates` function in `appointmentController.js` for fetching medical certificates
-- [x] Add new route `/medical-certificates` in `appointments.js`
+## Steps to Complete
 
-## Frontend Changes
-- [x] Update `Reports.jsx` to use separate endpoints based on active tab
-- [x] Remove client-side filtering for purpose in `Reports.jsx`
+1. **Update Notification Model**: Add `appointmentId` field to `Notification.js` to link notifications to appointments.
+2. **Update sendNotification Utility**: Modify `sendNotification.js` to accept and store `appointmentId` when creating notifications.
+3. **Add createEventFromNotification Function**: In `calendarController.js`, add a new function to fetch notification, get associated appointment, and create a Google Calendar event.
+4. **Add New Route**: In `routes/calendar.js`, add `POST /sync-notification/:notificationId` route to trigger the sync.
+5. **Test the Implementation**: Run the backend and test the new endpoint with a sample notification.
+6. **Frontend Integration**: Note to update frontend (e.g., add button in Notifications.jsx) to call the new endpoint (manual step for user).
 
-## Testing
-- [x] Test consultations endpoint returns only consultations
-- [x] Test medical-certificates endpoint returns only medical certificates
-- [x] Verify frontend tabs display correct data
+## Progress Tracking
+- [ ] Step 1: Update Notification Model
+- [ ] Step 2: Update sendNotification Utility
+- [ ] Step 3: Add createEventFromNotification Function
+- [ ] Step 4: Add New Route
+- [ ] Step 5: Test Implementation
+- [ ] Step 6: Frontend Integration (user action)

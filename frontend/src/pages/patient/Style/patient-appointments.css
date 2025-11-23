@@ -44,8 +44,8 @@
   color: #fff;
   font-weight: 600;
   position: sticky;
-  top: 0;
-  z-index: 1;
+  top: 60px;
+  z-index: 11;
   white-space: nowrap;
 }
 
@@ -125,12 +125,26 @@
   .appointments-table td button {
     font-size: 0.9rem;
   }
-}
 
+  .navbar-group {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .fb-name {
+    font-size: 1rem;
+  }
+
+  .navbar-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+}
 
 @media (max-width: 480px) {
   .patient-appointments-container {
-    padding: 1rem;
+    padding: 0.75rem;
     margin: 0.5rem;
   }
 
@@ -141,11 +155,29 @@
   }
 
   .appointments-table td button {
-    font-size: 0.85rem;
+    font-size: 0.8rem;
+    padding: 0.4rem 0.6rem;
   }
 
   .appointments-table td:last-child {
     flex-direction: column;
     align-items: flex-start;
+    gap: 0.25rem;
+  }
+
+  .navbar-group {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+  }
+
+  .fb-name {
+    font-size: 0.9rem;
+  }
+
+  .navbar-actions {
+    width: 100%;
+    justify-content: flex-end;
+    gap: 0.5rem;
   }
 }

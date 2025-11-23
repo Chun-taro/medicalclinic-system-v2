@@ -1,7 +1,7 @@
 const express = require('express');
 const { google } = require('googleapis');
 const { auth } = require('../middleware/auth');
-const { getEvents, createEvent } = require('../controllers/calendarController');
+const { getEvents, createEvent, createEventFromNotification } = require('../controllers/calendarController');
 const { googleCalendarCallback } = require('../controllers/authController');
 
 const router = express.Router();
@@ -11,6 +11,9 @@ router.get('/events', auth, getEvents);
 
 // POST create new event
 router.post('/events', auth, createEvent);
+
+// POST sync notification to calendar
+router.post('/sync-notification/:notificationId', auth, createEventFromNotification);
 
 // GET Google Calendar OAuth URL
 router.get('/oauth/url', auth, (req, res) => {

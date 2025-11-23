@@ -1,4 +1,4 @@
-/* ────────────────────────────────
+ /* ────────────────────────────────
    Base Layout
 ──────────────────────────────── */
 .dashboard-container {
@@ -85,7 +85,7 @@
 .page-content {
   flex: 1;
   padding: var(--spacing-lg);
-  padding-top: calc(var(--spacing-lg) + 60px);
+  padding-top: calc(var(--spacing-lg) + 70px);
   overflow-y: auto;
   background-color: var(--bg-secondary);
 }
@@ -440,6 +440,7 @@
 
   .page-content {
     padding: var(--spacing-md);
+    padding-top: calc(var(--spacing-md) + 70px);
   }
 
   .notification-dropdown {
@@ -455,8 +456,8 @@
     flex-direction: row;
     align-items: center;
     justify-content: space-around;
-    padding: var(--spacing-sm);
-    padding-top: calc(var(--spacing-sm) + 60px);
+    padding: var(--spacing-xs);
+    padding-top: calc(var(--spacing-xs) + 60px);
     height: auto;
     box-shadow: none;
   }
@@ -467,12 +468,12 @@
 
   .sidebar-menu {
     flex-direction: row;
-    gap: 5px;
+    gap: 3px;
     flex-wrap: wrap;
   }
 
   .sidebar-menu li {
-    padding: 8px 10px;
+    padding: 4px 6px;
   }
 
   .sidebar-menu li span {
@@ -497,6 +498,7 @@
 
   .fb-name {
     font-size: var(--font-size-sm);
+    line-height: 28px;
   }
 
   .navbar-actions {
@@ -509,30 +511,30 @@
 
   .profile-icon,
   .profile-initials {
-    width: 32px;
-    height: 32px;
-    font-size: 12px;
+    width: 28px;
+    height: 28px;
+    font-size: 10px;
   }
 
   .dropdown {
-    top: 40px;
-    min-width: 120px;
+    top: 36px;
+    min-width: 100px;
   }
 
   .dropdown button {
-    padding: 6px 10px;
-    font-size: 0.8rem;
+    padding: 4px 6px;
+    font-size: 0.7rem;
   }
 
   .notification-icon {
-    width: 18px;
-    height: 18px;
+    width: 14px;
+    height: 14px;
   }
 
   .notification-badge {
-    font-size: 0.6rem;
-    padding: 1px 4px;
-    min-width: 16px;
+    font-size: 0.5rem;
+    padding: 1px 2px;
+    min-width: 12px;
   }
 
   .notification-wrapper {
@@ -540,15 +542,15 @@
   }
 
   .page-content {
-    padding: var(--spacing-sm);
-    padding-top: calc(var(--spacing-sm) + 80px);
+    padding: var(--spacing-xs);
+    padding-top: calc(var(--spacing-xs) + 65px);
   }
 
   .notification-dropdown {
-    width: 90vw;
-    max-width: 300px;
-    max-height: 300px;
-    padding: var(--spacing-sm);
+    width: 80vw;
+    max-width: 260px;
+    max-height: 250px;
+    padding: var(--spacing-xs);
   }
 
   .dropdown-item {
@@ -560,11 +562,11 @@
   }
 
   .dropdown-meta {
-    font-size: 10px;
+    font-size: 8px;
   }
 
   .mark-read-btn {
-    font-size: 10px;
-    padding: 2px 6px;
+    font-size: 8px;
+    padding: 2px 4px;
   }
 }

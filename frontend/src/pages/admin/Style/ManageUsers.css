@@ -210,22 +210,102 @@
 }
 
 /* Responsive */
-@media (max-width: 480px) {
+@media (max-width: 768px) {
+  .user-table th,
+  .user-table td {
+    padding: 8px 6px;
+    font-size: 0.8rem;
+  }
+
+  .role-badge {
+    padding: 2px 6px;
+    font-size: 0.7rem;
+  }
+
+  .user-table select {
+    font-size: 0.8rem;
+    padding: 3px 4px;
+  }
+
+  .tabs button {
+    padding: 6px 12px;
+    font-size: 0.9rem;
+  }
+
   .popup-content {
-    margin: 20px;
-    width: calc(100% - 40px);
+    margin: 15px;
+    width: calc(100% - 30px);
   }
 
   .popup-header, .popup-body, .popup-footer {
-    padding-left: 20px;
-    padding-right: 20px;
+    padding-left: 15px;
+    padding-right: 15px;
   }
 
   .popup-icon {
-    font-size: 2.5rem;
+    font-size: 2.2rem;
   }
 
   .popup-header h3 {
-    font-size: 1.3rem;
+    font-size: 1.2rem;
+  }
+
+  .popup-body p {
+    font-size: 0.9rem;
+  }
+
+  .popup-btn-primary {
+    padding: 10px 25px;
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .user-table th,
+  .user-table td {
+    padding: 6px 4px;
+    font-size: 0.75rem;
+  }
+
+  .role-badge {
+    padding: 2px 4px;
+    font-size: 0.65rem;
+  }
+
+  .user-table select {
+    font-size: 0.75rem;
+    padding: 2px 3px;
+  }
+
+  .tabs button {
+    padding: 5px 10px;
+    font-size: 0.85rem;
+  }
+
+  .popup-content {
+    margin: 10px;
+    width: calc(100% - 20px);
+  }
+
+  .popup-header, .popup-body, .popup-footer {
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+
+  .popup-icon {
+    font-size: 2rem;
+  }
+
+  .popup-header h3 {
+    font-size: 1.1rem;
+  }
+
+  .popup-body p {
+    font-size: 0.85rem;
+  }
+
+  .popup-btn-primary {
+    padding: 8px 20px;
+    font-size: 0.85rem;
   }
 }

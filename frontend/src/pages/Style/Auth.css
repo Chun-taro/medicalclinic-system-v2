@@ -10,7 +10,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 2rem 1rem;
+  padding: 1rem 0.5rem;
   box-sizing: border-box;
 }
 
@@ -34,15 +34,15 @@
   border-top: 2px solid rgba(255, 255, 255, 0.7);
   border-bottom: 2px solid rgba(255, 255, 255, 0.7);
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-  padding: 1.25rem;
+  padding: 1rem;
   width: 100%;
-  max-width: 340px;
-  min-width: 260px;
+  max-width: 320px;
+  min-width: 240px;
   display: flex;
   flex-direction: column;
   align-items: center;
   overflow-y: auto;
-  max-height: 90vh;
+  max-height: 95vh;
 }
 
 /* Form layout */
@@ -50,13 +50,13 @@
   width: 100%;
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 0.5rem;
 }
 
 /* Header block */
 .form-header {
   text-align: center;
-  margin-bottom: 1rem;
+  margin-bottom: 0.75rem;
 }
 
 .clinic-logo {
@@ -206,7 +206,7 @@
 /* Small devices (phones, < 480px) */
 @media (max-width: 480px) {
   .auth-wrapper {
-    padding: 1rem 0.5rem;
+    padding: 0.5rem 0.5rem;
   }
 
   .auth-right {
@@ -214,23 +214,37 @@
     min-width: 100%;
     padding: 1rem;
     border-radius: 0;
-    max-height: none;
+    max-height: 100vh;
     box-shadow: none;
     border: none;
     backdrop-filter: none;
-    background-color: rgba(255, 255, 255, 0.9);
+    background-color: rgba(255, 255, 255, 0.95);
+    overflow-y: auto;
+  }
+
+  .form-wrapper {
+    gap: 0.5rem;
+  }
+
+  .form-header {
+    margin-bottom: 0.5rem;
   }
 
   .form-header .clinic-logo {
-    width: 60px;
+    width: 50px;
   }
 
   .clinic-title {
-    font-size: 1.2rem;
+    font-size: 1.1rem;
+  }
+
+  .form-divider {
+    margin: 0.5rem auto 0 auto;
   }
 
   .auth-right h2 {
     font-size: 1.2rem;
+    margin-bottom: 0.5rem;
   }
 
   .auth-right input,
@@ -240,20 +254,34 @@
     padding: 0.6rem;
   }
 
+  .google-label {
+    font-size: 0.8rem;
+    margin-bottom: 0.3rem;
+  }
+
   .google-button {
     width: 100%;
-    height: 40px;
+    height: 36px;
   }
 
   .google-icon {
     width: 100%;
-    height: 40px;
+    height: 36px;
   }
 
-  /* DEBUG: visual indicator to confirm small-screen media queries are applied on this machine */
-  .auth-right {
-    outline: 3px solid rgba(255,0,0,0.6) !important;
-    background-color: rgba(255,255,255,0.95) !important;
+  .auth-right p,
+  .forgot-password {
+    font-size: 0.8rem;
+    margin-top: 0.3rem;
+  }
+
+  .recaptcha-container {
+    margin-block: 0.5rem;
+  }
+
+  .recaptcha-error {
+    font-size: 0.7rem;
+    margin-top: 3px;
   }
 }
 
@@ -276,5 +304,23 @@
   .auth-right select,
   .auth-right button {
     font-size: 0.9rem;
+  }
+
+  .clinic-title {
+    font-size: 1.1rem;
+  }
+
+  .google-button {
+    width: 90%;
+    height: 38px;
+  }
+
+  .google-icon {
+    width: 90%;
+    height: 38px;
+  }
+
+  .recaptcha-container {
+    margin-block: 0.5rem;
   }
 }

@@ -237,24 +237,131 @@
 
 /* ===== Responsive ===== */
 @media (max-width: 768px) {
+  .fb-profile-container {
+    padding: 1rem;
+  }
+
   .fb-header-bar {
     flex-direction: column;
     align-items: center;
     text-align: center;
+    padding: 1rem;
   }
 
   .fb-about-grid {
     grid-template-columns: 1fr;
+    gap: 0.5rem 0.75rem;
   }
 
   .fb-avatar {
-    width: 100px;
-    height: 100px;
+    width: 90px;
+    height: 90px;
   }
 
   .fb-avatar-wrap {
-    width: 100px;
-    height: 100px;
+    width: 90px;
+    height: 90px;
+  }
+
+  .fb-name {
+    font-size: 1.4rem;
+  }
+
+  .fb-subtitle {
+    font-size: 0.85rem;
+  }
+
+  .fb-actions {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .fb-button {
+    width: 100%;
+    padding: 0.5rem 0.8rem;
+  }
+
+  .fb-card {
+    padding: 1rem;
+  }
+
+  .fb-card h3 {
+    font-size: 1rem;
+  }
+
+  .modal-content {
+    width: 95%;
+    padding: 1rem;
+  }
+
+  .form-group input,
+  .form-group select {
+    font-size: 0.85rem;
+    padding: 0.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .fb-profile-container {
+    padding: 0.75rem;
+  }
+
+  .fb-header-bar {
+    padding: 0.75rem;
+  }
+
+  .fb-avatar {
+    width: 70px;
+    height: 70px;
+  }
+
+  .fb-avatar-wrap {
+    width: 70px;
+    height: 70px;
+  }
+
+  .fb-name {
+    font-size: 1.2rem;
+  }
+
+  .fb-subtitle {
+    font-size: 0.8rem;
+  }
+
+  .fb-button {
+    font-size: 0.85rem;
+    padding: 0.4rem 0.7rem;
+  }
+
+  .fb-card {
+    padding: 0.75rem;
+  }
+
+  .fb-card h3 {
+    font-size: 0.95rem;
+  }
+
+  .fb-label {
+    font-size: 0.85rem;
+  }
+
+  .fb-value {
+    font-size: 0.85rem;
+  }
+
+  .modal-content {
+    width: 98%;
+    padding: 0.75rem;
+  }
+
+  .modal-content h3 {
+    font-size: 1.1rem;
+  }
+
+  .save-button,
+  .cancel-button {
+    font-size: 0.85rem;
+    padding: 0.4rem 0.8rem;
   }
 }
 

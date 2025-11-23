@@ -1,6 +1,6 @@
 const Notification = require('../models/Notification');
 
-const sendNotification = async ({ userId, type = 'appointment', status, message, recipientType }) => {
+const sendNotification = async ({ userId, type = 'appointment', status, message, recipientType, appointmentId }) => {
   try {
     const notification = await Notification.create({
       userId,
@@ -8,6 +8,7 @@ const sendNotification = async ({ userId, type = 'appointment', status, message,
       status,
       message,
       recipientType,
+      appointmentId,
       timestamp: new Date(),
       read: false
     });

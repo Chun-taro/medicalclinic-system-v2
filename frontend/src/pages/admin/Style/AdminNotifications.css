@@ -63,3 +63,58 @@
   border-radius: 4px;
   cursor: pointer;
 }
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .notification-dropdown {
+    top: 40px;
+    right: 0;
+    width: 280px;
+    padding: 10px;
+  }
+
+  .dropdown-header {
+    font-size: 0.95rem;
+  }
+
+  .dropdown-message {
+    font-size: 0.9rem;
+  }
+
+  .dropdown-meta {
+    font-size: 11px;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .mark-read-btn {
+    font-size: 11px;
+    padding: 4px 6px;
+  }
+}
+
+@media (max-width: 480px) {
+  .notification-dropdown {
+    top: 38px;
+    right: 0;
+    width: 85vw;
+    padding: 8px;
+  }
+
+  .dropdown-header {
+    font-size: 0.9rem;
+  }
+
+  .dropdown-message {
+    font-size: 0.85rem;
+  }
+
+  .dropdown-meta {
+    font-size: 10px;
+  }
+
+  .mark-read-btn {
+    font-size: 10px;
+    padding: 3px 5px;
+  }
+}

@@ -91,7 +91,10 @@ const appointmentSchema = new mongoose.Schema({
   },
 
   //  Consultation tracking
-  consultationCompletedAt: Date
+  consultationCompletedAt: Date,
+
+  // Version for optimistic concurrency control
+  version: { type: Number, default: 0 }
 }, { timestamps: true });
 
 module.exports = mongoose.model('Appointment', appointmentSchema);

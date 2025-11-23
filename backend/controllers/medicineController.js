@@ -65,17 +65,20 @@ const createMedicine = async (req, res) => {
 const dispenseCapsules = async (req, res) => {
   try {
     const { id } = req.params;
-    const { quantity, appointmentId } = req.body;
+    const { quantity, appointmentId, version } = req.body;
 
-    const med = await Medicine.findById(id);
-    if (!med) return res.status(404).json({ error: 'Medicine not found' });
+    const med = await Medicine.findOneAndUpdate(
+      { _id: id, version: version },
+      {
+        $inc: { quantityInStock: -quantity, version: 1 },
+        $set: { available: { $gt: ['$quantityInStock', quantity] } }
+      },
+      { new: true }
+    );
 
-    if (med.quantityInStock < quantity) {
-      return res.status(400).json({ error: 'Not enough stock to dispense' });
+    if (!med) {
+      return res.status(409).json({ error: 'Medicine version conflict or not found' });
     }
-
-    med.quantityInStock -= quantity;
-    med.available = med.quantityInStock > 0;
 
     // Extract user ID from token
     const authHeader = req.headers.authorization || '';
@@ -102,18 +105,23 @@ const dispenseCapsules = async (req, res) => {
 
     await med.save();
 
-    res.json({ message: 'Medicine dispensed', medicine: med });
+    res.json({ message: 'Medicine dispensed', medicine: med, version: med.version });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 };
 
-// Deduct multiple medicines (used in consultation)
+// Deduct multiple medicines (used in consultation) with pessimistic locking via transaction
 const deductMedicines = async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
   try {
     const { prescribed } = req.body;
 
     if (!Array.isArray(prescribed)) {
+      await session.abortTransaction();
+      session.endSession();
       return res.status(400).json({ error: 'Invalid prescribed list' });
     }
 
@@ -130,7 +138,7 @@ const deductMedicines = async (req, res) => {
     }
 
     for (const item of prescribed) {
-      const med = await Medicine.findById(item.medicineId);
+      const med = await Medicine.findById(item.medicineId).session(session);
       if (!med) continue;
 
       const qty = parseInt(item.quantity);
@@ -140,6 +148,8 @@ const deductMedicines = async (req, res) => {
       }
 
       if (med.quantityInStock < qty) {
+        await session.abortTransaction();
+        session.endSession();
         return res.status(400).json({ error: `Not enough stock for ${med.name}` });
       }
 
@@ -155,11 +165,15 @@ const deductMedicines = async (req, res) => {
         source: 'consultation'
       });
 
-      await med.save();
+      await med.save({ session });
     }
 
+    await session.commitTransaction();
+    session.endSession();
     res.json({ success: true });
   } catch (err) {
+    await session.abortTransaction();
+    session.endSession();
     console.error('Deduction error:', err);
     res.status(500).json({ error: err.message });
   }
