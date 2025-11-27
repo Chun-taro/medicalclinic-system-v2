@@ -1,5 +1,7 @@
 const { google } = require('googleapis');
 const User = require('../models/User');
+const Notification = require('../models/Notification');
+const Appointment = require('../models/Appointment');
 
 // Fetch upcoming events
 const getEvents = async (req, res) => {
@@ -10,9 +12,9 @@ const getEvents = async (req, res) => {
     }
 
     const oauth2Client = new google.auth.OAuth2(
-      process.env.GOOGLE_CLIENT_ID,
-      process.env.GOOGLE_CLIENT_SECRET,
-      process.env.GOOGLE_REDIRECT_URI
+      process.env.GOOGLE_CALENDAR_CLIENT_ID,
+      process.env.GOOGLE_CALENDAR_CLIENT_SECRET,
+      process.env.GOOGLE_CALENDAR_REDIRECT_URI
     );
 
     oauth2Client.setCredentials({
@@ -46,9 +48,9 @@ const createEvent = async (req, res) => {
     }
 
     const oauth2Client = new google.auth.OAuth2(
-      process.env.GOOGLE_CLIENT_ID,
-      process.env.GOOGLE_CLIENT_SECRET,
-      process.env.GOOGLE_REDIRECT_URI
+      process.env.GOOGLE_CALENDAR_CLIENT_ID,
+      process.env.GOOGLE_CALENDAR_CLIENT_SECRET,
+      process.env.GOOGLE_CALENDAR_REDIRECT_URI
     );
 
     oauth2Client.setCredentials({
@@ -77,9 +79,6 @@ const createEvent = async (req, res) => {
   }
 };
 
-const Notification = require('../models/Notification');
-const Appointment = require('../models/Appointment');
-
 // Create event from notification
 const createEventFromNotification = async (req, res) => {
   try {
@@ -105,9 +104,9 @@ const createEventFromNotification = async (req, res) => {
     const appointment = notification.appointmentId;
 
     const oauth2Client = new google.auth.OAuth2(
-      process.env.GOOGLE_CLIENT_ID,
-      process.env.GOOGLE_CLIENT_SECRET,
-      process.env.GOOGLE_REDIRECT_URI
+      process.env.GOOGLE_CALENDAR_CLIENT_ID,
+      process.env.GOOGLE_CALENDAR_CLIENT_SECRET,
+      process.env.GOOGLE_CALENDAR_REDIRECT_URI
     );
 
     oauth2Client.setCredentials({
@@ -117,14 +116,16 @@ const createEventFromNotification = async (req, res) => {
 
     const calendar = google.calendar({ version: 'v3', auth: oauth2Client });
 
-    const startDate = new Date(appointment.appointmentDate);
-    const endDate = new Date(startDate.getTime() + (30 * 60 * 1000)); // 30 min default
+    // Combine appointmentDate and time
+    const dateStr = appointment.appointmentDate.toISOString().split('T')[0]; // YYYY-MM-DD
+    const startDateTime = new Date(`${dateStr}T${appointment.time}:00`);
+    const endDateTime = new Date(startDateTime.getTime() + (30 * 60 * 1000)); // 30 min default
 
     const event = {
       summary: `Appointment Notification: ${notification.status}`,
       description: notification.message,
-      start: { dateTime: startDate.toISOString(), timeZone: 'Asia/Manila' },
-      end: { dateTime: endDate.toISOString(), timeZone: 'Asia/Manila' },
+      start: { dateTime: startDateTime.toISOString(), timeZone: 'Asia/Manila' },
+      end: { dateTime: endDateTime.toISOString(), timeZone: 'Asia/Manila' },
       reminders: { useDefault: true }
     };
 

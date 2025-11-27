@@ -12,50 +12,85 @@
 .table-container {
   width: 100%;
   margin-top: 1rem;
-  overflow-x: auto; /* Enables horizontal scroll on small screens */
+  overflow-x: auto;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  background: white;
 }
 
 /* Table base */
 .appointments-table {
   width: 100%;
-  min-width: 600px; /* Prevents table from collapsing too much */
+  min-width: 800px;
   border-collapse: collapse;
-  background-color: #fff;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-  table-layout: auto;
+  margin-top: 10px;
+  font-size: 14px;
 }
 
-/* Table headers and cells */
 .appointments-table th,
 .appointments-table td {
-  padding: 1rem 1.25rem;
-  font-size: 1.1rem;
+  padding: 12px 16px;
   text-align: left;
-  border-bottom: 1px solid #e0e0e0;
-  vertical-align: middle;
-  word-wrap: break-word;
-  overflow-wrap: break-word;
-  white-space: normal;
+  border-bottom: 1px solid #e9ecef;
 }
 
 .appointments-table th {
-  background-color: #0077cc;
-  color: #fff;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
   font-weight: 600;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
   position: sticky;
   top: 60px;
-  z-index: 11;
-  white-space: nowrap;
+  z-index: 10;
 }
 
-/* Zebra striping and hover */
-.appointments-table tr:nth-child(even) {
-  background-color: #f9f9f9;
+.appointments-table tbody tr {
+  transition: all 0.2s ease;
 }
 
-.appointments-table tr:hover {
-  background-color: #f0f8ff;
+.appointments-table tbody tr:hover {
+  background-color: #f8f9ff;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.appointments-table tbody tr:nth-child(even) {
+  background-color: #fafbfc;
+}
+
+.appointments-table tbody tr:nth-child(even):hover {
+  background-color: #f0f4ff;
+}
+
+.appointments-table td {
+  color: #495057;
+  vertical-align: middle;
+}
+
+/* Status column styling */
+.appointments-table td:nth-child(6) {
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+/* Date column styling */
+.appointments-table td:nth-child(5) {
+  font-family: 'Courier New', monospace;
+  font-size: 13px;
+}
+
+/* Medicines column styling */
+.appointments-table td:nth-child(7) {
+  max-width: 200px;
+  word-wrap: break-word;
+  line-height: 1.4;
+}
+
+/* Actions column styling */
+.appointments-table td:nth-child(8) {
+  text-align: center;
 }
 
 /* Action buttons */

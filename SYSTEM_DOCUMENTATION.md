@@ -1,86 +1,57 @@
-# System Documentation
+## Security Assessment (IAS Compliance)
 
-## Overview
-This system is a Medical Clinic Management System developed as a full-stack web application consisting of a RESTful API backend, a React-based frontend, and a MongoDB non-relational database. 
+### ✅ **Implemented Security Features**
 
-The system is designed to facilitate appointment scheduling, patient management, notifications, calendar integration, and other clinic administrative functions.
+#### 1. User Authentication & Session Management
+- **JWT-based authentication** with secure token generation and validation
+- **Password hashing** using bcrypt with salt rounds
+- **Google OAuth integration** for alternative login
+- **reCAPTCHA verification** for signup protection
+- **Session management** with configurable expiration
 
-## Architecture
-- **Backend:** Node.js with Express.js serving as the RESTful API. The backend handles business logic, data validation, authentication, and integration with the database and external services.
-- **Frontend:** React.js framework providing an interactive user interface. It separates views for admin and patient users with dedicated pages for dashboard, appointment booking, profile management, notifications, and reports.
-- **Database:** MongoDB non-relational database accessed via Mongoose ODM for flexible and scalable data management.
-- **Authentication:** Secured via JWT (JSON Web Token) for API endpoints, with additional OAuth support via Google for user login.
-- **Security:** Includes JWT authentication, CORS configuration, password hashing, role-based access control, and input validation to safeguard data and user privacy.
+#### 2. Role-Based Access Control (RBAC)
+- **Multiple user roles** defined: patient, admin, doctor, nurse, superadmin
+- **Role enforcement** in middleware and API endpoints
+- **Protected routes** requiring specific roles for access
 
-## Features
+#### 3. Basic Security Measures
+- **Helmet.js** for security headers
+- **CORS configuration** for cross-origin requests
+- **Input validation** in controllers
+- **Error handling** with appropriate HTTP status codes
 
-### Common Features (All Users)
-- User registration and login (including Google OAuth)
-- Role-based access control for feature permissions
-- Profile management including personal, medical, and contact information
-- Notifications system with email and push notifications
-- Secure API authentication with JWT
+### ❌ **Missing or Incomplete Features**
 
-### Patient (User) Features
-- Book and manage appointments (view current and past)
-- View personal medical history, allergies, medications, and consultation results
-- Receive notifications about appointment status and other relevant updates
-- View and download medical certificates and reports
-- Profile management including personal information and emergency contacts
-- View notifications and alerts in the patient dashboard
+#### 1. Data Encryption
+- **Storage encryption**: No encryption of sensitive data in MongoDB
+- **Transmission encryption**: No HTTPS enforcement in server configuration
+- **Data at rest**: Medical records and personal information stored in plain text
 
-### Admin Features
-- Manage all appointments including approval, rejection, and consultation management
-- Access detailed reports and analytics on appointments, diagnoses, and referrals
-- Manage medicine inventory (add, update, track stock levels)
-- Manage users including patients, doctors, nurses, and other admin staff
-- Send notifications and alerts to users and staff
-- Oversee calendar synchronization and appointment scheduling
-- Access detailed consultation records and medical certificates
+#### 2. Logging & Monitoring
+- **Basic logging**: Only console.log statements (not production-ready)
+- **No dedicated logging library** (e.g., Winston, Morgan)
+- **No security event monitoring** (failed logins, unauthorized access attempts)
+- **No audit trails** for sensitive operations
 
-### Superadmin Features
-- Full access to system configuration and settings
-- Manage all users and assign roles
-- Oversee global system health and logs
+#### 3. Backup & Recovery
+- **Automated database backup system** implemented with MongoDB dump
+- **Backup retention policy** (30 days) with automatic cleanup
+- **Manual and scheduled backup capabilities** via API endpoints
+- **Database restoration functionality** for disaster recovery
 
+### 📋 **Recommendations to Complete IAS Requirements**
 
-### Doctor and Nurse Features
-- Access assigned appointments and patient consultation history
-- Record diagnosis, treatment plans, and prescribe medicines
-- Start and complete consultations with detailed medical data entry
-- View notifications relevant to consultations and appointments
+1. **Implement HTTPS**: Configure SSL/TLS certificates and enforce HTTPS
+2. **Add Data Encryption**: Use MongoDB encryption or field-level encryption for sensitive data
+3. **Enhanced Monitoring**: Add intrusion detection and real-time security monitoring
+4. **Security Testing**: Conduct penetration testing and vulnerability assessments
 
 ---
+
 
 
 ## Design Decisions
-- Chose RESTful API design for stateless and scalable backend interactions.
-- Selected MongoDB for flexible data schema to manage complex patient medical histories.
-- Used JWT tokens for stateless, secure authentication across API endpoints.
-- Integrated Passport.js for Google OAuth to enhance user login options.
-- Modularized backend with controllers and routes for maintainability.
-- React frontend structured into patient and admin modules for clear separation of concerns.
-
-## Challenges and Solutions
-- Managing complex medical and demographic data required extensive mongoose schemas with nested subdocuments and validation.
-- Securing sensitive user data led to implementation of strong JWT auth and encryption best practices.
-- Synchronizing calendar data with external Google Calendar API required OAuth token management.
-- Handling real-time notifications necessitated utility modules for email and push notification abstraction.
-
-## External Integrations
-- Google OAuth for user authentication
-- Google Calendar API for calendar syncing
-- Email service for notifications (likely using nodemailer or similar)
-- Cloudinary for media upload and storage (e.g., patient profile pictures, appointment-related images)
-- Puppeteer for server-side PDF generation (e.g., medical certificates)
-- Additional external APIs to be integrated as needed (payment gateways, geolocation, third-party data sources)
-
-## Future Enhancements
-- Extend API integrations to cover payments and advanced analytics
-- Improve frontend UX/UI based on user feedback
-- Implement robust API documentation and automated testing
-- Add real-time chat or consultation features for doctors and patients
-
+=======
 ---
 
-This documentation provides a comprehensive overview of the system's structure, features, and design rationale to guide further development and maintenance.
+## Design Decisions

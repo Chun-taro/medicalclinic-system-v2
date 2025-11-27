@@ -32,6 +32,26 @@ export default function Notifications() {
     }
   };
 
+  const syncToCalendar = async (id) => {
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`http://localhost:5000/api/calendar/sync-notification/${id}`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const data = await res.json();
+      if (res.ok) {
+        alert('Notification synced to Google Calendar!');
+        fetchNotifications(); // Refresh to show updated read status
+      } else {
+        alert(`Error: ${data.error}`);
+      }
+    } catch (err) {
+      console.error('Error syncing to calendar:', err);
+      alert('Failed to sync to calendar');
+    }
+  };
+
   useEffect(() => {
     fetchNotifications();
   }, []);
@@ -63,6 +83,12 @@ export default function Notifications() {
                     Mark as Read
                   </button>
                 )}
+                <button
+                  className="sync-calendar-btn"
+                  onClick={() => syncToCalendar(n._id)}
+                >
+                  Sync to Calendar
+                </button>
               </li>
             ))}
           </ul>

@@ -29,6 +29,10 @@ const notificationSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
+  appointmentId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Appointment'
+  },
   timestamp: {
     type: Date,
     default: Date.now

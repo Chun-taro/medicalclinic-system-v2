@@ -1,18 +1,21 @@
-# TODO: Implement Notification to Google Calendar Sync
+# Task: Add Medicine Column to Patient Dashboard Table - COMPLETED
 
-## Steps to Complete
+## Plan
+- Add a "Medicines" column header to the appointments table in PatientDashboard.jsx
+- Add corresponding table data cell that displays prescribed medicines for each appointment
+- Format medicines as a list showing name and quantity
+- Apply modern table styling to both dashboard and appointments pages
 
-1. **Update Notification Model**: Add `appointmentId` field to `Notification.js` to link notifications to appointments.
-2. **Update sendNotification Utility**: Modify `sendNotification.js` to accept and store `appointmentId` when creating notifications.
-3. **Add createEventFromNotification Function**: In `calendarController.js`, add a new function to fetch notification, get associated appointment, and create a Google Calendar event.
-4. **Add New Route**: In `routes/calendar.js`, add `POST /sync-notification/:notificationId` route to trigger the sync.
-5. **Test the Implementation**: Run the backend and test the new endpoint with a sample notification.
-6. **Frontend Integration**: Note to update frontend (e.g., add button in Notifications.jsx) to call the new endpoint (manual step for user).
+## Steps
+1. ✅ Edit PatientDashboard.jsx to add "Medicines" th in thead
+2. ✅ Add td in tbody to render medicinesPrescribed array
+3. ✅ Format medicines display (e.g., "Aspirin (2), Paracetamol (1)")
+4. ✅ Test the changes
+5. ✅ Update MyAppointments.jsx to include medicines column
+6. ✅ Apply modern table styling to both pages
 
-## Progress Tracking
-- [ ] Step 1: Update Notification Model
-- [ ] Step 2: Update sendNotification Utility
-- [ ] Step 3: Add createEventFromNotification Function
-- [ ] Step 4: Add New Route
-- [ ] Step 5: Test Implementation
-- [ ] Step 6: Frontend Integration (user action)
+## Files to Edit
+- frontend/src/pages/patient/PatientDashboard.jsx
+- frontend/src/pages/patient/Style/PatientDashboard.css
+- frontend/src/pages/patient/MyAppointments.jsx
+- frontend/src/pages/patient/Style/patient-appointments.css

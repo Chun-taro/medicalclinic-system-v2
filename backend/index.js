@@ -28,6 +28,9 @@ const app = express();
 const server = http.createServer(app);
 const io = socketIo(server, { cors: { origin: '*' } });
 
+// Make io globally available for notifications
+global.io = io;
+
 // Inject Socket.IO into every request
 app.use((req, res, next) => {
   req.io = io;

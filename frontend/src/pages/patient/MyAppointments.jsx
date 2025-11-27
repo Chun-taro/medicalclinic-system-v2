@@ -78,9 +78,9 @@ export default function MyAppointments() {
               <tbody>
                 {appointments.map(app => (
                   <tr key={app._id}>
-                    <td>{firstName} {lastName}</td>
-                    <td>{email}</td>
-                    <td>{phone}</td>
+                    <td>{app.patientId?.firstName || firstName} {app.patientId?.lastName || lastName}</td>
+                    <td>{app.patientId?.email || email}</td>
+                    <td>{app.patientId?.contactNumber || phone}</td>
                     <td>{app.purpose || '—'}</td>
                     <td>{new Date(app.appointmentDate).toLocaleDateString()}</td>
                     <td>{app.status}</td>
