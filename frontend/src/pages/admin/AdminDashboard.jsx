@@ -20,12 +20,15 @@ ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend)
 export default function AdminDashboard() {
   const [appointments, setAppointments] = useState([]);
   const [selectedDate, setSelectedDate] = useState(new Date());
+  const [weather, setWeather] = useState(null);
   const [stats, setStats] = useState({
     totalAppointments: 0,
     totalUsers: 0,
     todayAppointments: 0,
   });
   const [loading, setLoading] = useState(true);
+  const [weatherLoading, setWeatherLoading] = useState(true);
+  const [weatherError, setWeatherError] = useState('');
 
   useEffect(() => {
     const fetchData = async () => {
@@ -64,7 +67,20 @@ export default function AdminDashboard() {
       }
     };
 
+    const fetchWeather = async () => {
+      try {
+        const res = await axios.get('http://localhost:5000/api/weather?city=London');
+        setWeather(res.data.weather);
+      } catch (err) {
+        console.error('Error fetching weather:', err);
+        setWeatherError('Failed to load weather');
+      } finally {
+        setWeatherLoading(false);
+      }
+    };
+
     fetchData();
+    fetchWeather();
   }, []);
 
   const appointmentsForDate = appointments.filter(
@@ -124,6 +140,21 @@ export default function AdminDashboard() {
               <div className="stat-card yellow">
                 <h3>Today's Appointments</h3>
                 <p>{stats.todayAppointments}</p>
+              </div>
+              <div className="stat-card purple">
+                <h3>Weather</h3>
+                {weatherLoading ? (
+                  <p>Loading...</p>
+                ) : weatherError ? (
+                  <p style={{ color: 'red', fontSize: '12px' }}>{weatherError}</p>
+                ) : weather ? (
+                  <div>
+                    <p>{Math.round(weather.main.temp)}°C</p>
+                    <p style={{ fontSize: '12px' }}>{weather.weather[0].description}</p>
+                  </div>
+                ) : (
+                  <p>No data</p>
+                )}
               </div>
             </div>
             <div className="calendar-card">

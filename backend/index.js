@@ -20,6 +20,7 @@ const resetRoutes = require('./routes/reset');
 const medicineRoutes = require('./routes/medicines');
 const notificationRoutes = require('./routes/notification');
 const systemRoutes = require('./routes/system');
+const weatherRoutes = require('./routes/weather');
 
 
 require('./passport');
@@ -74,6 +75,7 @@ app.use('/api/medicines', medicineRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/system', systemRoutes);
 app.use('/api/calendar', calendarRoutes);
+app.use('/api/weather', weatherRoutes);
 
 
 // MongoDB connection

@@ -1,15 +1,17 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import Calendar from 'react-calendar';
+import 'react-calendar/dist/Calendar.css';
 import PatientLayout from './PatientLayout';
 
 export default function PatientDashboard() {
   const [appointments, setAppointments] = useState([]);
-  const [calendarEvents, setCalendarEvents] = useState([]);
+  const [weather, setWeather] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [calendarLoading, setCalendarLoading] = useState(true);
+  const [weatherLoading, setWeatherLoading] = useState(true);
   const [error, setError] = useState('');
-  const [calendarError, setCalendarError] = useState('');
+  const [weatherError, setWeatherError] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -43,63 +45,31 @@ export default function PatientDashboard() {
       }
     };
 
-    const fetchCalendarEvents = async () => {
+    const fetchWeather = async () => {
       try {
-        const token = localStorage.getItem('token');
-        const res = await fetch('http://localhost:5000/api/calendar/events', {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-
-        if (res.status === 400) {
-          // No Google tokens - user needs to authorize
-          setCalendarError('Connect your Google Calendar to view upcoming events');
-          setCalendarLoading(false);
-          return;
-        }
-
-        const data = await res.json();
-        if (res.ok) {
-          setCalendarEvents(data.slice(0, 5)); // Show only next 5 events
-        } else {
-          setCalendarError(data.error);
-        }
+        const res = await axios.get('http://localhost:5000/api/weather?city=malaybalay');
+        setWeather(res.data.weather);
       } catch (err) {
-        console.error('Error fetching calendar events:', err);
-        setCalendarError('Failed to load calendar events');
+        console.error('Error fetching weather:', err);
+        setWeatherError('Failed to load weather');
       } finally {
-        setCalendarLoading(false);
+        setWeatherLoading(false);
       }
     };
 
     fetchData();
-    fetchCalendarEvents();
+    fetchWeather();
   }, [navigate]);
 
-  const formatDateTime = (dateTime) => {
-    return new Date(dateTime).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+
+
+  const getAppointmentDates = () => {
+    return appointments.map(apt => new Date(apt.appointmentDate).toDateString());
   };
 
-  const handleCalendarAuth = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      const res = await fetch('http://localhost:5000/api/calendar/oauth/url', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      const data = await res.json();
-      if (res.ok) {
-        window.location.href = data.authUrl;
-      } else {
-        alert('Failed to get authorization URL');
-      }
-    } catch (err) {
-      console.error('Error getting OAuth URL:', err);
-      alert('Failed to connect to Google Calendar');
-    }
+  const hasAppointment = (date) => {
+    const dateString = date.toDateString();
+    return getAppointmentDates().includes(dateString);
   };
 
   return (
@@ -164,34 +134,46 @@ export default function PatientDashboard() {
           {/* Calendar Section */}
           <div className="dashboard-section">
             <h3>My Calendar</h3>
-            {calendarLoading ? (
-              <p>Loading calendar events...</p>
-            ) : calendarError ? (
-              <div className="calendar-error">
-                <p>{calendarError}</p>
-                <button className="auth-calendar-btn" onClick={handleCalendarAuth}>
-                  Connect Google Calendar
-                </button>
-              </div>
-            ) : calendarEvents.length === 0 ? (
-              <p>No upcoming events.</p>
+            {loading ? (
+              <p>Loading appointments...</p>
+            ) : error ? (
+              <p style={{ color: 'red' }}>{error}</p>
             ) : (
-              <div className="calendar-events">
-                {calendarEvents.map((event) => (
-                  <div key={event.id} className="calendar-event">
-                    <div className="event-title">{event.summary}</div>
-                    <div className="event-time">
-                      {formatDateTime(event.start.dateTime)}
-                    </div>
-                  </div>
-                ))}
-                <button
-                  className="view-calendar-btn"
-                  onClick={() => navigate('/patient-calendar')}
-                >
-                  View Full Calendar
-                </button>
+              <div className="calendar-container">
+                <Calendar
+                  tileClassName={({ date, view }) => {
+                    if (view === 'month' && hasAppointment(date)) {
+                      return 'appointment-date';
+                    }
+                    return null;
+                  }}
+                  tileContent={({ date, view }) => {
+                    if (view === 'month' && hasAppointment(date)) {
+                      return <div className="appointment-indicator">•</div>;
+                    }
+                    return null;
+                  }}
+                />
               </div>
+            )}
+          </div>
+
+          {/* Weather Section */}
+          <div className="dashboard-section">
+            <h3>Weather</h3>
+            {weatherLoading ? (
+              <p>Loading weather...</p>
+            ) : weatherError ? (
+              <p style={{ color: 'red' }}>{weatherError}</p>
+            ) : weather ? (
+              <div className="weather-info">
+                <h4>{weather.name}</h4>
+                <p>Temperature: {Math.round(weather.main.temp)}°C</p>
+                <p>Weather: {weather.weather[0].description}</p>
+               
+              </div>
+            ) : (
+              <p>No weather data available.</p>
             )}
           </div>
         </div>
