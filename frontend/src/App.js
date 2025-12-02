@@ -24,6 +24,15 @@ import ConsultationPage from './pages/admin/ConsultationPage';
 import Inventory from './pages/admin/Inventory';
 import AdminProfile from './pages/admin/AdminProfile';
 
+// Superadmin pages
+import SuperadminDashboard from './pages/superadmin/SuperadminDashboard';
+import SuperadminAllAppointments from './pages/superadmin/SuperadminAllAppointments';
+import SuperadminManageUsers from './pages/superadmin/SuperadminManageUsers';
+import SuperadminReports from './pages/superadmin/SuperadminReports';
+import SuperadminConsultationPage from './pages/superadmin/SuperadminConsultationPage';
+import SuperadminInventory from './pages/superadmin/SuperadminInventory';
+import SuperadminProfile from './pages/superadmin/SuperadminProfile';
+import SuperadminLogs from './pages/superadmin/SuperadminLogs';
 
 
 
@@ -111,12 +120,68 @@ function App() {
       />
 
 
-      {/* Superadmin Routes (redirected to admin) */}
+      {/* Superadmin Routes */}
       <Route
         path="/superadmin-dashboard"
         element={
-          <ProtectedRoute requiredRole="admin">
-            <AdminDashboard />
+          <ProtectedRoute requiredRole="superadmin">
+            <SuperadminDashboard />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/superadmin-appointments"
+        element={
+          <ProtectedRoute requiredRole="superadmin">
+            <SuperadminAllAppointments />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/superadmin-users"
+        element={
+          <ProtectedRoute requiredRole="superadmin">
+            <SuperadminManageUsers />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/superadmin-reports"
+        element={
+          <ProtectedRoute requiredRole="superadmin">
+            <SuperadminReports />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/superadmin-consultation/preview"
+        element={
+          <ProtectedRoute requiredRole="superadmin">
+            <SuperadminConsultationPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/superadmin-inventory"
+        element={
+          <ProtectedRoute requiredRole="superadmin">
+            <SuperadminInventory />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/superadmin-profile"
+        element={
+          <ProtectedRoute requiredRole="superadmin">
+            <SuperadminProfile />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/superadmin-logs"
+        element={
+          <ProtectedRoute requiredRole="superadmin">
+            <SuperadminLogs />
           </ProtectedRoute>
         }
       />

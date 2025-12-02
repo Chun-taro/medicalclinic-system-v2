@@ -235,110 +235,294 @@
   background: #aaa;
 }
 
-/* ===== Responsive ===== */
-@media (max-width: 768px) {
+/* ────────────────────────────────
+   Responsive Design for Patient Profile
+────────────────────────────────── */
+
+/* Large screens (1025px+) */
+@media (min-width: 1025px) {
   .fb-profile-container {
-    padding: 1rem;
+    padding: 3rem 2rem;
+  }
+
+  .fb-header-bar {
+    max-width: 900px;
+    padding: 3rem;
+    gap: 3rem;
+  }
+
+  .fb-avatar {
+    width: 140px;
+    height: 140px;
+  }
+
+  .fb-avatar-wrap {
+    width: 140px;
+    height: 140px;
+  }
+
+  .fb-name {
+    font-size: 2.2rem;
+  }
+
+  .fb-subtitle {
+    font-size: 1.2rem;
+  }
+
+  .fb-actions {
+    gap: 1.5rem;
+  }
+
+  .fb-button {
+    padding: 0.8rem 1.5rem;
+    font-size: 1.1rem;
+  }
+
+  .fb-card {
+    max-width: 900px;
+    padding: 3rem;
+  }
+
+  .fb-card h3 {
+    font-size: 1.6rem;
+  }
+
+  .fb-about-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem 2rem;
+  }
+
+  .modal-content {
+    width: 600px;
+    padding: 3rem;
+  }
+
+  .modal-content h3 {
+    font-size: 1.8rem;
+  }
+
+  .form-group input,
+  .form-group select {
+    font-size: 1.1rem;
+    padding: 0.8rem;
+  }
+
+  .save-button,
+  .cancel-button {
+    font-size: 1.1rem;
+    padding: 0.8rem 1.5rem;
+  }
+}
+
+/* Desktop (769px-1024px) */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .fb-profile-container {
+    padding: 2.5rem 1.5rem;
+  }
+
+  .fb-header-bar {
+    max-width: 850px;
+    padding: 2.5rem;
+    gap: 2.5rem;
+  }
+
+  .fb-avatar {
+    width: 130px;
+    height: 130px;
+  }
+
+  .fb-avatar-wrap {
+    width: 130px;
+    height: 130px;
+  }
+
+  .fb-name {
+    font-size: 2rem;
+  }
+
+  .fb-subtitle {
+    font-size: 1.1rem;
+  }
+
+  .fb-actions {
+    gap: 1.25rem;
+  }
+
+  .fb-button {
+    padding: 0.75rem 1.25rem;
+    font-size: 1rem;
+  }
+
+  .fb-card {
+    max-width: 850px;
+    padding: 2.5rem;
+  }
+
+  .fb-card h3 {
+    font-size: 1.5rem;
+  }
+
+  .fb-about-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.25rem 1.75rem;
+  }
+
+  .modal-content {
+    width: 550px;
+    padding: 2.5rem;
+  }
+
+  .modal-content h3 {
+    font-size: 1.6rem;
+  }
+
+  .form-group input,
+  .form-group select {
+    font-size: 1rem;
+    padding: 0.75rem;
+  }
+
+  .save-button,
+  .cancel-button {
+    font-size: 1rem;
+    padding: 0.75rem 1.25rem;
+  }
+}
+
+/* Tablet (481px-768px) */
+@media (min-width: 481px) and (max-width: 768px) {
+  .fb-profile-container {
+    padding: 2rem 1rem;
   }
 
   .fb-header-bar {
     flex-direction: column;
     align-items: center;
     text-align: center;
-    padding: 1rem;
-  }
-
-  .fb-about-grid {
-    grid-template-columns: 1fr;
-    gap: 0.5rem 0.75rem;
+    padding: 2rem;
+    gap: 2rem;
   }
 
   .fb-avatar {
-    width: 90px;
-    height: 90px;
+    width: 110px;
+    height: 110px;
   }
 
   .fb-avatar-wrap {
-    width: 90px;
-    height: 90px;
+    width: 110px;
+    height: 110px;
   }
 
   .fb-name {
-    font-size: 1.4rem;
+    font-size: 1.8rem;
   }
 
   .fb-subtitle {
-    font-size: 0.85rem;
+    font-size: 1rem;
   }
 
   .fb-actions {
     flex-direction: column;
     width: 100%;
+    gap: 1rem;
   }
 
   .fb-button {
     width: 100%;
-    padding: 0.5rem 0.8rem;
+    padding: 0.7rem 1rem;
+    font-size: 0.95rem;
   }
 
   .fb-card {
-    padding: 1rem;
+    padding: 2rem;
   }
 
   .fb-card h3 {
-    font-size: 1rem;
+    font-size: 1.3rem;
+  }
+
+  .fb-about-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem 1.5rem;
   }
 
   .modal-content {
-    width: 95%;
-    padding: 1rem;
+    width: 90%;
+    padding: 2rem;
+  }
+
+  .modal-content h3 {
+    font-size: 1.4rem;
   }
 
   .form-group input,
   .form-group select {
-    font-size: 0.85rem;
-    padding: 0.5rem;
+    font-size: 0.95rem;
+    padding: 0.7rem;
+  }
+
+  .save-button,
+  .cancel-button {
+    font-size: 0.95rem;
+    padding: 0.7rem 1rem;
   }
 }
 
+/* Mobile (481px and below) */
 @media (max-width: 480px) {
   .fb-profile-container {
-    padding: 0.75rem;
+    padding: 1rem 0.75rem;
   }
 
   .fb-header-bar {
-    padding: 0.75rem;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 1.5rem;
+    gap: 1.5rem;
   }
 
   .fb-avatar {
-    width: 70px;
-    height: 70px;
+    width: 90px;
+    height: 90px;
   }
 
   .fb-avatar-wrap {
-    width: 70px;
-    height: 70px;
+    width: 90px;
+    height: 90px;
   }
 
   .fb-name {
-    font-size: 1.2rem;
+    font-size: 1.5rem;
   }
 
   .fb-subtitle {
-    font-size: 0.8rem;
+    font-size: 0.9rem;
+  }
+
+  .fb-actions {
+    flex-direction: column;
+    width: 100%;
+    gap: 0.75rem;
   }
 
   .fb-button {
-    font-size: 0.85rem;
-    padding: 0.4rem 0.7rem;
+    width: 100%;
+    padding: 0.6rem 0.9rem;
+    font-size: 0.9rem;
   }
 
   .fb-card {
-    padding: 0.75rem;
+    padding: 1.5rem;
   }
 
   .fb-card h3 {
-    font-size: 0.95rem;
+    font-size: 1.2rem;
+  }
+
+  .fb-about-grid {
+    grid-template-columns: 1fr;
+    gap: 0.75rem 1rem;
   }
 
   .fb-label {
@@ -350,18 +534,24 @@
   }
 
   .modal-content {
-    width: 98%;
-    padding: 0.75rem;
+    width: 95%;
+    padding: 1.5rem;
   }
 
   .modal-content h3 {
-    font-size: 1.1rem;
+    font-size: 1.2rem;
+  }
+
+  .form-group input,
+  .form-group select {
+    font-size: 0.9rem;
+    padding: 0.6rem;
   }
 
   .save-button,
   .cancel-button {
-    font-size: 0.85rem;
-    padding: 0.4rem 0.8rem;
+    font-size: 0.9rem;
+    padding: 0.6rem 0.9rem;
   }
 }
 

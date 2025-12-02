@@ -1,0 +1,196 @@
+/* ────────────────────────────────
+   Superadmin Profile Styles
+────────────────────────────────── */
+.admin-profile-container {
+  max-width: 600px;
+  margin: 2rem auto;
+  padding: 1.5rem;
+  background-color: #f9fafb;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.dashboard-heading {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+  color: #1e293b;
+  text-align: center;
+}
+
+.profile-card {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  background-color: #f1f5f9;
+  padding: 1.5rem;
+  border-radius: 10px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+}
+
+.profile-avatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid #3b82f6;
+}
+
+.profile-avatar.initials {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #3b82f6;
+  color: white;
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+
+.profile-details {
+  flex: 1;
+}
+
+.profile-details p {
+  margin: 0.5rem 0;
+  font-size: 1rem;
+  color: #1e293b;
+}
+
+.profile-details p strong {
+  color: #475569;
+}
+
+/* ────────────────────────────────
+   Responsive Design for Superadmin Profile
+────────────────────────────────── */
+
+/* Large screens (1025px+) */
+@media (min-width: 1025px) {
+  .admin-profile-container {
+    max-width: 700px;
+    padding: 2rem;
+    margin: 3rem auto;
+  }
+
+  .dashboard-heading {
+    font-size: 1.8rem;
+  }
+
+  .profile-card {
+    padding: 2rem;
+    gap: 2rem;
+  }
+
+  .profile-avatar {
+    width: 100px;
+    height: 100px;
+  }
+
+  .profile-avatar.initials {
+    font-size: 2rem;
+  }
+
+  .profile-details p {
+    font-size: 1.1rem;
+  }
+}
+
+/* Desktop (769px-1024px) */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .admin-profile-container {
+    max-width: 650px;
+    padding: 1.75rem;
+    margin: 2.5rem auto;
+  }
+
+  .dashboard-heading {
+    font-size: 1.7rem;
+  }
+
+  .profile-card {
+    padding: 1.75rem;
+    gap: 1.75rem;
+  }
+
+  .profile-avatar {
+    width: 90px;
+    height: 90px;
+  }
+
+  .profile-avatar.initials {
+    font-size: 1.7rem;
+  }
+
+  .profile-details p {
+    font-size: 1.05rem;
+  }
+}
+
+/* Tablet (481px-768px) */
+@media (min-width: 481px) and (max-width: 768px) {
+  .admin-profile-container {
+    max-width: 550px;
+    padding: 1.5rem;
+    margin: 2rem auto;
+  }
+
+  .dashboard-heading {
+    font-size: 1.6rem;
+  }
+
+  .profile-card {
+    flex-direction: column;
+    text-align: center;
+    padding: 1.5rem;
+    gap: 1.5rem;
+  }
+
+  .profile-avatar {
+    width: 85px;
+    height: 85px;
+  }
+
+  .profile-avatar.initials {
+    font-size: 1.6rem;
+  }
+
+  .profile-details p {
+    font-size: 1rem;
+  }
+}
+
+/* Mobile (481px and below) */
+@media (max-width: 480px) {
+  .admin-profile-container {
+    max-width: 100%;
+    padding: 1rem;
+    margin: 1rem 0.5rem;
+    border-radius: 8px;
+  }
+
+  .dashboard-heading {
+    font-size: 1.4rem;
+    margin-bottom: 1rem;
+  }
+
+  .profile-card {
+    flex-direction: column;
+    text-align: center;
+    padding: 1.25rem;
+    gap: 1.25rem;
+  }
+
+  .profile-avatar {
+    width: 75px;
+    height: 75px;
+  }
+
+  .profile-avatar.initials {
+    font-size: 1.4rem;
+  }
+
+  .profile-details p {
+    font-size: 0.95rem;
+    margin: 0.4rem 0;
+  }
+}

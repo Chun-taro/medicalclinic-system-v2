@@ -4,6 +4,7 @@ const Medicine = require('../models/Medicine');
 const { google } = require('googleapis');
 const { sendNotification } = require('../utils/sendNotification');
 const sendEmail = require('../utils/mailer');
+const logActivity = require('../utils/logActivity');
 const puppeteer = require('puppeteer');
 
 
@@ -184,6 +185,20 @@ const approveAppointment = async (req, res) => {
     }
 
     const patient = updated.patientId;
+
+    // Log the activity
+    await logActivity(
+      req.user.userId,
+      req.user.name || `${req.user.firstName} ${req.user.lastName}`,
+      req.user.role,
+      'approve_appointment',
+      'appointment',
+      updated._id,
+      {
+        patientName: `${patient.firstName} ${patient.lastName}`,
+        appointmentDate: updated.appointmentDate
+      }
+    );
 
     // In-app notification
     await sendNotification({
@@ -426,6 +441,21 @@ const saveConsultation = async (req, res) => {
 
     await appointment.save();
 
+    // Log the activity
+    await logActivity(
+      req.user.userId,
+      req.user.name || `${req.user.firstName} ${req.user.lastName}`,
+      req.user.role,
+      'complete_consultation',
+      'appointment',
+      appointment._id,
+      {
+        patientName: `${appointment.patientId?.firstName || ''} ${appointment.patientId?.lastName || ''}`.trim(),
+        diagnosis: diagnosis,
+        medicinesCount: medicinesPrescribed?.length || 0
+      }
+    );
+
     // Debug: log saved consultation to verify fields
     console.log('Consultation saved with vitals:', appointment);
 
@@ -446,6 +476,20 @@ const deleteAppointment = async (req, res) => {
 
     const deleted = await Appointment.findByIdAndDelete(req.params.id);
     if (!deleted) return res.status(404).json({ error: 'Appointment not found' });
+
+    // Log the activity
+    await logActivity(
+      req.user.userId,
+      req.user.name || `${req.user.firstName} ${req.user.lastName}`,
+      req.user.role,
+      'delete_appointment',
+      'appointment',
+      deleted._id,
+      {
+        patientName: `${deleted.patientId?.firstName || ''} ${deleted.patientId?.lastName || ''}`.trim(),
+        appointmentDate: deleted.appointmentDate
+      }
+    );
 
     res.json({ message: 'Appointment deleted successfully' });
   } catch (err) {
@@ -566,9 +610,10 @@ const updateAppointment = async (req, res) => {
     }
 
     const isAdmin = req.user.role === 'admin';
+    const isSuperAdmin = req.user.role === 'superadmin';
     const isOwner = String(appointment.patientId._id) === String(req.user.userId);
 
-    if (!isAdmin && !isOwner) {
+    if (!isAdmin && !isSuperAdmin && !isOwner) {
       return res.status(403).json({ error: 'Access denied' });
     }
 
@@ -583,6 +628,23 @@ const updateAppointment = async (req, res) => {
     });
 
     await appointment.save();
+
+    // Log reschedule activity if appointment date changed
+    if (changes.includes('appointmentDate')) {
+      await logActivity(
+        req.user.userId,
+        req.user.name || `${req.user.firstName} ${req.user.lastName}`,
+        req.user.role,
+        'reschedule_appointment',
+        'appointment',
+        appointment._id,
+        {
+          patientName: `${appointment.patientId?.firstName || ''} ${appointment.patientId?.lastName || ''}`.trim(),
+          oldDate: appointment.appointmentDate, // This is the new date, but we can log it
+          newDate: req.body.appointmentDate
+        }
+      );
+    }
 
     // Build notification message if something changed
     if (changes.length > 0) {

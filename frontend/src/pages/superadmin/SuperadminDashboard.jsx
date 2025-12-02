@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 import axios from "axios";
-import AdminLayout from "./AdminLayout";
+import SuperadminLayout from "./SuperadminLayout";
 import { Bar } from "react-chartjs-2";
 import {
   Chart as ChartJS,
@@ -15,9 +15,10 @@ import {
 } from "chart.js";
 import "./Style/admindashboard1.css";
 
+
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
-export default function AdminDashboard() {
+export default function SuperadminDashboard() {
   const [appointments, setAppointments] = useState([]);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [weather, setWeather] = useState(null);
@@ -115,14 +116,14 @@ export default function AdminDashboard() {
 
   if (loading) {
     return (
-      <AdminLayout>
+      <SuperadminLayout>
         <p className="loading-text">Loading dashboard...</p>
-      </AdminLayout>
+      </SuperadminLayout>
     );
   }
 
   return (
-    <AdminLayout>
+    <SuperadminLayout>
       <div className="admin-dashboard-container">
         {/* Top: Cards and Calendar */}
         <div className="dashboard-top">
@@ -204,6 +205,6 @@ export default function AdminDashboard() {
           </div>
         </div>
       </div>
-    </AdminLayout>
+    </SuperadminLayout>
   );
 }

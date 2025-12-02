@@ -155,13 +155,168 @@ body {
   text-decoration: underline;
 }
 
-@media (max-width: 900px) {
+/* ────────────────────────────────
+   Responsive Design for Signup Pages
+────────────────────────────────── */
+
+/* Large screens (1025px+) */
+@media (min-width: 1025px) {
+  .signup-wrapper {
+    padding: 3rem 2rem;
+  }
+
+  .signup-right {
+    padding: 3rem;
+  }
+
+  .signup-form {
+    padding: 3rem;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem 2rem;
+  }
+
+  .signup-form h2 {
+    font-size: 2rem;
+  }
+
+  .signup-form input,
+  .signup-form select {
+    padding: 0.9rem 1rem;
+    font-size: 1.1rem;
+  }
+
+  .signup-form button {
+    padding: 1rem 1.5rem;
+    font-size: 1.1rem;
+  }
+
+  .recaptcha-container {
+    margin: 1.5rem 0;
+  }
+}
+
+/* Desktop (769px-1024px) */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .signup-wrapper {
+    padding: 2rem 1.5rem;
+  }
+
+  .signup-right {
+    padding: 2rem;
+  }
+
+  .signup-form {
+    padding: 2.5rem;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.25rem 1.75rem;
+  }
+
+  .signup-form h2 {
+    font-size: 1.8rem;
+  }
+
+  .signup-form input,
+  .signup-form select {
+    padding: 0.8rem 0.95rem;
+    font-size: 1rem;
+  }
+
+  .signup-form button {
+    padding: 0.95rem 1.25rem;
+    font-size: 1rem;
+  }
+
+  .recaptcha-container {
+    margin: 1.25rem 0;
+  }
+}
+
+/* Tablet (481px-768px) */
+@media (min-width: 481px) and (max-width: 768px) {
+  .signup-wrapper {
+    padding: 1.5rem 1rem;
+  }
+
+  .signup-right {
+    padding: 1.5rem;
+  }
+
   .signup-form {
     grid-template-columns: 1fr;
-    padding: 1.5rem;
+    padding: 2rem;
+    gap: 1rem 1.5rem;
+  }
+
+  .signup-form h2 {
+    font-size: 1.6rem;
+  }
+
+  .signup-form input,
+  .signup-form select {
+    padding: 0.75rem 0.85rem;
+    font-size: 0.95rem;
+  }
+
+  .signup-form button {
+    padding: 0.85rem 1.1rem;
+    font-size: 0.95rem;
+  }
+
+  .recaptcha-container {
+    margin: 1rem 0;
+  }
+}
+
+/* Mobile (481px and below) */
+@media (max-width: 480px) {
+  .signup-wrapper {
+    padding: 0.75rem 0.5rem;
   }
 
   .signup-right {
     padding: 1rem;
+  }
+
+  .signup-form {
+    grid-template-columns: 1fr;
+    padding: 1.5rem;
+    gap: 0.75rem 1rem;
+  }
+
+  .signup-form h2 {
+    font-size: 1.4rem;
+  }
+
+  .signup-form input,
+  .signup-form select {
+    padding: 0.7rem 0.8rem;
+    font-size: 0.9rem;
+  }
+
+  .signup-form button {
+    padding: 0.8rem 1rem;
+    font-size: 0.9rem;
+  }
+
+  .recaptcha-container {
+    margin: 0.75rem 0;
+  }
+
+  .section-divider {
+    margin: 1rem 0 0.25rem;
+    font-size: 0.9rem;
+  }
+
+  .google-button {
+    width: 100%;
+    height: 40px;
+  }
+
+  .signup-form p {
+    font-size: 0.85rem;
+  }
+
+  .signup-form span {
+    font-size: 0.85rem;
   }
 }

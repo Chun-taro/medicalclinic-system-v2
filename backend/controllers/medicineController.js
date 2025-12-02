@@ -4,6 +4,7 @@ const jwt = require('jsonwebtoken');
 const PDFDocument = require('pdfkit');
 const fs = require('fs');
 const path = require('path');
+const logActivity = require('../utils/logActivity');
 
 // Get all medicines (admin or superadmin only)
 const getAllMedicines = async (req, res) => {
@@ -166,6 +167,21 @@ const deductMedicines = async (req, res) => {
       });
 
       await med.save({ session });
+
+      // Log the activity for each dispensed medicine
+      await logActivity(
+        userId,
+        req.user?.name || `${req.user?.firstName} ${req.user?.lastName}` || 'Unknown',
+        req.user?.role || 'admin',
+        'dispense_medicine',
+        'medicine',
+        med._id,
+        {
+          medicineName: med.name,
+          quantity: qty,
+          appointmentId: item.appointmentId
+        }
+      );
     }
 
     await session.commitTransaction();
