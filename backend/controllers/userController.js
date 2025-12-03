@@ -1,4 +1,6 @@
 const User = require('../models/User');
+const logActivity = require('../utils/logActivity');
+const { optimisticUpdate } = require('../utils/concurrencyControl');
 
 // Get all users (admin or superadmin only)
 const getAllUsers = async (req, res) => {

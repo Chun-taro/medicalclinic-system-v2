@@ -690,7 +690,7 @@ const updateAppointment = async (req, res) => {
         appointment._id,
         {
           patientName: `${appointment.patientId?.firstName || ''} ${appointment.patientId?.lastName || ''}`.trim(),
-          oldDate: appointment.appointmentDate, // This is the new date, but we can log it
+          oldDate: appointment.appointmentDate,
           newDate: req.body.appointmentDate
         }
       );

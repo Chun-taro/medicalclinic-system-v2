@@ -120,6 +120,7 @@ export default function PatientLayout({ children }) {
       <main className="main-content">
         <nav className="navbar">
   <div className="navbar-group">
+    <img src="../logo.png" alt="Logo" className="navbar-logo" />
     <h1 className="fb-name">{user.firstName} {user.middleName} {user.lastName}</h1>
 
     <div className="navbar-actions">

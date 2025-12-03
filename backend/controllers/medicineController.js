@@ -67,47 +67,65 @@ const createMedicine = async (req, res) => {
 const dispenseCapsules = async (req, res) => {
   try {
     const { id } = req.params;
-    const { quantity, appointmentId, version } = req.body;
+    const { quantity, appointmentId } = req.body;
 
-    const med = await Medicine.findOneAndUpdate(
-      { _id: id, version: version },
-      {
-        $inc: { quantityInStock: -quantity, version: 1 },
-        $set: { available: { $gt: ['$quantityInStock', quantity] } }
-      },
+    // Fetch medicine to check stock
+    const med = await Medicine.findById(id);
+    if (!med) {
+      return res.status(404).json({ error: 'Medicine not found' });
+    }
+
+    if (med.quantityInStock < quantity) {
+      return res.status(400).json({ error: 'Not enough stock' });
+    }
+
+    // Update using aggregation pipeline
+    const updatedMed = await Medicine.findOneAndUpdate(
+      { _id: id },
+      [
+        {
+          $set: {
+            quantityInStock: { $subtract: ['$quantityInStock', quantity] },
+            version: { $add: ['$version', 1] },
+            available: { $gt: [{ $subtract: ['$quantityInStock', quantity] }, 0] }
+          }
+        }
+      ],
       { new: true }
     );
 
-    if (!med) {
-      return res.status(409).json({ error: 'Medicine version conflict or not found' });
-    }
-
-    // Extract user ID from token
-    const authHeader = req.headers.authorization || '';
-    const token = authHeader.split(' ')[1];
-    let userId = null;
-    if (token) {
-      try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        userId = decoded.id;
-      } catch (err) {
-        console.warn('Token decode failed:', err.message);
-      }
+    if (!updatedMed) {
+      return res.status(500).json({ error: 'Failed to update medicine' });
     }
 
     // Log dispense history
-    med.dispenseHistory = med.dispenseHistory || [];
-    med.dispenseHistory.push({
+    updatedMed.dispenseHistory = updatedMed.dispenseHistory || [];
+    updatedMed.dispenseHistory.push({
       appointmentId: appointmentId ? new mongoose.Types.ObjectId(appointmentId) : null,
       quantity,
-      dispensedBy: userId ? new mongoose.Types.ObjectId(userId) : null,
+      dispensedBy: req.user.id,
       dispensedAt: new Date(),
       source: appointmentId ? 'consultation' : 'manual'
     });
 
-    await med.save();
+    await updatedMed.save();
 
-    res.json({ message: 'Medicine dispensed', medicine: med, version: med.version });
+    // Log the activity
+    await logActivity(
+      req.user.userId,
+      req.user?.name || `${req.user?.firstName} ${req.user?.lastName}` || 'Unknown',
+      req.user?.role || 'admin',
+      'dispense_medicine',
+      'medicine',
+      updatedMed._id,
+      {
+        medicineName: updatedMed.name,
+        quantity,
+        appointmentId
+      }
+    );
+
+    res.json({ message: 'Medicine dispensed', medicine: updatedMed, version: updatedMed.version });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

@@ -3,7 +3,7 @@ import axios from 'axios';
 import SuperadminLayout from './SuperadminLayout';
 import './Style/appointment-table.css';
 
-export default function SuperadminAllAppointments() {
+export default function AllAppointments() {
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -222,21 +222,29 @@ export default function SuperadminAllAppointments() {
                     </tr>
                   </thead>
                   <tbody>
-  {filteredAppointments.filter(app => app.status === 'pending').map(app => (
-    <tr key={app._id}>
-      <td>{app.patientId?.firstName || app.firstName || 'N/A'} {app.patientId?.lastName || app.lastName || ''}</td>
-      <td>{new Date(app.appointmentDate).toLocaleDateString()}</td>
-      <td>{app.patientId?.email || app.email || 'N/A'}</td>
-      <td>{app.patientId?.contactNumber || app.phone || 'N/A'}</td>
-      <td>{app.purpose}</td>
-      <td><span className="status-tag pending">Pending</span></td>
-      <td className="action-cell">
-        <button onClick={() => handleApprove(app._id)}>✅</button>
-        <button onClick={() => openEditModal(app)}>✏️</button>
-        <button onClick={() => handleDelete(app._id)}>🗑️</button>
+  {filteredAppointments.filter(app => app.status === 'pending').length === 0 ? (
+    <tr>
+      <td colSpan="7" style={{ textAlign: 'center', padding: '20px', fontStyle: 'italic', color: '#666' }}>
+        No pending appointments
       </td>
     </tr>
-  ))}
+  ) : (
+    filteredAppointments.filter(app => app.status === 'pending').map(app => (
+      <tr key={app._id}>
+        <td>{app.patientId?.firstName || app.firstName || 'N/A'} {app.patientId?.lastName || app.lastName || ''}</td>
+        <td>{new Date(app.appointmentDate).toLocaleDateString()}</td>
+        <td>{app.patientId?.email || app.email || 'N/A'}</td>
+        <td>{app.patientId?.contactNumber || app.phone || 'N/A'}</td>
+        <td>{app.purpose}</td>
+        <td><span className="status-tag pending">Pending</span></td>
+        <td className="action-cell">
+          <button onClick={() => handleApprove(app._id)}>✅</button>
+          <button onClick={() => openEditModal(app)}>✏️</button>
+          <button onClick={() => handleDelete(app._id)}>🗑️</button>
+        </td>
+      </tr>
+    ))
+  )}
 </tbody>
                 </table>
               </div>
@@ -260,20 +268,28 @@ export default function SuperadminAllAppointments() {
                     </tr>
                   </thead>
                   <tbody>
-  {filteredAppointments.filter(app => app.status === 'approved').map(app => (
-    <tr key={app._id}>
-      <td>{app.patientId?.firstName || app.firstName || 'N/A'} {app.patientId?.lastName || app.lastName || ''}</td>
-      <td>{new Date(app.appointmentDate).toLocaleDateString()}</td>
-      <td>{app.patientId?.email || app.email || 'N/A'}</td>
-      <td>{app.patientId?.contactNumber || app.phone || 'N/A'}</td>
-      <td>{app.purpose}</td>
-      <td><span className="status-tag confirmed">Approved</span></td>
-      <td className="action-cell">
-        <button onClick={() => openEditModal(app)}>✏️</button>
-        <button onClick={() => handleDelete(app._id)}>🗑️</button>
+  {filteredAppointments.filter(app => app.status === 'approved').length === 0 ? (
+    <tr>
+      <td colSpan="7" style={{ textAlign: 'center', padding: '20px', fontStyle: 'italic', color: '#666' }}>
+        No approved appointments
       </td>
     </tr>
-  ))}
+  ) : (
+    filteredAppointments.filter(app => app.status === 'approved').map(app => (
+      <tr key={app._id}>
+        <td>{app.patientId?.firstName || app.firstName || 'N/A'} {app.patientId?.lastName || app.lastName || ''}</td>
+        <td>{new Date(app.appointmentDate).toLocaleDateString()}</td>
+        <td>{app.patientId?.email || app.email || 'N/A'}</td>
+        <td>{app.patientId?.contactNumber || app.phone || 'N/A'}</td>
+        <td>{app.purpose}</td>
+        <td><span className="status-tag confirmed">Approved</span></td>
+        <td className="action-cell">
+          <button onClick={() => openEditModal(app)}>✏️</button>
+          <button onClick={() => handleDelete(app._id)}>🗑️</button>
+        </td>
+      </tr>
+    ))
+  )}
 </tbody>
                 </table>
               </div>
