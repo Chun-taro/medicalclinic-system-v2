@@ -49,13 +49,13 @@ app.use(express.json());
 
 // Session setup
 app.use(session({
-  secret: process.env.SESSION_SECRET || 'MySecretKey',
+  secret: process.env.SESSION_SECRET,
   resave: false,
   saveUninitialized: false,
   cookie: {
-    secure: process.env.NODE_ENV === 'production', // only secure in prod
+    secure: process.env.NODE_ENV === 'production',
     httpOnly: true,
-    maxAge: 1000 * 60 * 60 * 24 // 1 day
+    maxAge: 1000 * 60 * 60 * 24 
   }
 }));
 
