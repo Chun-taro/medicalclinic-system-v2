@@ -29,7 +29,7 @@
 /* Stats cards responsive grid */
 .stats-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  grid-template-columns: repeat(2, 1fr);
   gap: 1rem;
   flex: 1;
 }
@@ -96,7 +96,8 @@
   border: none;
   font-family: 'Inter', sans-serif;
   border-radius: 10px;
-  font-size: 1.2rem; /* Bigger overall font */
+  font-size: 1.4rem; /* Even bigger overall font */
+  min-height: 400px; /* Make calendar taller */
 }
 
 /* ──────────────── Dashboard Bottom ──────────────── */
@@ -142,6 +143,7 @@
   color: #334155;
   transition: background 0.2s ease, color 0.2s ease;
   font-size: 1.1rem; /* Bigger font */
+  position: relative; /* For absolute positioning of count */
 }
 
 .react-calendar__tile--active {
@@ -161,6 +163,21 @@
 .react-calendar__tile:enabled:hover {
   background: #dbeafe;
   border-radius: 6px;
+}
+
+/* Appointment count on calendar tiles */
+.appointment-count {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  background: #ef4444;
+  color: white;
+  font-size: 0.7rem;
+  padding: 1px 4px;
+  border-radius: 50%;
+  font-weight: bold;
+  min-width: 16px;
+  text-align: center;
 }
 
 /* ──────────────── Appointment List ──────────────── */

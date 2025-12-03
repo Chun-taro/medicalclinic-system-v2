@@ -93,6 +93,9 @@ const appointmentSchema = new mongoose.Schema({
   //  Consultation tracking
   consultationCompletedAt: Date,
 
+  // Google Calendar integration
+  googleCalendarEventId: String,
+
   // Version for optimistic concurrency control
   version: { type: Number, default: 0 }
 }, { timestamps: true });

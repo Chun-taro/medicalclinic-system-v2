@@ -79,16 +79,21 @@ const getProfile = async (req, res) => {
 //  Update profile of logged-in user
 const updateProfile = async (req, res) => {
   try {
-    const updates = req.body;
-    const updatedUser = await User.findByIdAndUpdate(
-      req.user.userId,
-      updates,
+    const { version, ...updates } = req.body;
+
+    const updatedUser = await optimisticUpdate(
+      User,
+      { _id: req.user.userId, version: version },
+      { ...updates, $inc: { version: 1 } },
       { new: true }
     ).select('-password');
 
     if (!updatedUser) return res.status(404).json({ error: 'User not found' });
-    res.json({ message: 'Profile updated successfully', user: updatedUser });
+    res.json({ message: 'Profile updated successfully', user: updatedUser, version: updatedUser.version });
   } catch (err) {
+    if (err.message.includes('version conflict')) {
+      return res.status(409).json({ error: 'Profile was modified by another process. Please refresh and try again.' });
+    }
     res.status(500).json({ error: err.message });
   }
 };

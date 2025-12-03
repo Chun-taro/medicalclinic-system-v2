@@ -5,6 +5,7 @@ const PDFDocument = require('pdfkit');
 const fs = require('fs');
 const path = require('path');
 const logActivity = require('../utils/logActivity');
+const { optimisticUpdate } = require('../utils/concurrencyControl');
 
 // Get all medicines (admin or superadmin only)
 const getAllMedicines = async (req, res) => {

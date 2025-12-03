@@ -15,9 +15,10 @@ import {
 } from "chart.js";
 import "./Style/admindashboard1.css";
 
+
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
-export default function AdminDashboard() {
+export default function SuperadminDashboard() {
   const [appointments, setAppointments] = useState([]);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [weather, setWeather] = useState(null);
@@ -88,6 +89,12 @@ export default function AdminDashboard() {
       new Date(app.appointmentDate).toDateString() === selectedDate.toDateString()
   );
 
+  const dateCount = {};
+  appointments.forEach((app) => {
+    const dateStr = new Date(app.appointmentDate).toDateString();
+    dateCount[dateStr] = (dateCount[dateStr] || 0) + 1;
+  });
+
   const highlightDates = ({ date, view }) => {
     if (view === "month") {
       const hasAppointment = appointments.some(
@@ -95,6 +102,13 @@ export default function AdminDashboard() {
           new Date(app.appointmentDate).toDateString() === date.toDateString()
       );
       return hasAppointment ? "has-appointment" : null;
+    }
+  };
+
+  const tileContent = ({ date, view }) => {
+    if (view === "month") {
+      const count = dateCount[date.toDateString()];
+      return count ? <span className="appointment-count">{count}</span> : null;
     }
   };
 
@@ -127,45 +141,44 @@ export default function AdminDashboard() {
         {/* Top: Cards and Calendar */}
         <div className="dashboard-top">
           <h2 className="dashboard-heading">📊 Dashboard Overview</h2>
-          <div className="top-row">
-            <div className="stats-grid">
-              <div className="stat-card blue">
-                <h3>Total Appointments</h3>
-                <p>{stats.totalAppointments}</p>
-              </div>
-              <div className="stat-card green">
-                <h3>Total Users</h3>
-                <p>{stats.totalUsers}</p>
-              </div>
-              <div className="stat-card yellow">
-                <h3>Today's Appointments</h3>
-                <p>{stats.todayAppointments}</p>
-              </div>
-              <div className="stat-card purple">
-                <h3>Weather</h3>
-                {weatherLoading ? (
-                  <p>Loading...</p>
-                ) : weatherError ? (
-                  <p style={{ color: 'red', fontSize: '12px' }}>{weatherError}</p>
-                ) : weather ? (
-                  <div>
-                    <p>{Math.round(weather.main.temp)}°C</p>
-                    <p style={{ fontSize: '12px' }}>{weather.weather[0].description}</p>
-                  </div>
-                ) : (
-                  <p>No data</p>
-                )}
-              </div>
+          <div className="stats-grid">
+            <div className="stat-card blue">
+              <h3>Total Appointments</h3>
+              <p>{stats.totalAppointments}</p>
             </div>
-            <div className="calendar-card">
-              <h2 className="dashboard-heading">📅 Calendar</h2>
-              <Calendar
-                value={selectedDate}
-                onChange={setSelectedDate}
-                className="styled-calendar"
-                tileClassName={highlightDates}
-              />
+            <div className="stat-card green">
+              <h3>Total Users</h3>
+              <p>{stats.totalUsers}</p>
             </div>
+            <div className="stat-card yellow">
+              <h3>Today's Appointments</h3>
+              <p>{stats.todayAppointments}</p>
+            </div>
+            <div className="stat-card purple">
+              <h3>Weather</h3>
+              {weatherLoading ? (
+                <p>Loading...</p>
+              ) : weatherError ? (
+                <p style={{ color: 'red', fontSize: '12px' }}>{weatherError}</p>
+              ) : weather ? (
+                <div>
+                  <p>{Math.round(weather.main.temp)}°C</p>
+                  <p style={{ fontSize: '12px' }}>{weather.weather[0].description}</p>
+                </div>
+              ) : (
+                <p>No data</p>
+              )}
+            </div>
+          </div>
+          <div className="calendar-card">
+            <h2 className="dashboard-heading">📅 Calendar</h2>
+            <Calendar
+              value={selectedDate}
+              onChange={setSelectedDate}
+              className="styled-calendar"
+              tileClassName={highlightDates}
+              tileContent={tileContent}
+            />
           </div>
         </div>
 

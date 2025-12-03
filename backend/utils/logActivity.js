@@ -7,8 +7,7 @@ const logActivity = async (adminId, adminName, adminRole, action, entityType, en
       action,
       entityType,
       entityId,
-      details,
-      description: `${adminName} (${adminRole}) performed ${action} on ${entityType}`
+      details
     });
     await log.save();
   } catch (error) {

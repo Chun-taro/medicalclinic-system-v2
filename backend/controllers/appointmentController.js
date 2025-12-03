@@ -5,7 +5,7 @@ const { google } = require('googleapis');
 const { sendNotification } = require('../utils/sendNotification');
 const sendEmail = require('../utils/mailer');
 const logActivity = require('../utils/logActivity');
-const puppeteer = require('puppeteer');
+
 
 
 
@@ -148,6 +148,42 @@ const updateAppointmentStatus = async (req, res) => {
 
     const patient = appointment.patientId;
 
+    // Delete Google Calendar event if appointment is rejected/cancelled
+    if (status === 'rejected' && appointment.googleCalendarEventId && patient) {
+      try {
+        if (patient.googleRefreshToken || patient.googleAccessToken) {
+          const oauth2Client = new google.auth.OAuth2(
+            process.env.GOOGLE_CLIENT_ID,
+            process.env.GOOGLE_CLIENT_SECRET,
+            process.env.GOOGLE_REDIRECT_URI
+          );
+
+          if (patient.googleRefreshToken) {
+            oauth2Client.setCredentials({ refresh_token: patient.googleRefreshToken });
+            const access = await oauth2Client.getAccessToken();
+            if (access && access.token) {
+              oauth2Client.setCredentials({ access_token: access.token, refresh_token: patient.googleRefreshToken });
+            }
+          } else {
+            oauth2Client.setCredentials({ access_token: patient.googleAccessToken });
+          }
+
+          const calendar = google.calendar({ version: 'v3', auth: oauth2Client });
+          await calendar.events.delete({
+            calendarId: 'primary',
+            eventId: appointment.googleCalendarEventId
+          });
+          console.log('Google Calendar event deleted (patient):', appointment.googleCalendarEventId);
+
+          // Clear the event ID from the appointment
+          appointment.googleCalendarEventId = null;
+          await appointment.save();
+        }
+      } catch (calendarErr) {
+        console.error('Failed to delete Google Calendar event:', calendarErr.message);
+      }
+    }
+
     // Send email notification
     await sendEmail({
       to: patient.email,
@@ -169,18 +205,28 @@ const updateAppointmentStatus = async (req, res) => {
 
 // Approve appointment
 const approveAppointment = async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
   try {
     if (req.user.role !== 'admin' && req.user.role !== 'superadmin') {
+      await session.abortTransaction();
+      session.endSession();
       return res.status(403).json({ error: 'Access denied' });
     }
 
-    const updated = await Appointment.findByIdAndUpdate(
-      req.params.id,
-      { status: 'approved' },
-      { new: true }
+    const { version } = req.body;
+
+    const updated = await optimisticUpdate(
+      Appointment,
+      { _id: req.params.id, version: version },
+      { status: 'approved', $inc: { version: 1 } },
+      { new: true, session }
     ).populate('patientId');
 
     if (!updated || !updated.patientId) {
+      await session.abortTransaction();
+      session.endSession();
       return res.status(404).json({ error: 'Appointment or patient not found' });
     }
 
@@ -272,6 +318,10 @@ const approveAppointment = async (req, res) => {
         const calendar = google.calendar({ version: 'v3', auth: oauth2Client });
         const resp = await calendar.events.insert({ calendarId: 'primary', resource: event });
         console.log('Google Calendar event created (patient):', resp.data.id);
+
+        // Store the Google Calendar event ID in the appointment
+        updated.googleCalendarEventId = resp.data.id;
+        await updated.save();
       } else {
         // No patient tokens — fall through to clinic invite flow
         throw new Error('No patient Google tokens');
@@ -619,7 +669,7 @@ const updateAppointment = async (req, res) => {
 
     // Track changes
     const changes = [];
-    const allowedFields = ['appointmentDate', 'purpose', 'typeOfVisit', 'diagnosis'];
+    const allowedFields = ['appointmentDate', 'purpose', 'typeOfVisit', 'diagnosis', 'status'];
     allowedFields.forEach(field => {
       if (req.body[field] !== undefined && req.body[field] !== appointment[field]) {
         appointment[field] = req.body[field];
@@ -740,134 +790,9 @@ const prescribeMedicines = async (req, res) => {
   }
 };
 
-const generateCertificatePDF = async (req, res) => {
-  try {
-    const appointment = await Appointment.findById(req.params.id).populate('patientId', 'firstName lastName');
-    if (!appointment) {
-      return res.status(404).json({ error: 'Appointment not found' });
-    }
 
-    const patient = appointment.patientId;
-    if (!patient) {
-      return res.status(404).json({ error: 'Patient not found' });
-    }
 
-    // Mark appointment as completed when certificate is generated
-    appointment.status = 'completed';
-    appointment.consultationCompletedAt = new Date();
-    await appointment.save();
 
-    const htmlContent = `
-      <!DOCTYPE html>
-      <html lang="en">
-      <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Medical Certificate</title>
-        <style>
-          body {
-            font-family: 'Times New Roman', serif;
-            margin: 40px;
-            line-height: 1.6;
-            color: #333;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-          }
-          .content {
-            flex: 1;
-          }
-          .header {
-            text-align: center;
-            margin-bottom: 40px;
-          }
-          .header h1 {
-            font-size: 24px;
-            margin-bottom: 10px;
-          }
-          .header p {
-            font-size: 14px;
-            margin: 5px 0;
-          }
-          .certificate-content {
-            margin: 40px 0;
-          }
-          .certificate-content p {
-            margin: 20px 0;
-            font-size: 16px;
-          }
-          .footer {
-            margin-top: auto;
-            text-align: left;
-          }
-          .signature-section {
-            margin-bottom: 20px;
-          }
-          .signature-line {
-            border-bottom: 1px solid #000;
-            width: 300px;
-            margin-top: 10px;
-            margin-bottom: 10px;
-          }
-          .date-section {
-            margin-top: 10px;
-          }
-        </style>
-      </head>
-      <body>
-        <div class="content">
-          <div class="header">
-            <h1>Medical Certificate</h1>
-            <p>Medical Center Name</p>
-            <p>Address Line 1</p>
-            <p>City, State, ZIP Code</p>
-            <p>Phone: (123) 456-7890</p>
-          </div>
-
-          <div class="certificate-content">
-            <p>This is to certify that</p>
-            <p><strong>${patient.firstName} ${patient.lastName}</strong></p>
-            <p><strong>Purpose:</strong> ${appointment.purpose || 'Medical Certificate'}</p>
-            <p><strong>Diagnosis:</strong> ${appointment.diagnosis || 'N/A'}</p>
-            <p><strong>Fit to Work:</strong> ${appointment.fitToWork === 'yes' ? 'Yes' : appointment.fitToWork === 'no' ? 'No' : 'N/A'}</p>
-            ${appointment.fitToWork === 'yes' ? `<p><strong>Fit to Work From:</strong> ${appointment.fitToWorkFrom ? new Date(appointment.fitToWorkFrom).toLocaleDateString() : 'N/A'}</p><p><strong>Fit to Work To:</strong> ${appointment.fitToWorkTo ? new Date(appointment.fitToWorkTo).toLocaleDateString() : 'N/A'}</p>` : ''}
-            ${appointment.fitToWork === 'no' ? `<p><strong>Rest Days:</strong> ${appointment.restDays || 'N/A'}</p>` : ''}
-            <p><strong>Remarks:</strong> ${appointment.remarks || 'N/A'}</p>
-            <p>The examination was conducted on <strong>${appointment.consultationCompletedAt ? new Date(appointment.consultationCompletedAt).toLocaleDateString() : new Date().toLocaleDateString()}</strong>.</p>
-            <p><strong>Report ID:</strong> ${appointment._id}</p>
-          </div>
-        </div>
-
-        <div class="footer">
-          <div class="signature-section">
-            <p>Doctor's Signature:</p>
-            <div class="signature-line"></div>
-            <p>Dr. [Doctor's Name]</p>
-            <p>License Number: [License #]</p>
-          </div>
-
-          <div class="date-section">
-            <p>Date: ${new Date().toLocaleDateString()}</p>
-          </div>
-        </div>
-      </body>
-      </html>
-    `;
-
-    const browser = await puppeteer.launch();
-    const page = await browser.newPage();
-    await page.setContent(htmlContent);
-    const pdfBuffer = await page.pdf({ format: 'A4', printBackground: true });
-    await browser.close();
-
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', `attachment; filename="medical_certificate_${appointment._id}.pdf"`);
-    res.send(pdfBuffer);
-  } catch (err) {
-    console.error('PDF generation error:', err.message);
-    res.status(500).json({ error: 'Failed to generate PDF' });
-  }
-};
 
 module.exports = {
   bookAppointment,
@@ -884,6 +809,5 @@ module.exports = {
   getConsultationById,
   updateAppointment,
   saveConsultation,
-  prescribeMedicines,
-  generateCertificatePDF
-};
+  prescribeMedicines
+}

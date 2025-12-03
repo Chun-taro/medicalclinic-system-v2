@@ -143,7 +143,10 @@ lastAdmissionTypeLocation: { type: String, trim: true },
   resetTokenExpiry: Date,
 
   //  Profile Picture
-  avatar: { type: String, default: '' }
+  avatar: { type: String, default: '' },
+
+  // Version for optimistic concurrency control
+  version: { type: Number, default: 0 }
 }, { timestamps: true });
 
 module.exports = mongoose.model('User', userSchema);

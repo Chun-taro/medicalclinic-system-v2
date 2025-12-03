@@ -81,27 +81,22 @@ export default function SuperadminConsultationPage() {
     }
   };
 
-  const handleGenerateCertificate = async (appointment) => {
+  const handleFinishCertificate = async (appointment) => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get(`http://localhost:5000/api/appointments/${appointment._id}/certificate-pdf`, {
-        headers: { Authorization: `Bearer ${token}` },
-        responseType: 'blob'
-      });
-
-      const url = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', `medical_certificate_${appointment._id}.pdf`);
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-
-      // Navigate to Reports page with medical-certificates tab
-      window.location.href = '/admin-reports?tab=medical-certificates';
+      await axios.patch(
+        `http://localhost:5000/api/appointments/${appointment._id}`,
+        { status: 'completed' },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      alert('Medical certificate completed');
+      setShowPDFModal(false);
+      // Remove the completed appointment from the list immediately
+      setApprovedAppointments(prev => prev.filter(app => app._id !== appointment._id));
+      window.location.href = '/superadmin-reports?tab=medical-certificates';
     } catch (err) {
-      console.error('Error downloading certificate:', err);
-      alert('Failed to download certificate');
+      console.error('Error finishing certificate:', err);
+      alert('Failed to finish certificate');
     }
   };
 
@@ -364,10 +359,7 @@ export default function SuperadminConsultationPage() {
                 <p>Purpose: {selectedPDFAppointment.purpose}</p>
                 <p>Date: {new Date(selectedPDFAppointment.appointmentDate).toLocaleDateString()}</p>
                 <button
-                  onClick={() => {
-                    handleGenerateCertificate(selectedPDFAppointment);
-                    setShowPDFModal(false);
-                  }}
+                  onClick={() => handleFinishCertificate(selectedPDFAppointment)}
                   style={{
                     padding: '10px 20px',
                     backgroundColor: '#007bff',
@@ -378,7 +370,7 @@ export default function SuperadminConsultationPage() {
                     marginTop: '20px'
                   }}
                 >
-                  🖨️ Print Certificate
+                  Done
                 </button>
               </div>
             </div>

@@ -21,6 +21,9 @@ export default function ConsultationPage() {
   const [showPDFModal, setShowPDFModal] = useState(false);
   const [selectedPDFAppointment, setSelectedPDFAppointment] = useState(null);
 
+  const [showOngoingModal, setShowOngoingModal] = useState(false);
+  const [selectedOngoingAppointment, setSelectedOngoingAppointment] = useState(null);
+
   const [form, setForm] = useState({
     bloodPressure: '',
     temperature: '',
@@ -105,6 +108,25 @@ export default function ConsultationPage() {
     }
   };
 
+  const handleFinishCertificate = async (appointment) => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.patch(
+        `http://localhost:5000/api/appointments/${appointment._id}`,
+        { status: 'completed' },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      alert('Medical certificate completed');
+      setShowPDFModal(false);
+      // Remove the completed appointment from the list immediately
+      setApprovedAppointments(prev => prev.filter(app => app._id !== appointment._id));
+      window.location.href = '/admin-reports?tab=medical-certificates';
+    } catch (err) {
+      console.error('Error finishing certificate:', err);
+      alert('Failed to finish certificate');
+    }
+  };
+
   useEffect(() => {
     fetchApprovedAppointments();
     fetchMedicines();
@@ -112,7 +134,7 @@ export default function ConsultationPage() {
 
   // Only disable body scrolling while a modal is open
   useEffect(() => {
-    if (showModal || showMRFModal) {
+    if (showModal || showMRFModal || showPDFModal) {
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = '';
@@ -120,7 +142,7 @@ export default function ConsultationPage() {
     return () => {
       document.body.style.overflow = '';
     };
-  }, [showModal, showMRFModal]);
+  }, [showModal, showMRFModal, showPDFModal]);
 
   const handleStartConsultation = appointment => {
     setSelectedAppointment(appointment);
@@ -358,16 +380,14 @@ export default function ConsultationPage() {
           <div className="modal-overlay">
             <div className="consultation-modal">
               <button className="close-button" onClick={() => setShowPDFModal(false)}>✖</button>
-              <h3 className="modal-title">📄 Print Medical Certificate</h3>
+              <h3 className="modal-title">Medical Certificate Ongoing</h3>
               <div style={{ textAlign: 'center', padding: '20px' }}>
+                <p>Medical certificate ongoing</p>
                 <p>Patient: {selectedPDFAppointment.patientId?.firstName} {selectedPDFAppointment.patientId?.lastName}</p>
                 <p>Purpose: {selectedPDFAppointment.purpose}</p>
                 <p>Date: {new Date(selectedPDFAppointment.appointmentDate).toLocaleDateString()}</p>
                 <button
-                  onClick={() => {
-                    handleGenerateCertificate(selectedPDFAppointment);
-                    setShowPDFModal(false);
-                  }}
+                  onClick={() => handleFinishCertificate(selectedPDFAppointment)}
                   style={{
                     padding: '10px 20px',
                     backgroundColor: '#007bff',
@@ -378,7 +398,7 @@ export default function ConsultationPage() {
                     marginTop: '20px'
                   }}
                 >
-                  🖨️ Print Certificate
+                  Done
                 </button>
               </div>
             </div>

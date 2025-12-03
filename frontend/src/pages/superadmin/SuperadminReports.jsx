@@ -253,40 +253,6 @@ export default function Reports() {
                           <p>
                             <strong>Purpose:</strong> {selected.purpose || '—'}
                           </p>
-                          <button
-                            onClick={async () => {
-                              try {
-                                const token = localStorage.getItem("token");
-                                const response = await axios.get(`http://localhost:5000/api/appointments/${selected._id}/certificate-pdf`, {
-                                  headers: { Authorization: `Bearer ${token}` },
-                                  responseType: 'blob'
-                                });
-
-                                const url = window.URL.createObjectURL(new Blob([response.data]));
-                                const link = document.createElement('a');
-                                link.href = url;
-                                link.setAttribute('download', `medical_certificate_${selected._id}.pdf`);
-                                document.body.appendChild(link);
-                                link.click();
-                                link.remove();
-                                window.URL.revokeObjectURL(url);
-                              } catch (err) {
-                                console.error('Error downloading certificate:', err);
-                                alert('Failed to download certificate');
-                              }
-                            }}
-                            style={{
-                              padding: '8px 16px',
-                              backgroundColor: '#007bff',
-                              color: 'white',
-                              border: 'none',
-                              borderRadius: '4px',
-                              cursor: 'pointer',
-                              marginTop: '10px'
-                            }}
-                          >
-                            Download PDF
-                          </button>
                         </>
                       ) : (
                         <>

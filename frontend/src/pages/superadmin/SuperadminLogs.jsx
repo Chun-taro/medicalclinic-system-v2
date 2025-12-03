@@ -168,7 +168,6 @@ export default function SuperadminLogs() {
                   <th>Admin</th>
                   <th>Entity</th>
                   <th>Timestamp</th>
-                  <th>Description</th>
                   <th>Details</th>
                 </tr>
               </thead>
@@ -182,9 +181,6 @@ export default function SuperadminLogs() {
                     <td>{log.adminId?.firstName} {log.adminId?.lastName}</td>
                     <td>{log.entityType}</td>
                     <td>{formatDateTime(log.timestamp)}</td>
-                    <td className="description-cell">
-                      {log.description || '—'}
-                    </td>
                     <td>
                       <button
                         className="details-toggle"
@@ -199,42 +195,35 @@ export default function SuperadminLogs() {
             </table>
           )}
 
-          {/* Expanded Details Modal/Panel */}
+          {/* Expanded Details Modal */}
           {expandedId && (
-            <div className="expanded-details-panel">
-              {(() => {
-                const log = filteredLogs.find(l => l._id === expandedId);
-                if (!log) return null;
-                return (
-                  <div className="details-content">
-                    <h4>Activity Details</h4>
-                    <div className="details-grid">
-                      <p><strong>Admin:</strong> {log.adminId?.firstName} {log.adminId?.lastName}</p>
-                      <p><strong>Action:</strong> {log.action.replace('_', ' ')}</p>
-                      <p><strong>Entity:</strong> {log.entityType}</p>
-                      <p><strong>Entity ID:</strong> {log.entityId}</p>
-                      <p><strong>Timestamp:</strong> {formatDateTime(log.timestamp)}</p>
+            <div className="modal-overlay" onClick={() => setExpandedId(null)}>
+              <div className="modal-content logs-modal" onClick={(e) => e.stopPropagation()}>
+                <button className="close-button" onClick={() => setExpandedId(null)}>✖</button>
+                {(() => {
+                  const log = filteredLogs.find(l => l._id === expandedId);
+                  if (!log) return null;
+                  return (
+                    <div className="details-content">
+                      <h4>📋 Activity Details</h4>
+                      <div className="details-grid">
+                        <p><strong>Admin:</strong> {log.adminId?.firstName} {log.adminId?.lastName}</p>
+                        <p><strong>Action:</strong> {log.action.replace('_', ' ')}</p>
+                        <p><strong>Entity:</strong> {log.entityType}</p>
+                        <p><strong>Entity ID:</strong> {log.entityId}</p>
+                        <p><strong>Timestamp:</strong> {formatDateTime(log.timestamp)}</p>
 
-                      {log.details && Object.keys(log.details).length > 0 && (
-                        <div className="details-section">
-                          <h5>Details:</h5>
-                          <pre className="details-json">{JSON.stringify(log.details, null, 2)}</pre>
-                        </div>
-                      )}
-
-                      {log.description && (
-                        <p><strong>Description:</strong> {log.description}</p>
-                      )}
+                        {log.details && Object.keys(log.details).length > 0 && (
+                          <div className="details-section">
+                            <h5>Details:</h5>
+                            <pre className="details-json">{JSON.stringify(log.details, null, 2)}</pre>
+                          </div>
+                        )}
+                      </div>
                     </div>
-                    <button
-                      className="close-details"
-                      onClick={() => setExpandedId(null)}
-                    >
-                      Close Details
-                    </button>
-                  </div>
-                );
-              })()}
+                  );
+                })()}
+              </div>
             </div>
           )}
         </div>
