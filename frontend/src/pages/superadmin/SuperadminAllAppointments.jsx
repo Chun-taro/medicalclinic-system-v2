@@ -13,7 +13,7 @@ export default function AllAppointments() {
   const [editDate, setEditDate] = useState('');
   const [editPurpose, setEditPurpose] = useState('');
   // Filters
-  const [nameFilter, setNameFilter] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
   const [startDateFilter, setStartDateFilter] = useState('');
   const [endDateFilter, setEndDateFilter] = useState('');
   const [purposeFilter, setPurposeFilter] = useState('');
@@ -39,13 +39,16 @@ export default function AllAppointments() {
 
   // Apply client-side filters to appointments list
   const filteredAppointments = appointments.filter(app => {
-    // Name filter: match patient name from patientId or appointment-level name
-    if (nameFilter) {
-      const q = nameFilter.toLowerCase();
+    // Search query: match across name, email, phone, purpose
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase().trim();
       const first = app.patientId?.firstName || app.firstName || '';
       const last = app.patientId?.lastName || app.lastName || '';
-      const full = (first + ' ' + last).toLowerCase();
-      if (!full.includes(q)) return false;
+      const fullName = (first + ' ' + last).toLowerCase();
+      const email = (app.patientId?.email || app.email || '').toLowerCase();
+      const phone = (app.patientId?.contactNumber || app.phone || '').toLowerCase();
+      const purpose = app.purpose.toLowerCase();
+      if (!fullName.includes(q) && !email.includes(q) && !phone.includes(q) && !purpose.includes(q)) return false;
     }
 
     // Date filters (inclusive)
@@ -127,31 +130,35 @@ export default function AllAppointments() {
       <h2>All Appointments</h2>
 
       {/* Filters */}
-      <div style={{ display: 'flex', gap: '10px', marginBottom: '12px', alignItems: 'center' }}>
+      <div className="filters-container">
         <input
           type="text"
-          placeholder="Search by name"
-          value={nameFilter}
-          onChange={e => setNameFilter(e.target.value)}
+          placeholder="Search by name, email, phone, or purpose"
+          value={searchQuery}
+          onChange={e => setSearchQuery(e.target.value)}
         />
-        <label style={{ fontSize: '12px' }}>From:</label>
-        <input
-          type="date"
-          value={startDateFilter}
-          onChange={e => setStartDateFilter(e.target.value)}
-        />
-        <label style={{ fontSize: '12px' }}>To:</label>
-        <input
-          type="date"
-          value={endDateFilter}
-          onChange={e => setEndDateFilter(e.target.value)}
-        />
+        <div className="date-group">
+          <label>From:</label>
+          <input
+            type="date"
+            value={startDateFilter}
+            onChange={e => setStartDateFilter(e.target.value)}
+          />
+        </div>
+        <div className="date-group">
+          <label>To:</label>
+          <input
+            type="date"
+            value={endDateFilter}
+            onChange={e => setEndDateFilter(e.target.value)}
+          />
+        </div>
         <select value={purposeFilter} onChange={e => setPurposeFilter(e.target.value)}>
           <option value="">All Purposes</option>
           <option value="checkup">Checkup</option>
           <option value="medical-certificate">Medical Certificate</option>
         </select>
-        <button onClick={() => { setNameFilter(''); setStartDateFilter(''); setEndDateFilter(''); setPurposeFilter(''); }}>Clear</button>
+        <button onClick={() => { setSearchQuery(''); setStartDateFilter(''); setEndDateFilter(''); setPurposeFilter(''); }}>Clear</button>
       </div>
 
      {/* Tab Navigation */}

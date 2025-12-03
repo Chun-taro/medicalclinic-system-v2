@@ -8,8 +8,7 @@ export default function ManageUsers() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [activeTab, setActiveTab] = useState('admin');
-  const [nameSearch, setNameSearch] = useState('');
-  const [idSearch, setIdSearch] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
   const [currentUserRole, setCurrentUserRole] = useState('');
   const [showPopup, setShowPopup] = useState(false);
 
@@ -74,9 +73,15 @@ export default function ManageUsers() {
   const renderTable = role => {
     const filtered = users.filter(user => {
       const matchesRole = role === 'admin' ? user.role !== 'patient' : user.role === role;
-      const matchesName = nameSearch === '' || (user.name || `${user.firstName} ${user.lastName}`).toLowerCase().includes(nameSearch.toLowerCase());
-      const matchesId = idSearch === '' || (user.idNumber && user.idNumber.toString().toLowerCase().includes(idSearch.toLowerCase()));
-      return matchesRole && matchesName && matchesId;
+      if (searchQuery) {
+        const q = searchQuery.toLowerCase().trim();
+        const fullName = (user.name || `${user.firstName} ${user.lastName}`).toLowerCase();
+        const email = user.email.toLowerCase();
+        const idNumber = (user.idNumber && user.idNumber.toString().toLowerCase()) || '';
+        const userRole = user.role.toLowerCase();
+        if (!fullName.includes(q) && !email.includes(q) && !idNumber.includes(q) && !userRole.includes(q)) return false;
+      }
+      return matchesRole;
     });
     return filtered.length === 0 ? (
       <p>No {role === 'admin' ? 'staff' : role}s found.</p>
@@ -134,15 +139,9 @@ export default function ManageUsers() {
       <div className="search-filters">
         <input
           type="text"
-          placeholder="Search by name..."
-          value={nameSearch}
-          onChange={(e) => setNameSearch(e.target.value)}
-        />
-        <input
-          type="text"
-          placeholder="Search by ID number..."
-          value={idSearch}
-          onChange={(e) => setIdSearch(e.target.value)}
+          placeholder="Search by name, email, ID number, or role..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
         />
       </div>
 

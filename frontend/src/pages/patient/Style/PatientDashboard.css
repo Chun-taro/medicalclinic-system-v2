@@ -99,6 +99,7 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  padding-top: 10px;
 }
 
 .page-content {
@@ -124,7 +125,7 @@
   left: 0;
   right: 0;
   z-index: 10;
-  height: 60px;
+  height: 80px;
   box-sizing: border-box;
 }
 
@@ -252,18 +253,19 @@
 }
 
 .notification-dropdown {
-  position: absolute;
-  top: 50px;
-  right: 0;
+  position: fixed;
+  top: 85px;
+  right: 10px;
   width: 320px;
   max-height: 400px;
   overflow-y: auto;
   background: white;
   border-radius: var(--border-radius-large);
   box-shadow: var(--shadow-hover);
-  z-index: 9999;
+  z-index: 1000001;
   padding: var(--spacing-md);
   border: 1px solid var(--border-color);
+  box-sizing: content-box;
 }
 
 .dropdown-header {
@@ -672,6 +674,7 @@
   background-color: #f8f9ff;
   transform: translateY(-1px);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  z-index: 100;
 }
 
 .appointment-table tbody tr:nth-child(even) {

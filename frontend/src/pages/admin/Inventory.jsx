@@ -3,6 +3,7 @@ import axios from 'axios';
 import AdminLayout from './AdminLayout';
 import './Style/Inventory.css';
 
+
 export default function Inventory() {
   const [medicines, setMedicines] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -263,18 +264,17 @@ export default function Inventory() {
               </div>
 
               {/* History Filters */}
-              <div style={{ display: 'flex', gap: '10px', marginBottom: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
+              <div className="history-filters">
                 <input
                   type="text"
                   placeholder="Search by medicine name..."
                   value={historyNameFilter}
                   onChange={e => setHistoryNameFilter(e.target.value)}
-                  style={{ padding: '8px', minWidth: '180px' }}
                 />
-                <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px' }}>
+                <label>
                   From <input type="date" value={historyStartDateFilter} onChange={e => setHistoryStartDateFilter(e.target.value)} />
                 </label>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px' }}>
+                <label>
                   To <input type="date" value={historyEndDateFilter} onChange={e => setHistoryEndDateFilter(e.target.value)} />
                 </label>
                 <button onClick={() => { setHistoryNameFilter(''); setHistoryStartDateFilter(''); setHistoryEndDateFilter(''); }}>Clear</button>

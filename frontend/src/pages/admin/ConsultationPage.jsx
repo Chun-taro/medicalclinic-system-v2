@@ -11,7 +11,7 @@ export default function ConsultationPage() {
   const [medicineSearch, setMedicineSearch] = useState('');
   const [showModal, setShowModal] = useState(false);
   // Filters
-  const [nameFilter, setNameFilter] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
   const [startDateFilter, setStartDateFilter] = useState('');
   const [endDateFilter, setEndDateFilter] = useState('');
 
@@ -21,8 +21,7 @@ export default function ConsultationPage() {
   const [showPDFModal, setShowPDFModal] = useState(false);
   const [selectedPDFAppointment, setSelectedPDFAppointment] = useState(null);
 
-  const [showOngoingModal, setShowOngoingModal] = useState(false);
-  const [selectedOngoingAppointment, setSelectedOngoingAppointment] = useState(null);
+
 
   const [form, setForm] = useState({
     bloodPressure: '',
@@ -84,29 +83,7 @@ export default function ConsultationPage() {
     }
   };
 
-  const handleGenerateCertificate = async (appointment) => {
-    try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get(`http://localhost:5000/api/appointments/${appointment._id}/certificate-pdf`, {
-        headers: { Authorization: `Bearer ${token}` },
-        responseType: 'blob'
-      });
 
-      const url = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', `medical_certificate_${appointment._id}.pdf`);
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-
-      // Navigate to Reports page with medical-certificates tab
-      window.location.href = '/admin-reports?tab=medical-certificates';
-    } catch (err) {
-      console.error('Error downloading certificate:', err);
-      alert('Failed to download certificate');
-    }
-  };
 
   const handleFinishCertificate = async (appointment) => {
     try {
@@ -224,36 +201,46 @@ export default function ConsultationPage() {
       <div className="consultation-container">
         <h2>Consultation Queue</h2>
         {/* Filters */}
-        <div className="filters-row" style={{ display: 'flex', gap: 12, marginBottom: 12, alignItems: 'center' }}>
+      
+      <div className="filters-container">
+        <input
+          type="text"
+          placeholder="Search by name, email, phone, or purpose"
+          value={searchQuery}
+          onChange={e => setSearchQuery(e.target.value)}
+        />
+        <div className="date-group">
+          <label>From:</label>
           <input
-            type="text"
-            placeholder="Search by patient name..."
-            value={nameFilter}
-            onChange={e => setNameFilter(e.target.value)}
-            style={{ padding: '8px', minWidth: 220 }}
+            type="date"
+            value={startDateFilter}
+            onChange={e => setStartDateFilter(e.target.value)}
           />
-          <label style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <span style={{ fontSize: 13 }}>From</span>
-            <input type="date" value={startDateFilter} onChange={e => setStartDateFilter(e.target.value)} />
-          </label>
-          <label style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <span style={{ fontSize: 13 }}>To</span>
-            <input type="date" value={endDateFilter} onChange={e => setEndDateFilter(e.target.value)} />
-          </label>
-          <button onClick={() => { setNameFilter(''); setStartDateFilter(''); setEndDateFilter(''); }} style={{ marginLeft: 6 }}>Clear</button>
         </div>
-
+        <div className="date-group">
+          <label>To:</label>
+          <input
+            type="date"
+            value={endDateFilter}
+            onChange={e => setEndDateFilter(e.target.value)}
+          />
+        </div>
+        </div>
+        
         {approvedAppointments.length === 0 ? (
           <p>No approved appointments waiting for consultation.</p>
         ) : (
           // apply filters client-side
           (() => {
             const filtered = approvedAppointments.filter(app => {
-              // name filter
-              if (nameFilter) {
-                const q = nameFilter.toLowerCase();
+              // search query filter
+              if (searchQuery) {
+                const q = searchQuery.toLowerCase();
                 const fullName = `${app.patientId?.firstName || ''} ${app.patientId?.lastName || ''}`.toLowerCase();
-                if (!fullName.includes(q)) return false;
+                const email = (app.patientId?.email || '').toLowerCase();
+                const phone = (app.patientId?.contactNumber || '').toLowerCase();
+                const purpose = (app.purpose || '').toLowerCase();
+                if (!fullName.includes(q) && !email.includes(q) && !phone.includes(q) && !purpose.includes(q)) return false;
               }
 
               // date filter

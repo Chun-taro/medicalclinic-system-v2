@@ -3,7 +3,7 @@ import axios from 'axios';
 import SuperadminLayout from './SuperadminLayout';
 import './Style/consultation.css';
 
-export default function SuperadminConsultationPage() {
+export default function ConsultationPage() {
   const [approvedAppointments, setApprovedAppointments] = useState([]);
   const [selectedAppointment, setSelectedAppointment] = useState(null);
   const [medicineOptions, setMedicineOptions] = useState([]);
@@ -11,7 +11,7 @@ export default function SuperadminConsultationPage() {
   const [medicineSearch, setMedicineSearch] = useState('');
   const [showModal, setShowModal] = useState(false);
   // Filters
-  const [nameFilter, setNameFilter] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
   const [startDateFilter, setStartDateFilter] = useState('');
   const [endDateFilter, setEndDateFilter] = useState('');
 
@@ -20,6 +20,8 @@ export default function SuperadminConsultationPage() {
 
   const [showPDFModal, setShowPDFModal] = useState(false);
   const [selectedPDFAppointment, setSelectedPDFAppointment] = useState(null);
+
+
 
   const [form, setForm] = useState({
     bloodPressure: '',
@@ -81,6 +83,8 @@ export default function SuperadminConsultationPage() {
     }
   };
 
+
+
   const handleFinishCertificate = async (appointment) => {
     try {
       const token = localStorage.getItem('token');
@@ -93,7 +97,7 @@ export default function SuperadminConsultationPage() {
       setShowPDFModal(false);
       // Remove the completed appointment from the list immediately
       setApprovedAppointments(prev => prev.filter(app => app._id !== appointment._id));
-      window.location.href = '/superadmin-reports?tab=medical-certificates';
+      window.location.href = '/admin-reports?tab=medical-certificates';
     } catch (err) {
       console.error('Error finishing certificate:', err);
       alert('Failed to finish certificate');
@@ -107,7 +111,7 @@ export default function SuperadminConsultationPage() {
 
   // Only disable body scrolling while a modal is open
   useEffect(() => {
-    if (showModal || showMRFModal) {
+    if (showModal || showMRFModal || showPDFModal) {
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = '';
@@ -115,7 +119,7 @@ export default function SuperadminConsultationPage() {
     return () => {
       document.body.style.overflow = '';
     };
-  }, [showModal, showMRFModal]);
+  }, [showModal, showMRFModal, showPDFModal]);
 
   const handleStartConsultation = appointment => {
     setSelectedAppointment(appointment);
@@ -197,36 +201,46 @@ export default function SuperadminConsultationPage() {
       <div className="consultation-container">
         <h2>Consultation Queue</h2>
         {/* Filters */}
-        <div className="filters-row" style={{ display: 'flex', gap: 12, marginBottom: 12, alignItems: 'center' }}>
+      
+      <div className="filters-container">
+        <input
+          type="text"
+          placeholder="Search by name, email, phone, or purpose"
+          value={searchQuery}
+          onChange={e => setSearchQuery(e.target.value)}
+        />
+        <div className="date-group">
+          <label>From:</label>
           <input
-            type="text"
-            placeholder="Search by patient name..."
-            value={nameFilter}
-            onChange={e => setNameFilter(e.target.value)}
-            style={{ padding: '8px', minWidth: 220 }}
+            type="date"
+            value={startDateFilter}
+            onChange={e => setStartDateFilter(e.target.value)}
           />
-          <label style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <span style={{ fontSize: 13 }}>From</span>
-            <input type="date" value={startDateFilter} onChange={e => setStartDateFilter(e.target.value)} />
-          </label>
-          <label style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <span style={{ fontSize: 13 }}>To</span>
-            <input type="date" value={endDateFilter} onChange={e => setEndDateFilter(e.target.value)} />
-          </label>
-          <button onClick={() => { setNameFilter(''); setStartDateFilter(''); setEndDateFilter(''); }} style={{ marginLeft: 6 }}>Clear</button>
         </div>
-
+        <div className="date-group">
+          <label>To:</label>
+          <input
+            type="date"
+            value={endDateFilter}
+            onChange={e => setEndDateFilter(e.target.value)}
+          />
+        </div>
+        </div>
+        
         {approvedAppointments.length === 0 ? (
           <p>No approved appointments waiting for consultation.</p>
         ) : (
           // apply filters client-side
           (() => {
             const filtered = approvedAppointments.filter(app => {
-              // name filter
-              if (nameFilter) {
-                const q = nameFilter.toLowerCase();
+              // search query filter
+              if (searchQuery) {
+                const q = searchQuery.toLowerCase();
                 const fullName = `${app.patientId?.firstName || ''} ${app.patientId?.lastName || ''}`.toLowerCase();
-                if (!fullName.includes(q)) return false;
+                const email = (app.patientId?.email || '').toLowerCase();
+                const phone = (app.patientId?.contactNumber || '').toLowerCase();
+                const purpose = (app.purpose || '').toLowerCase();
+                if (!fullName.includes(q) && !email.includes(q) && !phone.includes(q) && !purpose.includes(q)) return false;
               }
 
               // date filter
@@ -353,8 +367,9 @@ export default function SuperadminConsultationPage() {
           <div className="modal-overlay">
             <div className="consultation-modal">
               <button className="close-button" onClick={() => setShowPDFModal(false)}>✖</button>
-              <h3 className="modal-title">📄 Print Medical Certificate</h3>
+              <h3 className="modal-title">Medical Certificate Ongoing</h3>
               <div style={{ textAlign: 'center', padding: '20px' }}>
+                <p>Medical certificate ongoing</p>
                 <p>Patient: {selectedPDFAppointment.patientId?.firstName} {selectedPDFAppointment.patientId?.lastName}</p>
                 <p>Purpose: {selectedPDFAppointment.purpose}</p>
                 <p>Date: {new Date(selectedPDFAppointment.appointmentDate).toLocaleDateString()}</p>

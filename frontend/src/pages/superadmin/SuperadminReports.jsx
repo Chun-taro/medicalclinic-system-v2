@@ -164,21 +164,21 @@ export default function Reports() {
             <h3 className="section-title">
               {activeTab === 'consultations' ? '🩺 Past Consultations' : '📄 Medical Certificates'}
             </h3>
-            <div style={{ display: 'flex', gap: '10px', marginBottom: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
+            <div className="filters-section">
               <input
                 type="text"
                 placeholder="Search by name..."
                 value={nameFilter}
                 onChange={e => setNameFilter(e.target.value)}
-                style={{ padding: '8px', minWidth: '180px' }}
+                className="filter-input"
               />
-              <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px' }}>
-                From <input type="date" value={startDateFilter} onChange={e => setStartDateFilter(e.target.value)} />
+              <label className="filter-label">
+                From <input type="date" value={startDateFilter} onChange={e => setStartDateFilter(e.target.value)} className="filter-date" />
               </label>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px' }}>
-                To <input type="date" value={endDateFilter} onChange={e => setEndDateFilter(e.target.value)} />
+              <label className="filter-label">
+                To <input type="date" value={endDateFilter} onChange={e => setEndDateFilter(e.target.value)} className="filter-date" />
               </label>
-              <button onClick={() => { setNameFilter(''); setStartDateFilter(''); setEndDateFilter(''); }}>Clear</button>
+              <button onClick={() => { setNameFilter(''); setStartDateFilter(''); setEndDateFilter(''); }} className="clear-filters-btn">Clear</button>
             </div>
             <div className="consultation-split-view">
               {/* Left list */}

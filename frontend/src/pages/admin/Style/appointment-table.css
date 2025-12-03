@@ -191,3 +191,67 @@
   min-width: 300px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
 }
+
+/* Filters Section */
+.filters-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 20px;
+  padding: 16px;
+  background-color: #f8fafc;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.filters-container input[type="text"],
+.filters-container input[type="date"],
+.filters-container select {
+  padding: 10px 14px;
+  border: 2px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  background-color: #fff;
+  min-width: 180px;
+}
+
+.filters-container input[type="text"]:focus,
+.filters-container input[type="date"]:focus,
+.filters-container select:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.filters-container label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #374151;
+  margin-right: 4px;
+  white-space: nowrap;
+}
+
+.filters-container button {
+  padding: 10px 16px;
+  background-color: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease, box-shadow 0.2s ease;
+  white-space: nowrap;
+}
+
+.filters-container button:hover {
+  background-color: #2563eb;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.filters-container button:active {
+  transform: translateY(1px);
+}

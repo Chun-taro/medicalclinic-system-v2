@@ -43,7 +43,7 @@
   letter-spacing: 0.5px;
   position: sticky;
   top: 60px;
-  z-index: 10;
+  z-index: 2;
 }
 
 .appointments-table tbody tr {
