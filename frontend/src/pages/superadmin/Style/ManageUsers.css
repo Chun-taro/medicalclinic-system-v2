@@ -99,23 +99,313 @@
   margin-top: 10px;
 }
 
-/* Responsive for mobile */
-@media (max-width: 768px) {
+/* ────────────────────────────────
+   Responsive Design for Manage Users
+────────────────────────────────── */
+
+/* Large screens (1025px+) */
+@media (min-width: 1025px) {
+  .user-table {
+    font-size: 1rem;
+  }
+
   .user-table th,
   .user-table td {
-    padding: 10px 8px;
+    padding: 16px 20px;
+  }
+
+  .user-table th {
+    font-size: 1rem;
+  }
+
+  .role-badge {
+    padding: 6px 14px;
+    font-size: 0.9rem;
+  }
+
+  .user-table select {
+    padding: 8px 12px;
+    font-size: 1rem;
+  }
+
+  .tabs button {
+    padding: 10px 18px;
+    font-size: 1rem;
+  }
+
+  .popup-content {
+    max-width: 500px;
+  }
+
+  .popup-header {
+    padding: 35px 35px 25px;
+  }
+
+  .popup-icon {
+    font-size: 3.5rem;
+  }
+
+  .popup-header h3 {
+    font-size: 1.7rem;
+  }
+
+  .popup-body {
+    padding: 35px;
+  }
+
+  .popup-body p {
+    font-size: 1.1rem;
+  }
+
+  .popup-footer {
+    padding: 25px 35px 35px;
+  }
+
+  .popup-btn-primary {
+    padding: 14px 35px;
+    font-size: 1.1rem;
+  }
+}
+
+/* Desktop (769px-1024px) */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .user-table {
+    font-size: 0.95rem;
+  }
+
+  .user-table th,
+  .user-table td {
+    padding: 14px 18px;
+  }
+
+  .user-table th {
+    font-size: 0.95rem;
+  }
+
+  .role-badge {
+    padding: 5px 12px;
     font-size: 0.85rem;
+  }
+
+  .user-table select {
+    padding: 7px 11px;
+    font-size: 0.95rem;
+  }
+
+  .tabs button {
+    padding: 9px 16px;
+    font-size: 0.95rem;
+  }
+
+  .popup-content {
+    max-width: 480px;
+  }
+
+  .popup-header {
+    padding: 32px 32px 22px;
+  }
+
+  .popup-icon {
+    font-size: 3.2rem;
+  }
+
+  .popup-header h3 {
+    font-size: 1.6rem;
+  }
+
+  .popup-body {
+    padding: 32px;
+  }
+
+  .popup-body p {
+    font-size: 1rem;
+  }
+
+  .popup-footer {
+    padding: 22px 32px 32px;
+  }
+
+  .popup-btn-primary {
+    padding: 13px 32px;
+    font-size: 1rem;
+  }
+}
+
+/* Tablet (481px-768px) */
+@media (min-width: 481px) and (max-width: 768px) {
+  .user-table {
+    font-size: 0.9rem;
+  }
+
+  .user-table th,
+  .user-table td {
+    padding: 12px 14px;
+  }
+
+  .user-table th {
+    font-size: 0.9rem;
+  }
+
+  .role-badge {
+    padding: 4px 10px;
+    font-size: 0.8rem;
+  }
+
+  .user-table select {
+    font-size: 0.9rem;
+    padding: 6px 9px;
+  }
+
+  .tabs {
+    gap: 8px;
+  }
+
+  .tabs button {
+    padding: 8px 14px;
+    font-size: 0.9rem;
+  }
+
+  .popup-content {
+    max-width: 420px;
+    width: 85%;
+  }
+
+  .popup-header {
+    padding: 28px 28px 18px;
+  }
+
+  .popup-icon {
+    font-size: 2.8rem;
+  }
+
+  .popup-header h3 {
+    font-size: 1.4rem;
+  }
+
+  .popup-body {
+    padding: 28px;
+  }
+
+  .popup-body p {
+    font-size: 0.95rem;
+  }
+
+  .popup-footer {
+    padding: 18px 28px 28px;
+  }
+
+  .popup-btn-primary {
+    padding: 11px 28px;
+    font-size: 0.95rem;
+  }
+}
+
+/* Mobile (481px and below) */
+@media (max-width: 480px) {
+  .user-table {
+    font-size: 0.8rem;
+    margin-top: 15px;
+  }
+
+  .user-table th,
+  .user-table td {
+    padding: 8px 10px;
+  }
+
+  .user-table th {
+    font-size: 0.8rem;
+    padding: 10px 10px 8px;
   }
 
   .role-badge {
     padding: 3px 8px;
-    font-size: 0.75rem;
+    font-size: 0.7rem;
+    min-width: 60px;
   }
 
   .user-table select {
-    font-size: 0.85rem;
+    font-size: 0.8rem;
     padding: 4px 6px;
+    width: 100%;
+    max-width: 80px;
   }
+
+  .tabs {
+    gap: 6px;
+    margin-bottom: 12px;
+  }
+
+  .tabs button {
+    padding: 6px 10px;
+    font-size: 0.8rem;
+  }
+
+  .popup-overlay {
+    padding: 10px;
+  }
+
+  .popup-content {
+    margin: 10px;
+    width: calc(100% - 20px);
+    max-width: 380px;
+  }
+
+  .popup-header {
+    padding: 20px 20px 15px;
+  }
+
+  .popup-icon {
+    font-size: 2.2rem;
+  }
+
+  .popup-header h3 {
+    font-size: 1.2rem;
+  }
+
+  .popup-body {
+    padding: 20px;
+  }
+
+  .popup-body p {
+    font-size: 0.85rem;
+    line-height: 1.4;
+  }
+
+  .popup-footer {
+    padding: 15px 20px 20px;
+  }
+
+  .popup-btn-primary {
+    padding: 9px 20px;
+    font-size: 0.85rem;
+  }
+}
+
+/* Search Filters */
+.search-filters {
+  margin-bottom: 20px;
+}
+
+.search-filters input {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+}
+
+.search-filters input:focus {
+  outline: none;
+  border-color: #0077cc;
+  box-shadow: 0 0 8px rgba(0, 119, 204, 0.2);
+  background-color: #f9f9f9;
+}
+
+.search-filters input::placeholder {
+  color: #999;
 }
 
 /* Popup Styles */
@@ -207,105 +497,4 @@
 @keyframes slideIn {
   from { transform: scale(0.8); opacity: 0; }
   to { transform: scale(1); opacity: 1; }
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-  .user-table th,
-  .user-table td {
-    padding: 8px 6px;
-    font-size: 0.8rem;
-  }
-
-  .role-badge {
-    padding: 2px 6px;
-    font-size: 0.7rem;
-  }
-
-  .user-table select {
-    font-size: 0.8rem;
-    padding: 3px 4px;
-  }
-
-  .tabs button {
-    padding: 6px 12px;
-    font-size: 0.9rem;
-  }
-
-  .popup-content {
-    margin: 15px;
-    width: calc(100% - 30px);
-  }
-
-  .popup-header, .popup-body, .popup-footer {
-    padding-left: 15px;
-    padding-right: 15px;
-  }
-
-  .popup-icon {
-    font-size: 2.2rem;
-  }
-
-  .popup-header h3 {
-    font-size: 1.2rem;
-  }
-
-  .popup-body p {
-    font-size: 0.9rem;
-  }
-
-  .popup-btn-primary {
-    padding: 10px 25px;
-    font-size: 0.9rem;
-  }
-}
-
-@media (max-width: 480px) {
-  .user-table th,
-  .user-table td {
-    padding: 6px 4px;
-    font-size: 0.75rem;
-  }
-
-  .role-badge {
-    padding: 2px 4px;
-    font-size: 0.65rem;
-  }
-
-  .user-table select {
-    font-size: 0.75rem;
-    padding: 2px 3px;
-  }
-
-  .tabs button {
-    padding: 5px 10px;
-    font-size: 0.85rem;
-  }
-
-  .popup-content {
-    margin: 10px;
-    width: calc(100% - 20px);
-  }
-
-  .popup-header, .popup-body, .popup-footer {
-    padding-left: 10px;
-    padding-right: 10px;
-  }
-
-  .popup-icon {
-    font-size: 2rem;
-  }
-
-  .popup-header h3 {
-    font-size: 1.1rem;
-  }
-
-  .popup-body p {
-    font-size: 0.85rem;
-  }
-
-  .popup-btn-primary {
-    padding: 8px 20px;
-    font-size: 0.85rem;
-  }
 }

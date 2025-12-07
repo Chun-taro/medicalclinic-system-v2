@@ -6,13 +6,13 @@ const mongoose = require('mongoose');
 
 /**
  * Performs an optimistic update with version checking
- * @param {mongoose.Model} Model - The Mongoose model to update
- * @param {Object} query - Query to find the document
- * @param {Object} update - Update operations
- * @param {Object} options - Additional options for the update
- * @param {number} maxRetries - Maximum number of retry attempts (default: 3)
- * @param {number} retryDelay - Delay between retries in ms (default: 100)
- * @returns {Promise<Object>} Updated document
+ * @param {mongoose.Model} Model 
+ * @param {Object} query 
+ * @param {Object} update 
+ * @param {Object} options 
+ * @param {number} maxRetries 
+ * @param {number} retryDelay 
+ * @returns {Promise<Object>} 
  */
 async function optimisticUpdate(Model, query, update, options = {}, maxRetries = 3, retryDelay = 100) {
   let attempts = 0;
@@ -27,7 +27,7 @@ async function optimisticUpdate(Model, query, update, options = {}, maxRetries =
         versionQuery,
         {
           ...update,
-          $inc: { version: 1 } // Increment version on successful update
+          $inc: { version: 1 } 
         },
         {
           new: true,
@@ -55,9 +55,8 @@ async function optimisticUpdate(Model, query, update, options = {}, maxRetries =
 }
 
 /**
- * Creates a transaction session and executes operations within it
- * @param {Function} operations - Function that receives session and performs operations
- * @returns {Promise<any>} Result of the operations
+ * @param {Function} operations
+ * @returns {Promise<any>} 
  */
 async function executeInTransaction(operations) {
   const session = await mongoose.startSession();
@@ -76,19 +75,18 @@ async function executeInTransaction(operations) {
 }
 
 /**
- * Checks if a document has been modified by comparing versions
- * @param {mongoose.Document} doc - The document to check
- * @param {number} expectedVersion - The expected version
- * @returns {boolean} True if versions match
+ * @param {mongoose.Document} doc 
+ * @param {number} expectedVersion
+ * @returns {boolean} 
  */
 function isVersionCurrent(doc, expectedVersion) {
   return doc.version === expectedVersion;
 }
 
 /**
- * Gets the current version of a document
- * @param {mongoose.Document} doc - The document
- * @returns {number} Current version
+ *
+ * @param {mongoose.Document} doc 
+ * @returns {number} 
  */
 function getCurrentVersion(doc) {
   return doc.version || 0;
