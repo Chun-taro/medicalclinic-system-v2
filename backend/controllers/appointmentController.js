@@ -790,6 +790,61 @@ const prescribeMedicines = async (req, res) => {
   }
 };
 
+// Lock appointment for editing
+const lockAppointmentForEdit = async (req, res) => {
+  try {
+    const appointment = await Appointment.findById(req.params.id);
+    if (!appointment) {
+      return res.status(404).json({ error: 'Appointment not found' });
+    }
+
+    if (appointment.isBeingEdited) {
+      if (String(appointment.editedBy) !== String(req.user.userId)) {
+        return res.status(409).json({ error: 'Appointment is currently being edited by another user' });
+      } else {
+        // Already locked by this user, just return success
+        return res.json({ message: 'Appointment already locked for editing' });
+      }
+    }
+
+    appointment.isBeingEdited = true;
+    appointment.editedBy = req.user.userId;
+    await appointment.save();
+
+    res.json({ message: 'Appointment locked for editing' });
+  } catch (err) {
+    console.error('Lock appointment error:', err.message);
+    res.status(500).json({ error: 'Failed to lock appointment' });
+  }
+};
+
+// Unlock appointment after editing
+const unlockAppointmentForEdit = async (req, res) => {
+  try {
+    const appointment = await Appointment.findById(req.params.id);
+    if (!appointment) {
+      return res.status(404).json({ error: 'Appointment not found' });
+    }
+
+    if (!appointment.isBeingEdited) {
+      return res.json({ message: 'Appointment is not locked' });
+    }
+
+    if (String(appointment.editedBy) !== String(req.user.userId)) {
+      return res.status(403).json({ error: 'You do not have permission to unlock this appointment' });
+    }
+
+    appointment.isBeingEdited = false;
+    appointment.editedBy = null;
+    await appointment.save();
+
+    res.json({ message: 'Appointment unlocked' });
+  } catch (err) {
+    console.error('Unlock appointment error:', err.message);
+    res.status(500).json({ error: 'Failed to unlock appointment' });
+  }
+};
+
 
 
 
@@ -809,5 +864,7 @@ module.exports = {
   getConsultationById,
   updateAppointment,
   saveConsultation,
-  prescribeMedicines
+  prescribeMedicines,
+  lockAppointmentForEdit,
+  unlockAppointmentForEdit
 }

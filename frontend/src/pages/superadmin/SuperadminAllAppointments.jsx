@@ -100,11 +100,21 @@ export default function AllAppointments() {
     }
   };
 
-  const openEditModal = appointment => {
-    setEditId(appointment._id);
-    setEditDate(appointment.appointmentDate.split('T')[0]);
-    setEditPurpose(appointment.purpose);
-    setShowModal(true);
+  const openEditModal = async appointment => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.post(`http://localhost:5000/api/appointments/${appointment._id}/lock`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      setEditId(appointment._id);
+      setEditDate(appointment.appointmentDate.split('T')[0]);
+      setEditPurpose(appointment.purpose);
+      setShowModal(true);
+    } catch (err) {
+      alert(err.response?.data?.error || 'Failed to lock appointment for editing');
+      console.error(err);
+    }
   };
 
   const handleReschedule = async () => {
@@ -116,6 +126,12 @@ export default function AllAppointments() {
       }, {
         headers: { Authorization: `Bearer ${token}` }
       });
+
+      // Unlock the appointment after successful update
+      await axios.post(`http://localhost:5000/api/appointments/${editId}/unlock`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
       alert('Appointment rescheduled and patient notified');
       setShowModal(false);
       fetchAppointments();
@@ -239,7 +255,7 @@ export default function AllAppointments() {
     filteredAppointments.filter(app => app.status === 'pending').map(app => (
       <tr key={app._id}>
         <td>{app.patientId?.firstName || app.firstName || 'N/A'} {app.patientId?.lastName || app.lastName || ''}</td>
-        <td>{new Date(app.appointmentDate).toLocaleDateString()}</td>
+        <td>{new Date(app.appointmentDate).toLocaleString()}</td>
         <td>{app.patientId?.email || app.email || 'N/A'}</td>
         <td>{app.patientId?.contactNumber || app.phone || 'N/A'}</td>
         <td>{app.purpose}</td>

@@ -16,7 +16,9 @@ const {
   getConsultationById,
   updateAppointment,
   saveConsultation,
-  prescribeMedicines
+  prescribeMedicines,
+  lockAppointmentForEdit,
+  unlockAppointmentForEdit
 } = require('../controllers/appointmentController');
 
 const { auth } = require('../middleware/auth');
@@ -32,11 +34,15 @@ router.get('/', auth, getAllAppointments);
 router.delete('/:id', auth, deleteAppointment);
 router.patch('/:id/approve', auth, approveAppointment);
 
+//  Concurrency control routes
+router.post('/:id/lock', auth, lockAppointmentForEdit);
+router.post('/:id/unlock', auth, unlockAppointmentForEdit);
+
 //  Consultation routes
 router.patch('/:id/start', auth, startConsultation);
 router.patch('/:id/complete', auth, completeConsultation);
 router.patch('/:id/consultation', auth, saveConsultation);
-router.post('/:id/prescribe', auth, prescribeMedicines); 
+router.post('/:id/prescribe', auth, prescribeMedicines);
 
 //  Reporting and analytics
 router.get('/reports', auth, generateReports);

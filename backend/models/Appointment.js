@@ -97,7 +97,11 @@ const appointmentSchema = new mongoose.Schema({
   googleCalendarEventId: String,
 
   // Version for optimistic concurrency control
-  version: { type: Number, default: 0 }
+  version: { type: Number, default: 0 },
+
+  // Concurrency control for editing
+  isBeingEdited: { type: Boolean, default: false },
+  editedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
 }, { timestamps: true });
 
 module.exports = mongoose.model('Appointment', appointmentSchema);
