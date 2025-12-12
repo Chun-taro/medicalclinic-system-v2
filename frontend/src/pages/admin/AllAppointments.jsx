@@ -17,6 +17,12 @@ export default function AllAppointments() {
   const [startDateFilter, setStartDateFilter] = useState('');
   const [endDateFilter, setEndDateFilter] = useState('');
   const [purposeFilter, setPurposeFilter] = useState('');
+  // Alert popup
+  const [alertMessage, setAlertMessage] = useState('');
+  const [showAlert, setShowAlert] = useState(false);
+  const [userName, setUserName] = useState('');
+  const [showLockModal, setShowLockModal] = useState(false);
+  const [lockModalData, setLockModalData] = useState({ editorName: '', editorId: '' });
 
   const fetchAppointments = async () => {
     try {
@@ -35,6 +41,22 @@ export default function AllAppointments() {
 
   useEffect(() => {
     fetchAppointments();
+  }, []);
+
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const res = await axios.get('http://localhost:5000/api/profile', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setUserName(`${res.data.firstName} ${res.data.lastName}`);
+      } catch (err) {
+        console.error('Failed to fetch user profile:', err);
+        setUserName('Admin');
+      }
+    };
+    fetchUserProfile();
   }, []);
 
   // Apply client-side filters to appointments list
@@ -92,10 +114,12 @@ export default function AllAppointments() {
       await axios.patch(`http://localhost:5000/api/appointments/${id}/approve`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      alert('Appointment approved');
+      setAlertMessage('Appointment approved');
+      setShowAlert(true);
       fetchAppointments();
     } catch (err) {
-      alert('Failed to approve appointment');
+      setAlertMessage('Failed to approve appointment');
+      setShowAlert(true);
       console.error(err);
     }
   };
@@ -112,7 +136,18 @@ export default function AllAppointments() {
       setEditPurpose(appointment.purpose);
       setShowModal(true);
     } catch (err) {
-      alert(err.response?.data?.error || 'Failed to lock appointment for editing');
+      const errorData = err.response?.data;
+      if (errorData?.editorName) {
+        // Show lock conflict modal
+        setLockModalData({
+          editorName: errorData.editorName,
+          editorId: errorData.editorId
+        });
+        setShowLockModal(true);
+      } else {
+        setAlertMessage(errorData?.error || 'Failed to lock appointment for editing');
+        setShowAlert(true);
+      }
       console.error(err);
     }
   };
@@ -132,11 +167,13 @@ export default function AllAppointments() {
         headers: { Authorization: `Bearer ${token}` }
       });
 
-      alert('Appointment rescheduled and patient notified');
+      setAlertMessage('Appointment rescheduled and patient notified');
+      setShowAlert(true);
       setShowModal(false);
       fetchAppointments();
     } catch (err) {
-      alert('Failed to reschedule appointment');
+      setAlertMessage('Failed to reschedule appointment');
+      setShowAlert(true);
       console.error(err);
     }
   };
@@ -197,21 +234,26 @@ export default function AllAppointments() {
       {/* Modal */}
       {showModal && (
         <div className="modal-overlay">
-          <div className="modal-content">
-            <h3>Reschedule Appointment</h3>
-            <label>Date:</label>
-            <input
-              type="date"
-              value={editDate}
-              onChange={(e) => setEditDate(e.target.value)}
-            />
-            <label>Purpose:</label>
-            <input
-              type="text"
-              value={editPurpose}
-              onChange={(e) => setEditPurpose(e.target.value)}
-            />
-            <div style={{ marginTop: '10px' }}>
+          <div className="modal-content appointment-modal">
+            <div className="modal-header">
+              <h3>Reschedule Appointment</h3>
+              <p className="editor-info">Currently editing by: {userName}</p>
+            </div>
+            <div className="modal-body">
+              <label>Date:</label>
+              <input
+                type="date"
+                value={editDate}
+                onChange={(e) => setEditDate(e.target.value)}
+              />
+              <label>Purpose:</label>
+              <input
+                type="text"
+                value={editPurpose}
+                onChange={(e) => setEditPurpose(e.target.value)}
+              />
+            </div>
+            <div className="modal-footer">
               <button onClick={handleReschedule}>Confirm</button>
               <button onClick={async () => {
                 try {
@@ -223,9 +265,60 @@ export default function AllAppointments() {
                   fetchAppointments(); // Refresh the appointments list to reflect unlocked state
                 } catch (err) {
                   console.error('Failed to unlock appointment:', err);
-                  alert('Failed to unlock appointment. Please try again.');
+                  setAlertMessage('Failed to unlock appointment. Please try again.');
+                  setShowAlert(true);
                 }
-              }} style={{ marginLeft: '10px' }}>Cancel</button>
+              }}>Cancel</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Alert Modal */}
+      {showAlert && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <p>{alertMessage}</p>
+            <button onClick={() => setShowAlert(false)}>OK</button>
+          </div>
+        </div>
+      )}
+
+      {/* Lock Conflict Modal */}
+      {showLockModal && (
+        <div className="modal-overlay">
+          <div className="modal-content appointment-modal">
+            <div className="modal-header">
+              <h3>⚠️ Appointment Locked</h3>
+            </div>
+            <div className="modal-body">
+              <div style={{ textAlign: 'center', padding: '20px' }}>
+                <div style={{ fontSize: '3rem', marginBottom: '15px' }}>🔒</div>
+                <p style={{ fontSize: '1.1rem', marginBottom: '10px', color: '#374151' }}>
+                  This appointment is currently being edited by another user.
+                </p>
+                <div style={{
+                  backgroundColor: '#f3f4f6',
+                  padding: '15px',
+                  borderRadius: '8px',
+                  border: '2px solid #e5e7eb',
+                  margin: '15px 0'
+                }}>
+                  <strong style={{ color: '#1f2937', fontSize: '1.2rem' }}>
+                    {lockModalData.editorName}
+                  </strong>
+                  <br />
+                  <span style={{ color: '#6b7280', fontSize: '0.9rem' }}>
+                    Currently editing this appointment
+                  </span>
+                </div>
+                <p style={{ color: '#6b7280', fontSize: '0.9rem' }}>
+                  Please wait for them to finish or contact an administrator if needed.
+                </p>
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button onClick={() => setShowLockModal(false)}>OK</button>
             </div>
           </div>
         </div>

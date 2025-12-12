@@ -793,14 +793,19 @@ const prescribeMedicines = async (req, res) => {
 // Lock appointment for editing
 const lockAppointmentForEdit = async (req, res) => {
   try {
-    const appointment = await Appointment.findById(req.params.id);
+    const appointment = await Appointment.findById(req.params.id).populate('editedBy', 'firstName lastName');
     if (!appointment) {
       return res.status(404).json({ error: 'Appointment not found' });
     }
 
     if (appointment.isBeingEdited) {
-      if (String(appointment.editedBy) !== String(req.user.userId)) {
-        return res.status(409).json({ error: 'Appointment is currently being edited by another user' });
+      if (String(appointment.editedBy._id) !== String(req.user.userId)) {
+        const editorName = `${appointment.editedBy.firstName} ${appointment.editedBy.lastName}`;
+        return res.status(409).json({
+          error: 'Appointment is currently being edited by another user',
+          editorName: editorName,
+          editorId: appointment.editedBy._id
+        });
       } else {
         // Already locked by this user, just return success
         return res.json({ message: 'Appointment already locked for editing' });
