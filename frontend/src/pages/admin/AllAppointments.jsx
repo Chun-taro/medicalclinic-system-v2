@@ -53,11 +53,32 @@ export default function AllAppointments() {
         setUserName(`${res.data.firstName} ${res.data.lastName}`);
       } catch (err) {
         console.error('Failed to fetch user profile:', err);
-        setUserName('Admin');
+        setUserName('Superadmin');
       }
     };
     fetchUserProfile();
   }, []);
+
+  // Unlock appointment when modal is closed without clicking Cancel/Confirm
+  useEffect(() => {
+    const handleBeforeUnload = async () => {
+      if (showModal && editId) {
+        try {
+          const token = localStorage.getItem('token');
+          await axios.post(`http://localhost:5000/api/appointments/${editId}/unlock`, {}, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+        } catch (err) {
+          console.error('Failed to unlock appointment on page unload:', err);
+        }
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [showModal, editId]);
 
   // Apply client-side filters to appointments list
   const filteredAppointments = appointments.filter(app => {
@@ -103,7 +124,8 @@ export default function AllAppointments() {
       });
       setAppointments(prev => prev.filter(app => app._id !== id));
     } catch (err) {
-      alert('Failed to delete appointment');
+      setAlertMessage('Failed to delete appointment');
+      setShowAlert(true);
       console.error(err);
     }
   };
@@ -114,12 +136,10 @@ export default function AllAppointments() {
       await axios.patch(`http://localhost:5000/api/appointments/${id}/approve`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setAlertMessage('Appointment approved');
-      setShowAlert(true);
+      alert('Appointment approved');
       fetchAppointments();
     } catch (err) {
-      setAlertMessage('Failed to approve appointment');
-      setShowAlert(true);
+      alert('Failed to approve appointment');
       console.error(err);
     }
   };
@@ -262,7 +282,6 @@ export default function AllAppointments() {
                     headers: { Authorization: `Bearer ${token}` }
                   });
                   setShowModal(false);
-                  fetchAppointments(); // Refresh the appointments list to reflect unlocked state
                 } catch (err) {
                   console.error('Failed to unlock appointment:', err);
                   setAlertMessage('Failed to unlock appointment. Please try again.');
@@ -406,7 +425,7 @@ export default function AllAppointments() {
     filteredAppointments.filter(app => app.status === 'approved').map(app => (
       <tr key={app._id}>
         <td>{app.patientId?.firstName || app.firstName || 'N/A'} {app.patientId?.lastName || app.lastName || ''}</td>
-        <td>{new Date(app.appointmentDate).toLocaleString()}</td>
+        <td>{new Date(app.appointmentDate).toLocaleDateString()}</td>
         <td>{app.patientId?.email || app.email || 'N/A'}</td>
         <td>{app.patientId?.contactNumber || app.phone || 'N/A'}</td>
         <td>{app.purpose}</td>
