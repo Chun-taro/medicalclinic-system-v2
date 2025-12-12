@@ -219,10 +219,12 @@ export default function AllAppointments() {
                   await axios.post(`http://localhost:5000/api/appointments/${editId}/unlock`, {}, {
                     headers: { Authorization: `Bearer ${token}` }
                   });
+                  setShowModal(false);
+                  fetchAppointments(); // Refresh the appointments list to reflect unlocked state
                 } catch (err) {
                   console.error('Failed to unlock appointment:', err);
+                  alert('Failed to unlock appointment. Please try again.');
                 }
-                setShowModal(false);
               }} style={{ marginLeft: '10px' }}>Cancel</button>
             </div>
           </div>

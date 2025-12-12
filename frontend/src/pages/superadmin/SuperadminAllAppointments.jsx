@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import axios from 'axios';
 import SuperadminLayout from './SuperadminLayout';
 import './Style/appointment-table.css';
@@ -36,6 +36,27 @@ export default function AllAppointments() {
   useEffect(() => {
     fetchAppointments();
   }, []);
+
+  // Unlock appointment when modal is closed without clicking Cancel/Confirm
+  useEffect(() => {
+    const handleBeforeUnload = async () => {
+      if (showModal && editId) {
+        try {
+          const token = localStorage.getItem('token');
+          await axios.post(`http://localhost:5000/api/appointments/${editId}/unlock`, {}, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+        } catch (err) {
+          console.error('Failed to unlock appointment on page unload:', err);
+        }
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [showModal, editId]);
 
   // Apply client-side filters to appointments list
   const filteredAppointments = appointments.filter(app => {
@@ -213,7 +234,18 @@ export default function AllAppointments() {
             />
             <div style={{ marginTop: '10px' }}>
               <button onClick={handleReschedule}>Confirm</button>
-              <button onClick={() => setShowModal(false)} style={{ marginLeft: '10px' }}>Cancel</button>
+              <button onClick={async () => {
+                try {
+                  const token = localStorage.getItem('token');
+                  await axios.post(`http://localhost:5000/api/appointments/${editId}/unlock`, {}, {
+                    headers: { Authorization: `Bearer ${token}` }
+                  });
+                  setShowModal(false);
+                } catch (err) {
+                  console.error('Failed to unlock appointment:', err);
+                  alert('Failed to unlock appointment. Please try again.');
+                }
+              }} style={{ marginLeft: '10px' }}>Cancel</button>
             </div>
           </div>
         </div>

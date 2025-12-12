@@ -821,16 +821,28 @@ const lockAppointmentForEdit = async (req, res) => {
 // Unlock appointment after editing
 const unlockAppointmentForEdit = async (req, res) => {
   try {
+    console.log('Unlock attempt for appointment:', req.params.id, 'by user:', req.user.userId, 'role:', req.user.role);
     const appointment = await Appointment.findById(req.params.id);
     if (!appointment) {
+      console.log('Appointment not found');
       return res.status(404).json({ error: 'Appointment not found' });
     }
 
+    console.log('Appointment found:', appointment._id, 'isBeingEdited:', appointment.isBeingEdited, 'editedBy:', appointment.editedBy);
+
     if (!appointment.isBeingEdited) {
+      console.log('Appointment is not locked');
       return res.json({ message: 'Appointment is not locked' });
     }
 
-    if (String(appointment.editedBy) !== String(req.user.userId)) {
+    // Allow unlock if the user is the one who locked it, or if they are admin/superadmin
+    const isAdminOrSuper = req.user.role === 'admin' || req.user.role === 'superadmin';
+    const isLocker = String(appointment.editedBy) === String(req.user.userId);
+
+    console.log('isAdminOrSuper:', isAdminOrSuper, 'isLocker:', isLocker);
+
+    if (!isAdminOrSuper && !isLocker) {
+      console.log('Permission denied');
       return res.status(403).json({ error: 'You do not have permission to unlock this appointment' });
     }
 
@@ -838,6 +850,7 @@ const unlockAppointmentForEdit = async (req, res) => {
     appointment.editedBy = null;
     await appointment.save();
 
+    console.log('Appointment unlocked successfully');
     res.json({ message: 'Appointment unlocked' });
   } catch (err) {
     console.error('Unlock appointment error:', err.message);
