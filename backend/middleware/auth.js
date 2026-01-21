@@ -1,4 +1,3 @@
-
 const jwt = require('jsonwebtoken');
 
 const auth = (req, res, next) => {
@@ -37,4 +36,19 @@ const auth = (req, res, next) => {
   }
 };
 
-module.exports = { auth };
+// Middleware to check if user has required role
+const requireRole = (...roles) => {
+  return (req, res, next) => {
+    if (!req.user || !req.user.role) {
+      return res.status(403).json({ error: 'Access denied. No role specified.' });
+    }
+
+    if (!roles.includes(req.user.role)) {
+      return res.status(403).json({ error: 'Access denied. Insufficient permissions.' });
+    }
+
+    next();
+  };
+};
+
+module.exports = { auth, requireRole };
