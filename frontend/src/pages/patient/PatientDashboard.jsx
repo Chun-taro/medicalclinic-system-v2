@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import Calendar from 'react-calendar';
-import 'react-calendar/dist/Calendar.css';
 import PatientLayout from './PatientLayout';
 
 export default function PatientDashboard() {

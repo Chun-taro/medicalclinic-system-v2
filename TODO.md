@@ -1,28 +1,36 @@
-# MVCC and Locking Implementation for MongoDB Atlas
+# TODO: Apply Recommendations
 
-## Phase 1: Model Enhancements
-- [x] Add version field to User model
-- [x] Add version field to Log model
-- [x] Verify existing version fields in Appointment, Medicine, Notification models
+## 1. Permissions
+- Implement role-based permissions system
+- Define roles: superadmin, admin/doctor, patient
+- Restrict access based on roles in frontend and backend
 
-## Phase 2: Controller Updates - Optimistic Concurrency Control
-- [x] Update userController.js - add OCC to user updates
-- [x] Update appointmentController.js - enhance existing OCC, add to other operations
-- [x] Update medicineController.js - enhance existing OCC
-- [x] Update notificationController.js - add OCC to notification updates
-- [x] Update logController.js - add OCC to log operations
+## 2. Colors for Super Admin and Doctor
+- Customize color schemes for superadmin and doctor roles
+- Update CSS files for different themes
 
-## Phase 3: Transaction Support
-- [x] Add transaction support to complex operations in appointmentController
-- [ ] Add transaction support to user management operations
-- [x] Add transaction support to inventory management
+## 3. Doctor must not see Activity Log
+- Hide activity log section from doctor (admin) role
+- Modify SuperadminLogs.jsx or AdminLogs.jsx to check role
 
-## Phase 4: Error Handling and Retry Mechanisms
-- [x] Create utility functions for OCC conflict handling
-- [ ] Implement retry logic for version conflicts
-- [ ] Add proper error messages for concurrency issues
+## 4. Appointment: Purpose of Visit
+- Hide or remove checkbox for purpose of visit in appointment forms
+- Update BookAppointment.jsx and related forms
 
-## Phase 5: Testing and Validation
-- [ ] Test concurrent operations
-- [ ] Validate transaction rollback behavior
-- [ ] Performance testing under load
+## 5. Names: Remove Alerts
+- Remove alert messages related to names in forms or validations
+
+## 6. Scheduling: Date of Request and Customize Availability
+- Add date of request field in scheduling
+- Allow customization of availability dates
+- Update Calendar.jsx and appointment booking
+
+## 7. Inventory: Fix Design, Add Medicine Button at Top
+- Redesign inventory page
+- Move "Add Medicine" button to the top
+- Update Inventory.jsx and SuperadminInventory.jsx
+
+## 8. Activity Logs: Record Every Action
+- Ensure all user actions are logged
+- Update logActivity.js and related logging functions
+- Add logging to all CRUD operations and user interactions

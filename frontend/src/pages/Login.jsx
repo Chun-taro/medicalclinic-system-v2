@@ -101,9 +101,25 @@ export default function Login() {
     </div>
 
     <button type="submit">Continue →</button>
-<p className="google-label">Or continue with Google</p>
-    <a href="http://localhost:5000/api/auth/google" className="google-button">
-      <img src={GoogleLogo} alt="Google logo" className="google-icon" />
+<p className="google-label" style={{textAlign: 'center', margin: '15px 0 10px', color: '#666'}}>Or</p>
+    <a 
+      href="http://localhost:5000/api/auth/google" 
+      className="google-button"
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: 'white',
+        color: '#444',
+        borderRadius: '5px',
+        border: '1px solid #ddd',
+        padding: '10px',
+        textDecoration: 'none',
+        fontWeight: '500',
+        fontSize: '1rem'
+      }}>
+      <img src={GoogleLogo} alt="Google logo" className="google-icon" style={{ width: '30px', height: '30px', marginRight: '12px' }} />
+      <span>Continue with Google</span>
     </a>
     <p>
       Don't have an account?{' '}

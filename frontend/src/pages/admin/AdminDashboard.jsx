@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import Calendar from "react-calendar";
-import "react-calendar/dist/Calendar.css";
 import axios from "axios";
 import AdminLayout from "./AdminLayout";
 import { Bar } from "react-chartjs-2";

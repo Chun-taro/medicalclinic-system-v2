@@ -385,9 +385,9 @@ export default function AllAppointments() {
         <td>{app.purpose}</td>
         <td><span className="status-tag pending">Pending</span></td>
         <td className="action-cell">
-          <button onClick={() => handleApprove(app._id)}>✅</button>
-          <button onClick={() => openEditModal(app)}>✏️</button>
-          <button onClick={() => handleDelete(app._id)}>🗑️</button>
+          <button onClick={() => handleApprove(app._id)} className="approve-btn">Approve</button>
+          <button onClick={() => openEditModal(app)} className="edit-btn">Edit</button>
+          <button onClick={() => handleDelete(app._id)} className="delete-btn">Delete</button>
         </td>
       </tr>
     ))
@@ -431,8 +431,8 @@ export default function AllAppointments() {
         <td>{app.purpose}</td>
         <td><span className="status-tag confirmed">Approved</span></td>
         <td className="action-cell">
-          <button onClick={() => openEditModal(app)}>✏️</button>
-          <button onClick={() => handleDelete(app._id)}>🗑️</button>
+          <button onClick={() => openEditModal(app)} className="edit-btn">Edit</button>
+          <button onClick={() => handleDelete(app._id)} className="delete-btn">Delete</button>
         </td>
       </tr>
     ))

@@ -98,14 +98,14 @@ export default function BookAppointment() {
           <input type="tel" name="phone" placeholder="Your phone" value={form.phone} onChange={handleChange} required />
           <input type="text" name="address" placeholder="Address" value={form.address} onChange={handleChange} />
           <input type="date" name="appointmentDate" placeholder="Pick the date" value={form.appointmentDate} onChange={handleChange} required />
-          <div className="checkbox-container">
+          {/* <div className="checkbox-container"> */}
             <input type="checkbox" name="isMedicalCertificate" checked={form.isMedicalCertificate} onChange={e => setForm(prev => ({ ...prev, isMedicalCertificate: e.target.checked, purpose: e.target.checked ? 'Medical Certificate' : '', isCheckup: false }))} />
             <label>Medical Certificate</label>
-          </div>
-          <div className="checkbox-container">
+          {/* </div> */}
+          {/* <div className="checkbox-container"> */}
             <input type="checkbox" name="isCheckup" checked={form.isCheckup} onChange={e => setForm(prev => ({ ...prev, isCheckup: e.target.checked, isMedicalCertificate: false }))} />
             <label>Checkup Session</label>
-          </div>
+          {/* </div> */}
           <textarea name="purpose" placeholder="Purpose of visit" value={form.purpose} onChange={handleChange} rows={4} required disabled={form.isMedicalCertificate} />
           <button type="submit" className="schedule-button" disabled={loading}>
             {loading ? 'Scheduling...' : 'SCHEDULE'}

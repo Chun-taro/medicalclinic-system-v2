@@ -597,7 +597,7 @@
 
   .page-content {
     padding: var(--spacing-sm);
-    padding-top: calc(var(--spacing-sm) + 70px);
+      padding-top: var(--spacing-sm);
   }
 
   .stats-grid {
