@@ -216,7 +216,7 @@ export default function SuperadminLayout({ children }) {
 
               {dropdownOpen && (
                 <div className="dropdown">
-                  <button onClick={() => navigate('/admin-profile')}>View Profile</button>
+                   <button onClick={() => navigate('/superadmin-profile')}>View Profile</button>
                   <button onClick={handleLogout}>Logout</button>
                 </div>
               )}

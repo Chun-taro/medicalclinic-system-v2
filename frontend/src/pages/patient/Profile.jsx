@@ -115,21 +115,24 @@ export default function Profile() {
         {/* About Section */}
         <div className="fb-content">
   <div className="fb-card">
-    <h3>About</h3>
+    <h3>Personal Details</h3>
     <div className="fb-about-grid">
-      {/* Core Info */}
-      <div><span className="fb-label">Sex</span><span className="fb-value">{patient.sex || '—'}</span></div>
-      <div><span className="fb-label">Civil Status</span><span className="fb-value">{patient.civilStatus || '—'}</span></div>
       <div><span className="fb-label">Birthday</span><span className="fb-value">{patient.birthday?.slice(0, 10) || '—'}</span></div>
       <div><span className="fb-label">Address</span><span className="fb-value">{patient.homeAddress || '—'}</span></div>
+      <div><span className="fb-label">Sex</span><span className="fb-value">{patient.sex || '—'}</span></div>
+      <div><span className="fb-label">Civil Status</span><span className="fb-value">{patient.civilStatus || '—'}</span></div>
       <div><span className="fb-label">Contact</span><span className="fb-value">{patient.contactNumber || '—'}</span></div>
       <div><span className="fb-label">Blood Type</span><span className="fb-value">{patient.bloodType || '—'}</span></div>
-
-      {/* Emergency */}
+    </div>
+    <h3 style={{marginTop: '1.5rem'}}>Emergency Contact</h3>
+    <div className="fb-about-grid">
       <div><span className="fb-label">Emergency Contact</span><span className="fb-value">
         {patient.emergencyContact?.name || '—'} ({patient.emergencyContact?.relationship || '—'})
       </span></div>
       <div><span className="fb-label">Emergency Phone</span><span className="fb-value">{patient.emergencyContact?.phone || '—'}</span></div>
+    </div>
+    <h3 style={{marginTop: '1.5rem'}}>Medical Details</h3>
+    <div className="fb-about-grid">
 
       {/* Medical */}
       <div><span className="fb-label">Allergies</span><span className="fb-value">{patient.allergies?.join(', ') || '—'}</span></div>
@@ -179,8 +182,8 @@ export default function Profile() {
     <div className="modal-content">
       <h3>Edit Details</h3>
       <form onSubmit={handleSubmit}>
-        {/* Basic Info */}
-        {['firstName', 'middleName', 'lastName', 'homeAddress', 'contactNumber'].map(field => (
+        <h4>Personal Information</h4>
+        {['firstName', 'middleName', 'lastName'].map(field => (
           <div className="form-group" key={field}>
             <label>{field.replace(/([A-Z])/g, ' $1')}</label>
             <input
@@ -191,8 +194,15 @@ export default function Profile() {
             />
           </div>
         ))}
-
-        {/* Selects */}
+        <div className="form-group">
+          <label>Birthday</label>
+          <input
+            type="date"
+            name="birthday"
+            value={editForm.birthday?.slice(0, 10) || ''}
+            onChange={handleChange}
+          />
+        </div>
         <div className="form-group">
           <label>Sex</label>
           <select name="sex" value={editForm.sex || ''} onChange={handleChange}>
@@ -212,15 +222,19 @@ export default function Profile() {
             <option value="divorced">Divorced</option>
           </select>
         </div>
-        <div className="form-group">
-          <label>Birthday</label>
-          <input
-            type="date"
-            name="birthday"
-            value={editForm.birthday?.slice(0, 10) || ''}
-            onChange={handleChange}
-          />
-        </div>
+
+        <h4>Contact Information</h4>
+        {['homeAddress', 'contactNumber'].map(field => (
+          <div className="form-group" key={field}>
+            <label>{field.replace(/([A-Z])/g, ' $1')}</label>
+            <input
+              type="text"
+              name={field}
+              value={editForm[field] || ''}
+              onChange={handleChange}
+            />
+          </div>
+        ))}
 
         {/* Emergency Contact */}
         <h4>Emergency Contact</h4>
@@ -244,7 +258,8 @@ export default function Profile() {
           </div>
         ))}
 
-        {/* Blood Type */}
+        <h4>Medical Details</h4>
+
         <div className="form-group">
           <label>Blood Type</label>
           <select

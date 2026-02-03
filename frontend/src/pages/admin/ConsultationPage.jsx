@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import axios from 'axios';
 import AdminLayout from './AdminLayout';
 import './Style/consultation.css';
-import './Style/appointment-table.css';
 
 export default function ConsultationPage() {
   const [approvedAppointments, setApprovedAppointments] = useState([]);
@@ -261,7 +260,8 @@ export default function ConsultationPage() {
             });
 
             return (
-              <table className="appointment-table">
+              <div className="appointment-table-wrapper">
+                <table className="all-appointments-table">
                 <thead>
                   <tr>
                     <th>Patient</th>
@@ -295,7 +295,8 @@ export default function ConsultationPage() {
                     </tr>
                   ))}
                 </tbody>
-          </table>
+                </table>
+              </div>
             );
           })()
         )}
@@ -303,64 +304,68 @@ export default function ConsultationPage() {
         {/* MRF Modal */}
         {showMRFModal && patientProfile && (
           <div className="modal-overlay">
-  <div className="modal-content">
-    <button className="close-button" onClick={() => setShowMRFModal(false)}>✖</button>
-    <h3>🩺 Medical Record Form</h3>
-    <div className="mrf-section">
-      {/* Personal Info */}
-      <p><strong>Name:</strong> {patientProfile.firstName} {patientProfile.middleName} {patientProfile.lastName}</p>
-      <p><strong>Email:</strong> {patientProfile.email}</p>
-      <p><strong>Birthday:</strong> {patientProfile.birthday?.slice(0, 10)}</p>
-      <p><strong>Sex:</strong> {patientProfile.sex}</p>
-      <p><strong>Civil Status:</strong> {patientProfile.civilStatus}</p>
-      <p><strong>Address:</strong> {patientProfile.homeAddress}</p>
-      <p><strong>Contact:</strong> {patientProfile.contactNumber}</p>
-      <p><strong>Blood Type:</strong> {patientProfile.bloodType}</p>
+            <div className="modal-content mrf-modal">
+              <div className="mrf-header">
+                <h3>🩺 Medical Record Form</h3>
+                <button className="close-button" onClick={() => setShowMRFModal(false)}>✖</button>
+              </div>
+              <div className="mrf-body">
+                <div className="mrf-section">
+                  {/* Personal Info */}
+                  <p><strong>Name:</strong> {patientProfile.firstName} {patientProfile.middleName} {patientProfile.lastName}</p>
+                  <p><strong>Email:</strong> {patientProfile.email}</p>
+                  <p><strong>Birthday:</strong> {patientProfile.birthday?.slice(0, 10)}</p>
+                  <p><strong>Sex:</strong> {patientProfile.sex}</p>
+                  <p><strong>Civil Status:</strong> {patientProfile.civilStatus}</p>
+                  <p><strong>Address:</strong> {patientProfile.homeAddress}</p>
+                  <p><strong>Contact:</strong> {patientProfile.contactNumber}</p>
+                  <p><strong>Blood Type:</strong> {patientProfile.bloodType}</p>
 
-      {/* Emergency */}
-      <p><strong>Emergency Contact:</strong> {patientProfile.emergencyContact?.name} ({patientProfile.emergencyContact?.relationship}) - {patientProfile.emergencyContact?.phone}</p>
+                  {/* Emergency */}
+                  <p><strong>Emergency Contact:</strong> {patientProfile.emergencyContact?.name} ({patientProfile.emergencyContact?.relationship}) - {patientProfile.emergencyContact?.phone}</p>
 
-      {/* Medical */}
-      <p><strong>Allergies:</strong> {patientProfile.allergies?.join(', ') || '—'}</p>
-      <p><strong>Medical History:</strong> {patientProfile.medicalHistory?.join(', ') || '—'}</p>
-      <p><strong>Current Medications:</strong> {patientProfile.currentMedications?.join(', ') || '—'}</p>
+                  {/* Medical */}
+                  <p><strong>Allergies:</strong> {patientProfile.allergies?.join(', ') || '—'}</p>
+                  <p><strong>Medical History:</strong> {patientProfile.medicalHistory?.join(', ') || '—'}</p>
+                  <p><strong>Current Medications:</strong> {patientProfile.currentMedications?.join(', ') || '—'}</p>
 
-      {/* Family History */}
-      <p><strong>Family History:</strong> {
-        Object.entries(patientProfile.familyHistory || {}).map(([key, val]) =>
-          typeof val === 'boolean' ? (val ? `${key}, ` : '') : val ? `Other: ${val}` : ''
-        )
-      }</p>
+                  {/* Family History */}
+                  <p><strong>Family History:</strong> {
+                    Object.entries(patientProfile.familyHistory || {}).map(([key, val]) =>
+                      typeof val === 'boolean' ? (val ? `${key}, ` : '') : val ? `Other: ${val}` : ''
+                    )
+                  }</p>
 
-      {/* Personal-Social History */}
-      <h4>🧠 Personal-Social History</h4>
-      <p><strong>Smoker:</strong> {patientProfile.personalSocialHistory?.smoking || '—'}</p>
-      <p><strong>Sticks/Day:</strong> {patientProfile.personalSocialHistory?.smokingSticks || '—'}</p>
-      <p><strong>Drinker:</strong> {patientProfile.personalSocialHistory?.drinking || '—'}</p>
-      <p><strong>Drinking Since:</strong> {patientProfile.personalSocialHistory?.drinkingStartYear || '—'}</p>
-      <p><strong>Drinking Frequency:</strong> {patientProfile.personalSocialHistory?.drinkingFrequency || '—'}</p>
+                  {/* Personal-Social History */}
+                  <h4>🧠 Personal-Social History</h4>
+                  <p><strong>Smoker:</strong> {patientProfile.personalSocialHistory?.smoking || '—'}</p>
+                  <p><strong>Sticks/Day:</strong> {patientProfile.personalSocialHistory?.smokingSticks || '—'}</p>
+                  <p><strong>Drinker:</strong> {patientProfile.personalSocialHistory?.drinking || '—'}</p>
+                  <p><strong>Drinking Since:</strong> {patientProfile.personalSocialHistory?.drinkingStartYear || '—'}</p>
+                  <p><strong>Drinking Frequency:</strong> {patientProfile.personalSocialHistory?.drinkingFrequency || '—'}</p>
 
-      {/* Past Medical History */}
-      <h4>🩹 Past Medical History</h4>
-      <p><strong>Conditions:</strong> {
-        Object.entries(patientProfile.pastMedicalHistory || {}).filter(([_, v]) => v).map(([k]) => `${k}, `)
-      }</p>
+                  {/* Past Medical History */}
+                  <h4>🩹 Past Medical History</h4>
+                  <p><strong>Conditions:</strong> {
+                    Object.entries(patientProfile.pastMedicalHistory || {}).filter(([_, v]) => v).map(([k]) => `${k}, `)
+                  }</p>
 
-      {/* Admissions & Operations */}
-      <h4>🏥 Hospitalization</h4>
-      <p><strong>Admissions:</strong> {patientProfile.admissionCount || '—'} ({patientProfile.admissionReason || '—'})</p>
-      <p><strong>Operation Date:</strong> {patientProfile.operationDate?.slice(0, 10) || '—'}</p>
-      <p><strong>Procedure:</strong> {patientProfile.operationProcedure || '—'}</p>
+                  {/* Admissions & Operations */}
+                  <h4>🏥 Hospitalization</h4>
+                  <p><strong>Admissions:</strong> {patientProfile.admissionCount || '—'} ({patientProfile.admissionReason || '—'})</p>
+                  <p><strong>Operation Date:</strong> {patientProfile.operationDate?.slice(0, 10) || '—'}</p>
+                  <p><strong>Procedure:</strong> {patientProfile.operationProcedure || '—'}</p>
 
-      {/* Immunization */}
-      <h4>💉 Immunization History</h4>
-      <p><strong>Vaccines:</strong> {
-        Object.entries(patientProfile.immunization || {}).filter(([_, v]) => v).map(([k]) => `${k}, `)
-      }</p>
-      <p><strong>Last Admission:</strong> {patientProfile.lastAdmissionDate?.slice(0, 10) || '—'} ({patientProfile.lastAdmissionTypeLocation || '—'})</p>
-    </div>
-  </div>
-</div>
+                  {/* Immunization */}
+                  <h4>💉 Immunization History</h4>
+                  <p><strong>Vaccines:</strong> {
+                    Object.entries(patientProfile.immunization || {}).filter(([_, v]) => v).map(([k]) => `${k}, `)
+                  }</p>
+                  <p><strong>Last Admission:</strong> {patientProfile.lastAdmissionDate?.slice(0, 10) || '—'} ({patientProfile.lastAdmissionTypeLocation || '—'})</p>
+                </div>
+              </div>
+            </div>
+          </div>
         )}
 
         {/* PDF Modal */}

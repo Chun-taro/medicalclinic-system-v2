@@ -37,7 +37,7 @@
   transform: translateX(2px);
 }
 
-.role-badge {
+.user-table .role-badge {
   display: inline-block;
   padding: 4px 12px;
   border-radius: 16px;
@@ -48,12 +48,24 @@
   min-width: 70px;
 }
 
-.role-admin {
-  background-color: #1E90FF; 
+.user-table .role-admin {
+  background-color: #3b82f6; /* Blue */
 }
 
-.role-patient {
-  background-color: #32CD32; 
+.user-table .role-patient {
+  background-color: #22c55e; /* Green */
+}
+
+.user-table .role-doctor {
+  background-color: #f97316; /* Orange */
+}
+
+.user-table .role-nurse {
+  background-color: #8b5cf6; /* Purple */
+}
+
+.user-table .role-superadmin {
+  background-color: #ef4444; /* Red */
 }
 
 /* Style select dropdown */
@@ -467,8 +479,11 @@
 
 .popup-footer {
   padding: 20px 30px 30px;
-  text-align: center;
   background: rgba(255, 255, 255, 0.05);
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  text-align: center;
 }
 
 .popup-btn-primary {
@@ -487,6 +502,23 @@
 .popup-btn-primary:hover {
   transform: translateY(-2px);
   box-shadow: 0 6px 20px rgba(255, 107, 107, 0.4);
+}
+
+.popup-btn-secondary {
+  background: transparent;
+  color: white;
+  border: 2px solid rgba(255, 255, 255, 0.7);
+  padding: 12px 30px;
+  border-radius: 25px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.popup-btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: white;
 }
 
 @keyframes fadeIn {

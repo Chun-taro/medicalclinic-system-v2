@@ -272,3 +272,24 @@
   border-radius: 50%;
   font-weight: bold;
 }
+
+/*
+  Responsive Overrides for Layout Conflicts.
+  These rules fix issues where global styles from other parts of the application
+  (like PatientDashboard.css) interfere with the Admin/Superadmin layout.
+*/
+@media (min-width: 481px) and (max-width: 768px) {
+  /* This ensures the admin sidebar remains a fixed top bar on tablets,
+     overriding conflicting styles that would otherwise break the layout. */
+  .sidebar {
+    position: fixed;
+    height: 60px;
+    box-shadow: var(--shadow);
+  }
+
+  /* This prevents the right side of the navbar from taking up 100% width,
+     which is an unwanted style inherited from PatientDashboard.css. */
+  .navbar-right {
+    width: auto;
+  }
+}

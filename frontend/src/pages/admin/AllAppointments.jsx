@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import AdminLayout from './AdminLayout';
-import './Style/appointment-table.css';
+import './Style/AllAppointments.css';
 
 export default function AllAppointments() {
   const [appointments, setAppointments] = useState([]);
@@ -356,7 +356,7 @@ export default function AllAppointments() {
             <>
               <h3>Pending Appointments</h3>
               <div className="appointment-table-wrapper">
-                <table className="appointment-table">
+                <table className="all-appointments-table">
                   <thead>
                     <tr>
                       <th>Name</th>
@@ -402,7 +402,7 @@ export default function AllAppointments() {
             <>
               <h3>Approved Appointments</h3>
               <div className="appointment-table-wrapper">
-                <table className="appointment-table">
+                <table className="all-appointments-table">
                   <thead>
                     <tr>
                       <th>Name</th>

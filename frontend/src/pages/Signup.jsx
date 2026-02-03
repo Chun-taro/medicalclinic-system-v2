@@ -3,21 +3,20 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import Recaptcha from '../components/Recaptcha';
+import GoogleLogo from './assets/google-logo.png';
 import backgroundImage from './assets/building.png';
 
 export default function Signup() {
   const [form, setForm] = useState({
     firstName: '', lastName: '', middleName: '', email: '', password: '',
-    role: 'patient', idNumber: '', sex: '', civilStatus: '', birthday: '',
-    age: '', homeAddress: '', contactNumber: '',
-    emergencyContact: { name: '', relationship: '', phone: '' },
-    bloodType: '', allergies: [], medicalHistory: [], currentMedications: [],
-    familyHistory: { diabetes: false, hypertension: false, heartDisease: false, cancer: false, other: '' }
+    role: 'patient', idNumber: '', contactNumber: ''
   });
 
   const [recaptchaToken, setRecaptchaToken] = useState('');
   const [recaptchaError, setRecaptchaError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const [modalData, setModalData] = useState({ title: '', icon: '', message: '', isSuccess: false });
   const navigate = useNavigate();
 
   const handleRecaptchaVerify = token => {
@@ -30,14 +29,26 @@ export default function Signup() {
     setRecaptchaError('reCAPTCHA expired. Please verify again.');
   };
 
-  const handleSignup = async () => {
+  const handleSignup = async (e) => {
+    e.preventDefault();
     const { firstName, lastName, email, password, idNumber, contactNumber } = form;
     if (!firstName || !lastName || !email || !password || !idNumber || !contactNumber) {
-      alert('Please fill out all required fields.');
+      setModalData({ title: 'Missing Information', icon: '⚠️', message: 'Please fill out all required fields.' });
+      setShowModal(true);
+      return;
+    }
+    if (!email.endsWith('@student.buksu.edu.ph')) {
+      setModalData({
+        title: 'Invalid Email',
+        icon: '📧',
+        message: 'Please use a valid BukSU student email (@student.buksu.edu.ph).'
+      });
+      setShowModal(true);
       return;
     }
     if (password.length < 6) {
-      alert('Password must be at least 6 characters.');
+      setModalData({ title: 'Weak Password', icon: '🔑', message: 'Password must be at least 6 characters long.' });
+      setShowModal(true);
       return;
     }
     if (!recaptchaToken) {
@@ -55,10 +66,16 @@ export default function Signup() {
       localStorage.setItem('userId', res.data.userId);
       localStorage.setItem('role', res.data.role);
 
-      alert('Signup successful');
-      navigate(`/${res.data.role}-dashboard`);
+      setModalData({
+        title: 'Success!',
+        icon: '✅',
+        message: 'Your account has been created successfully. You will now be redirected.',
+        isSuccess: true
+      });
+      setShowModal(true);
     } catch (err) {
-      alert(err.response?.data?.error || 'Signup failed');
+      setModalData({ title: 'Signup Failed', icon: '❌', message: err.response?.data?.error || 'An unexpected error occurred. Please try again.' });
+      setShowModal(true);
     } finally {
       setLoading(false);
     }
@@ -69,11 +86,12 @@ export default function Signup() {
       <div className="signup-overlay"></div>
 
       <div className="signup-right">
-        <div className="signup-form">
+        <form className="signup-form" onSubmit={handleSignup}>
           <h2>Create Your Account</h2>
-
-          <a href="http://localhost:5000/api/auth/google">
-            <button className="google-button">Sign Up with Google</button>
+ 
+          <a href="http://localhost:5000/api/auth/google" className="google-button">
+            <img src={GoogleLogo} alt="Google logo" className="google-icon" />
+            <span>Sign Up with Google</span>
           </a>
 
           {/* Personal Info */}
@@ -84,37 +102,6 @@ export default function Signup() {
           <input type="email" placeholder="Email Address *" required value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} />
           <input type="password" placeholder="Password *" required value={form.password} onChange={e => setForm({ ...form, password: e.target.value })} />
           <input type="tel" placeholder="Contact Number *" required value={form.contactNumber} onChange={e => setForm({ ...form, contactNumber: e.target.value })} />
-          <input type="date" placeholder="Date of Birth" value={form.birthday} onChange={e => setForm({ ...form, birthday: e.target.value })} />
-
-          <select value={form.sex} onChange={e => setForm({ ...form, sex: e.target.value })}>
-            <option value="">Select Gender</option>
-            <option value="male">Male</option>
-            <option value="female">Female</option>
-            <option value="other">Other</option>
-          </select>
-
-          <select value={form.civilStatus} onChange={e => setForm({ ...form, civilStatus: e.target.value })}>
-            <option value="">Civil Status</option>
-            <option value="single">Single</option>
-            <option value="married">Married</option>
-            <option value="widowed">Widowed</option>
-            <option value="divorced">Divorced</option>
-          </select>
-
-          <input type="text" placeholder="Home Address" value={form.homeAddress} onChange={e => setForm({ ...form, homeAddress: e.target.value })} />
-
-          <select value={form.bloodType} onChange={e => setForm({ ...form, bloodType: e.target.value })}>
-            <option value="">Blood Type</option>
-            {['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'].map(bt => (
-              <option key={bt} value={bt}>{bt}</option>
-            ))}
-          </select>
-
-          {/* Emergency Contact */}
-          <div className="section-divider">Emergency Contact</div>
-          <input type="text" placeholder="Contact Name" value={form.emergencyContact.name} onChange={e => setForm({ ...form, emergencyContact: { ...form.emergencyContact, name: e.target.value } })} />
-          <input type="text" placeholder="Relationship" value={form.emergencyContact.relationship} onChange={e => setForm({ ...form, emergencyContact: { ...form.emergencyContact, relationship: e.target.value } })} />
-          <input type="tel" placeholder="Phone Number" value={form.emergencyContact.phone} onChange={e => setForm({ ...form, emergencyContact: { ...form.emergencyContact, phone: e.target.value } })} />
 
           {/* Recaptcha */}
           <div className="recaptcha-container">
@@ -122,15 +109,37 @@ export default function Signup() {
             {recaptchaError && <p className="recaptcha-error">{recaptchaError}</p>}
           </div>
 
-          <button onClick={handleSignup} disabled={loading}>
+          <button type="submit" disabled={loading}>
             {loading ? 'Signing up...' : 'Sign Up'}
           </button>
 
           <p>
             Already have an account? <span onClick={() => navigate('/')}>Login here</span>
           </p>
-        </div>
+        </form>
       </div>
+
+      {showModal && (
+        <div className="popup-overlay">
+          <div className="popup-content">
+            <div className="popup-header">
+              <div className="popup-icon">{modalData.icon}</div>
+              <h3>{modalData.title}</h3>
+            </div>
+            <div className="popup-body">
+              <p>{modalData.message}</p>
+            </div>
+            <div className="popup-footer">
+              <button className="popup-btn-primary" onClick={() => {
+                setShowModal(false);
+                if (modalData.isSuccess) {
+                  navigate(`/${localStorage.getItem('role')}-dashboard`);
+                }
+              }}>OK</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -11,6 +11,10 @@ export default function ManageUsers() {
   const [searchQuery, setSearchQuery] = useState('');
   const [currentUserRole, setCurrentUserRole] = useState('');
   const [showPopup, setShowPopup] = useState(false);
+  const [popupData, setPopupData] = useState({ title: '', icon: '', messages: [] });
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [confirmModalData, setConfirmModalData] = useState({ userId: null, newRole: '', userName: '', oldRole: '' });
+  const [pendingChange, setPendingChange] = useState(null); // { userId, newRole }
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -37,42 +41,68 @@ export default function ManageUsers() {
     fetchUsers();
   }, []);
 
-  const handleRoleChange = async (id, newRole) => {
-    // Check if trying to change to superadmin and current user is not superadmin
+  const handleRoleChange = (id, newRole) => {
+    const userToChange = users.find(u => u._id === id);
+    if (!userToChange || userToChange.role === newRole) {
+      return;
+    }
+
     if (newRole === 'superadmin' && currentUserRole !== 'superadmin') {
+      setPopupData({
+        title: 'Access Denied',
+        icon: '🔒',
+        messages: ['Only a Superadmin can assign others to be Superadmin.']
+      });
       setShowPopup(true);
       return;
     }
 
+    setPendingChange({ userId: id, newRole });
+    setConfirmModalData({
+      userId: id,
+      newRole: newRole,
+      userName: userToChange.name || `${userToChange.firstName} ${userToChange.lastName}`,
+      oldRole: userToChange.role
+    });
+    setShowConfirmModal(true);
+  };
+
+  const executeRoleChange = async () => {
+    const { userId, newRole } = confirmModalData;
     try {
       const token = localStorage.getItem('token');
       await axios.put(
-        `http://localhost:5000/api/users/${id}/role`,
+        `http://localhost:5000/api/users/${userId}/role`,
         { role: newRole },
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
       setUsers(prev =>
-        prev.map(user => (user._id === id ? { ...user, role: newRole } : user))
+        prev.map(user => (user._id === userId ? { ...user, role: newRole } : user))
       );
     } catch (err) {
       console.error('Error updating role:', err.message);
-      // Provide user-friendly error message without technical details
-      // Check if server error message contains technical details and filter them out
       const serverError = err.response?.data?.error;
       let errorMessage = 'Unable to update user role. Please check your connection and try again.';
 
       if (serverError && !serverError.includes('localhost') && !serverError.includes('5000') && !serverError.includes('http')) {
         errorMessage = serverError;
       }
-
-      alert(errorMessage);
+      setPopupData({
+        title: 'Update Failed',
+        icon: '❌',
+        messages: [errorMessage]
+      });
+      setShowPopup(true);
+    } finally {
+      setShowConfirmModal(false);
+      setPendingChange(null);
     }
   };
 
   const renderTable = role => {
     const filtered = users.filter(user => {
-      const matchesRole = role === 'admin' ? user.role !== 'patient' : user.role === role;
+      const matchesRole = user.role === role;
       if (searchQuery) {
         const q = searchQuery.toLowerCase().trim();
         const fullName = (user.name || `${user.firstName} ${user.lastName}`).toLowerCase();
@@ -84,7 +114,7 @@ export default function ManageUsers() {
       return matchesRole;
     });
     return filtered.length === 0 ? (
-      <p>No {role === 'admin' ? 'staff' : role}s found.</p>
+      <p>No {role}s found.</p>
     ) : (
       <table className="user-table">
         <thead>
@@ -104,16 +134,18 @@ export default function ManageUsers() {
               <td>{user.idNumber}</td>
               <td>
                 <span
-                  className={`role-badge ${
-                    user.role === 'admin' ? 'role-admin' : 'role-patient'
-                  }`}
+                  className={`role-badge role-${user.role}`}
+                  // Dynamically apply a class based on the user's role
+                  // e.g., 'role-patient', 'role-admin', 'role-doctor', 'role-nurse', 'role-superadmin'
+                  // The CSS for these classes will define their respective colors.
+
                 >
                   {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
                 </span>
               </td>
               <td>
                 <select
-                  value={user.role}
+                  value={pendingChange?.userId === user._id ? pendingChange.newRole : user.role}
                   onChange={e => handleRoleChange(user._id, e.target.value)}
                 >
                   <option value="patient">patient</option>
@@ -153,18 +185,16 @@ export default function ManageUsers() {
         <>
           {/* Tab Buttons */}
           <div className="tabs">
-            <button
-              className={activeTab === 'admin' ? 'active' : ''}
-              onClick={() => setActiveTab('admin')}
-            >
-              Admins
-            </button>
-            <button
-              className={activeTab === 'patient' ? 'active' : ''}
-              onClick={() => setActiveTab('patient')}
-            >
-              Patients
-            </button>
+            {['admin', 'doctor', 'nurse', 'superadmin', 'patient'].map(tab => (
+              <button
+                key={tab}
+                className={activeTab === tab ? 'active' : ''}
+                onClick={() => setActiveTab(tab)}
+              >
+                {/* Capitalize first letter and add 's' for plural */}
+                {tab.charAt(0).toUpperCase() + tab.slice(1)}s
+              </button>
+            ))}
           </div>
 
           {/*  Tab Content */}
@@ -178,17 +208,42 @@ export default function ManageUsers() {
         </>
       )}
 
+      {/* Role Change Confirmation Modal */}
+      {showConfirmModal && (
+        <div className="popup-overlay">
+          <div className="popup-content">
+            <div className="popup-header">
+              <div className="popup-icon">🔄</div>
+              <h3>Confirm Role Change</h3>
+            </div>
+            <div className="popup-body">
+              <p>
+                Are you sure you want to change the role of <strong>{confirmModalData.userName}</strong> from{' '}
+                <strong>{confirmModalData.oldRole}</strong> to <strong>{confirmModalData.newRole}</strong>?
+              </p>
+            </div>
+            <div className="popup-footer">
+              <button className="popup-btn-secondary" onClick={() => {
+                setShowConfirmModal(false);
+                setPendingChange(null);
+              }}>
+                Cancel
+              </button>
+              <button className="popup-btn-primary" onClick={executeRoleChange}>Confirm</button>
+            </div>
+          </div>
+        </div>
+      )}
       {/* Custom Popup */}
       {showPopup && (
         <div className="popup-overlay">
           <div className="popup-content">
             <div className="popup-header">
-              <div className="popup-icon">🔒</div>
-              <h3>Super Admin Access Required</h3>
+              <div className="popup-icon">{popupData.icon}</div>
+              <h3>{popupData.title}</h3>
             </div>
             <div className="popup-body">
-              <p>You need Super Admin privileges to modify user roles.</p>
-              <p>Please contact your Super Administrator for assistance.</p>
+              {popupData.messages.map((msg, index) => <p key={index}>{msg}</p>)}
             </div>
             <div className="popup-footer">
               <button className="popup-btn-primary" onClick={() => setShowPopup(false)}>Understood</button>

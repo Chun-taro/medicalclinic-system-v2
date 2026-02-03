@@ -11,6 +11,7 @@ export default function ManageUsers() {
   const [searchQuery, setSearchQuery] = useState('');
   const [currentUserRole, setCurrentUserRole] = useState('');
   const [showPopup, setShowPopup] = useState(false);
+  const [popupData, setPopupData] = useState({ title: '', icon: '', messages: [] });
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -40,6 +41,14 @@ export default function ManageUsers() {
   const handleRoleChange = async (id, newRole) => {
     // Check if trying to change to superadmin and current user is not superadmin
     if (newRole === 'superadmin' && currentUserRole !== 'superadmin') {
+      setPopupData({
+        title: 'Super Admin Access Required',
+        icon: '🔒',
+        messages: [
+          'You need Super Admin privileges to modify user roles.',
+          'Please contact your Super Administrator for assistance.'
+        ]
+      });
       setShowPopup(true);
       return;
     }
@@ -61,18 +70,21 @@ export default function ManageUsers() {
       // Check if server error message contains technical details and filter them out
       const serverError = err.response?.data?.error;
       let errorMessage = 'Unable to update user role. Please check your connection and try again.';
-
       if (serverError && !serverError.includes('localhost') && !serverError.includes('5000') && !serverError.includes('http')) {
         errorMessage = serverError;
       }
-
-      alert(errorMessage);
+      setPopupData({
+        title: 'Access Denied',
+        icon: '🚫',
+        messages: [errorMessage]
+      });
+      setShowPopup(true);
     }
   };
 
   const renderTable = role => {
     const filtered = users.filter(user => {
-      const matchesRole = role === 'admin' ? user.role !== 'patient' : user.role === role;
+      const matchesRole = user.role === role;
       if (searchQuery) {
         const q = searchQuery.toLowerCase().trim();
         const fullName = (user.name || `${user.firstName} ${user.lastName}`).toLowerCase();
@@ -84,7 +96,7 @@ export default function ManageUsers() {
       return matchesRole;
     });
     return filtered.length === 0 ? (
-      <p>No {role === 'admin' ? 'staff' : role}s found.</p>
+      <p>No {role}s found.</p>
     ) : (
       <table className="user-table">
         <thead>
@@ -104,9 +116,11 @@ export default function ManageUsers() {
               <td>{user.idNumber}</td>
               <td>
                 <span
-                  className={`role-badge ${
-                    user.role === 'admin' ? 'role-admin' : 'role-patient'
-                  }`}
+                  className={`role-badge role-${user.role}`}
+                  // Dynamically apply a class based on the user's role
+                  // e.g., 'role-patient', 'role-admin', 'role-doctor', 'role-nurse', 'role-superadmin'
+                  // The CSS for these classes will define their respective colors.
+
                 >
                   {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
                 </span>
@@ -153,18 +167,16 @@ export default function ManageUsers() {
         <>
           {/* Tab Buttons */}
           <div className="tabs">
-            <button
-              className={activeTab === 'admin' ? 'active' : ''}
-              onClick={() => setActiveTab('admin')}
-            >
-              Admins
-            </button>
-            <button
-              className={activeTab === 'patient' ? 'active' : ''}
-              onClick={() => setActiveTab('patient')}
-            >
-              Patients
-            </button>
+            {['admin', 'doctor', 'nurse', 'patient'].map(tab => (
+              <button
+                key={tab}
+                className={activeTab === tab ? 'active' : ''}
+                onClick={() => setActiveTab(tab)}
+              >
+                {/* Capitalize first letter and add 's' for plural */}
+                {tab.charAt(0).toUpperCase() + tab.slice(1)}s
+              </button>
+            ))}
           </div>
 
           {/*  Tab Content */}
@@ -173,7 +185,6 @@ export default function ManageUsers() {
             {activeTab === 'patient' && renderTable('patient')}
             {activeTab === 'doctor' && renderTable('doctor')}
             {activeTab === 'nurse' && renderTable('nurse')}
-            {activeTab === 'superadmin' && renderTable('superadmin')}
           </div>
         </>
       )}
@@ -183,12 +194,11 @@ export default function ManageUsers() {
         <div className="popup-overlay">
           <div className="popup-content">
             <div className="popup-header">
-              <div className="popup-icon">🔒</div>
-              <h3>Super Admin Access Required</h3>
+              <div className="popup-icon">{popupData.icon}</div>
+              <h3>{popupData.title}</h3>
             </div>
             <div className="popup-body">
-              <p>You need Super Admin privileges to modify user roles.</p>
-              <p>Please contact your Super Administrator for assistance.</p>
+              {popupData.messages.map((msg, index) => <p key={index}>{msg}</p>)}
             </div>
             <div className="popup-footer">
               <button className="popup-btn-primary" onClick={() => setShowPopup(false)}>Understood</button>

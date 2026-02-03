@@ -37,7 +37,7 @@
   transform: translateX(2px);
 }
 
-.role-badge {
+.user-table .role-badge {
   display: inline-block;
   padding: 4px 12px;
   border-radius: 16px;
@@ -48,12 +48,24 @@
   min-width: 70px;
 }
 
-.role-admin {
-  background-color: #1E90FF; 
+.user-table .role-admin {
+  background-color: #3b82f6; /* Blue */
 }
 
-.role-patient {
-  background-color: #32CD32; 
+.user-table .role-patient {
+  background-color: #22c55e; /* Green */
+}
+
+.user-table .role-doctor {
+  background-color: #f97316; /* Orange */
+}
+
+.user-table .role-nurse {
+  background-color: #8b5cf6; /* Purple */
+}
+
+.user-table .role-superadmin {
+  background-color: #ef4444; /* Red */
 }
 
 /* Style select dropdown */

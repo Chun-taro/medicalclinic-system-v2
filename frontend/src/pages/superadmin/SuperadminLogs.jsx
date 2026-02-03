@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import axios from 'axios';
 import SuperadminLayout from './SuperadminLayout';
 import './Style/SuperadminLogs.css';
+import { io } from 'socket.io-client';
+import { toast } from 'react-toastify';
 
 export default function SuperadminLogs() {
   const [logs, setLogs] = useState([]);
@@ -32,7 +34,21 @@ export default function SuperadminLogs() {
 
   useEffect(() => {
     fetchLogs();
-  }, []);
+
+    const socket = io('http://localhost:5000');
+    socket.on('new_log', (newLog) => {
+      if (newLog && typeof newLog === 'object') {
+        // Add the new log to the top of the list
+        setLogs(prevLogs => [newLog, ...prevLogs]);
+        // Show a notification
+        toast.info(`New log: ${newLog.action?.replace(/_/g, ' ') || 'Update'}`);
+      }
+    });
+
+    return () => {
+      socket.disconnect();
+    };
+  }, []); // Run only once on component mount
 
   const toggleExpand = (id) => {
     setExpandedId((prev) => (prev === id ? null : id));
