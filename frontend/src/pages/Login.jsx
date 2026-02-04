@@ -12,6 +12,8 @@ export default function Login() {
   const [form, setForm] = useState({ email: '', password: '' });
   const [recaptchaToken, setRecaptchaToken] = useState('');
   const [recaptchaError, setRecaptchaError] = useState('');
+  const [showModal, setShowModal] = useState(false);
+  const [modalData, setModalData] = useState({ title: '', icon: '', message: '' });
   const navigate = useNavigate();
   const { setPatient } = usePatient();
 
@@ -52,7 +54,12 @@ export default function Login() {
 
       navigate(role === 'admin' ? '/admin-dashboard' : '/patient-dashboard');
     } catch (err) {
-      alert(err.response?.data?.error || 'Login failed');
+      setModalData({
+        title: 'Login Failed',
+        icon: '❌',
+        message: err.response?.data?.error || 'An unexpected error occurred. Please try again.'
+      });
+      setShowModal(true);
     }
   };
 
@@ -154,7 +161,26 @@ export default function Login() {
     ></div>
 
   </form>
-</div>
+      </div>
+
+      {showModal && (
+        <div className="popup-overlay">
+          <div className="popup-content">
+            <div className="popup-header">
+              <div className="popup-icon">{modalData.icon}</div>
+              <h3>{modalData.title}</h3>
+            </div>
+            <div className="popup-body">
+              <p>{modalData.message}</p>
+            </div>
+            <div className="popup-footer">
+              <button className="popup-btn-primary" onClick={() => setShowModal(false)}>
+                OK
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

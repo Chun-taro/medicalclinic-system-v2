@@ -7,11 +7,11 @@ export default function MyAppointments() {
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [expandedId, setExpandedId] = useState(null);
 
   const firstName = localStorage.getItem('firstName') || 'N/A';
   const lastName = localStorage.getItem('lastName') || '';
-  const email = localStorage.getItem('email') || 'N/A';
-  const phone = localStorage.getItem('contactNumber') || 'N/A';
+const phone = localStorage.getItem('contactNumber') || 'N/A';
 
   useEffect(() => {
     const fetchAppointments = async () => {
@@ -49,6 +49,10 @@ export default function MyAppointments() {
     }
   };
 
+  const handleToggle = id => {
+    setExpandedId(prevId => (prevId === id ? null : id));
+  };
+
   return (
     <PatientLayout>
       <div className="patient-appointments-container">
@@ -62,35 +66,48 @@ export default function MyAppointments() {
         ) : appointments.length === 0 ? (
           <p>No appointments found.</p>
         ) : (
-          <div className="table-container">
-            <table className="appointments-table">
-              <thead>
-                <tr>
-                  <th>Name</th>
-                  <th>Email</th>
-                  <th>Phone</th>
-                  <th>Purpose</th>
-                  <th>Date</th>
-                  <th>Status</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {appointments.map(app => (
-                  <tr key={app._id}>
-                    <td>{app.patientId?.firstName || firstName} {app.patientId?.lastName || lastName}</td>
-                    <td>{app.patientId?.email || email}</td>
-                    <td>{app.patientId?.contactNumber || phone}</td>
-                    <td>{app.purpose || '—'}</td>
-                    <td>{new Date(app.appointmentDate).toLocaleDateString()}</td>
-                    <td>{app.status}</td>
-                    <td>
-                      <button onClick={() => handleDelete(app._id)}>🗑️</button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="appointments-card-container">
+            {appointments.map(app => (
+              <div
+                key={app._id}
+                className={`appointment-card ${expandedId === app._id ? 'expanded' : ''}`}
+                onClick={() => handleToggle(app._id)}
+              >
+                <div className="card-header">
+                  <div className="card-header-info">
+                    <span className="card-purpose">{app.purpose || '—'}</span>
+                    <span className="card-date">{new Date(app.appointmentDate).toLocaleDateString()}</span>
+                  </div>
+                  <span className={`card-status status-${app.status.toLowerCase()}`}>{app.status}</span>
+                </div>
+                {expandedId === app._id && (
+                  <div className="card-details">
+                    <p><strong>Name:</strong> {app.patientId?.firstName || firstName} {app.patientId?.lastName || lastName}</p>
+                    <p><strong>Date:</strong> {new Date(app.appointmentDate).toLocaleString()}</p>
+                    <p><strong>Phone:</strong> {app.patientId?.contactNumber || phone}</p>
+                    <p><strong>Reason for Visit:</strong> {app.purpose || '—'}</p>
+                    <p><strong>Management:</strong> {app.management || 'Not available'}</p>
+                    <p>
+                      <strong>Medication:</strong>{' '}
+                      {app.medicinesPrescribed && app.medicinesPrescribed.length > 0
+                        ? app.medicinesPrescribed.map(med => `${med.name} (x${med.quantity})`).join(', ')
+                        : 'None'}
+                    </p>
+                    <div className="card-actions">
+                      <button
+                        className="delete-btn"
+                        onClick={(e) => {
+                          e.stopPropagation(); // Prevent card from toggling
+                          handleDelete(app._id);
+                        }}
+                      >
+                        Cancel Appointment
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
           </div>
         )}
       </div>

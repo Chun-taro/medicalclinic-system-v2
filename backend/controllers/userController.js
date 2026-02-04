@@ -28,13 +28,33 @@ const updateUserRole = async (req, res) => {
       return res.status(400).json({ error: 'Invalid role specified.' });
     }
 
+    // Get the user before updating to log the old role
+    const existingUser = await User.findById(req.params.id);
+    if (!existingUser) return res.status(404).json({ error: 'User not found' });
+
+    const oldRole = existingUser.role;
+
     const user = await User.findByIdAndUpdate(
       req.params.id,
       { role },
       { new: true }
     ).select('-password');
 
-    if (!user) return res.status(404).json({ error: 'User not found' });
+    // Log the activity
+    await logActivity(
+      req.user.userId,
+      `${req.user.firstName} ${req.user.lastName}`,
+      req.user.role,
+      'update_user_role',
+      'user',
+      req.params.id,
+      {
+        oldRole,
+        newRole: role,
+        userName: `${user.firstName} ${user.lastName}`
+      }
+    );
+
     res.json({ message: 'Role updated successfully', user });
   } catch (err) {
     res.status(500).json({ error: err.message });

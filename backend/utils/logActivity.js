@@ -35,7 +35,15 @@ const logActivity = async (adminId, adminName, adminRole, action, entityType, en
       details,
       description
     });
-    await log.save();
+    const savedLog = await log.save();
+
+    // Populate adminId for the emitted log
+    const populatedLog = await Log.findById(savedLog._id).populate('adminId', 'firstName lastName').lean();
+
+    // Emit the new log to all connected clients
+    if (global.io) {
+      global.io.emit('new_log', populatedLog);
+    }
   } catch (error) {
     console.error('Error logging activity:', error);
   }
