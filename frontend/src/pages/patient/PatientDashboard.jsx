@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import Calendar from 'react-calendar';
 import PatientLayout from './PatientLayout';
+import PatientCalendar from './PatientCalendar';
+import './Style/AppointmentTable.css';
+import './Style/PatientCalendar.css';
 
 export default function PatientDashboard() {
   const [appointments, setAppointments] = useState([]);
@@ -46,15 +48,6 @@ export default function PatientDashboard() {
 
 
 
-  const getAppointmentDates = () => {
-    return appointments.map(apt => new Date(apt.appointmentDate).toDateString());
-  };
-
-  const hasAppointment = (date) => {
-    const dateString = date.toDateString();
-    return getAppointmentDates().includes(dateString);
-  };
-
   return (
     <PatientLayout>
       <style>
@@ -82,22 +75,7 @@ export default function PatientDashboard() {
             ) : error ? (
               <p style={{ color: 'red' }}>{error}</p>
             ) : (
-              <div className="calendar-container">
-                <Calendar
-                  tileClassName={({ date, view }) => {
-                    if (view === 'month' && hasAppointment(date)) {
-                      return 'appointment-date';
-                    }
-                    return null;
-                  }}
-                  tileContent={({ date, view }) => {
-                    if (view === 'month' && hasAppointment(date)) {
-                      return <div className="appointment-indicator">•</div>;
-                    }
-                    return null;
-                  }}
-                />
-              </div>
+              <PatientCalendar appointments={appointments} />
             )}
           </div>
 
@@ -118,14 +96,16 @@ export default function PatientDashboard() {
                       <th>Status</th>
                       <th>Date</th>
                       <th>Reason</th>
+                      <th>Reschedule Reason</th>
                     </tr>
                   </thead>
                   <tbody>
                     {appointments.slice(0, 5).map((apt) => (
                       <tr key={apt._id}>
-                        <td>{apt.status}</td>
-                        <td>{new Date(apt.appointmentDate).toLocaleDateString()}</td>
-                        <td>{apt.reasonForVisit || apt.purpose || '—'}</td>
+                        <td data-label="Status">{apt.status}</td>
+                        <td data-label="Date">{new Date(apt.appointmentDate).toLocaleDateString()}</td>
+                        <td data-label="Reason">{apt.reasonForVisit || apt.purpose || '—'}</td>
+                        <td data-label="Reschedule Reason">{apt.rescheduleReason || '—'}</td>
                       </tr>
                     ))}
                   </tbody>

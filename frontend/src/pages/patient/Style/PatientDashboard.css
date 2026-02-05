@@ -7,8 +7,8 @@
 }
 
 .dashboard-section:nth-child(1) { /* My Appointments */
-  grid-column: 1 / span 2;
-  grid-row: 2;
+  grid-column: 2;
+  grid-row: 1;
 }
 
 .dashboard-section:nth-child(2) { /* My Calendar */
@@ -17,8 +17,8 @@
 }
 
 .dashboard-section:nth-child(3) { /* Weather */
-  grid-column: 2;
-  grid-row: 1;
+  grid-column: 1 / span 2;
+  grid-row: 2;
 }
 
    Sidebar
@@ -618,6 +618,8 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   border: 1px solid #e9ecef;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
+  max-height: 500px;
+  overflow-y: auto;
 }
 
 .dashboard-section:hover {
@@ -634,96 +636,52 @@
 }
 
 .table-container {
-  overflow-x: auto;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  background: white;
+  /* Styles moved to AppointmentTable.css */
 }
 
 .appointment-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 10px;
-  font-size: 14px;
+  /* Styles moved to AppointmentTable.css */
 }
 
 .appointment-table th,
 .appointment-table td {
-  padding: 12px 16px;
-  text-align: left;
-  border-bottom: 1px solid #e9ecef;
+  /* Styles moved to AppointmentTable.css */
 }
 
 .appointment-table th {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  font-weight: 600;
-  font-size: 13px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  position: sticky;
-  top: 0;
-  z-index: 10;
+  /* Styles moved to AppointmentTable.css */
 }
 
 .appointment-table tbody tr {
-  transition: all 0.2s ease;
+  /* Styles moved to AppointmentTable.css */
 }
 
 .appointment-table tbody tr:hover {
-  background-color: #f8f9ff;
-  transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  z-index: 100;
+  /* Styles moved to AppointmentTable.css */
 }
 
 .appointment-table tbody tr:nth-child(even) {
-  background-color: #fafbfc;
+  /* Styles moved to AppointmentTable.css */
 }
 
 .appointment-table tbody tr:nth-child(even):hover {
-  background-color: #f0f4ff;
+  /* Styles moved to AppointmentTable.css */
 }
 
 .appointment-table td {
-  color: #495057;
-  vertical-align: middle;
+  /* Styles moved to AppointmentTable.css */
 }
 
-/* Status column styling */
 .appointment-table td:first-child {
-  font-weight: 600;
-  text-transform: capitalize;
+  /* Styles moved to AppointmentTable.css */
 }
 
-/* Date column styling */
 .appointment-table td:nth-child(2) {
-  font-family: 'Courier New', monospace;
-  font-size: 13px;
+  /* Styles moved to AppointmentTable.css */
 }
 
-/* Medicines column styling */
 .appointment-table td:last-child {
-  max-width: 200px;
-  word-wrap: break-word;
-  line-height: 1.4;
-}
-
-.view-more-btn,
-.view-calendar-btn {
-  margin-top: 15px;
-  padding: 8px 16px;
-  background-color: #007bff;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 14px;
-}
-
-.view-more-btn:hover,
-.view-calendar-btn:hover {
-  background-color: #0056b3;
+  /* Styles moved to AppointmentTable.css */
 }
 
 .calendar-events {
@@ -779,6 +737,7 @@
 
   .dashboard-section {
     padding: 15px;
+    max-height: none;
   }
 
   .dashboard-section:nth-child(1) { /* My Appointments */

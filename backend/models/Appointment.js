@@ -93,6 +93,9 @@ const appointmentSchema = new mongoose.Schema({
   //  Consultation tracking
   consultationCompletedAt: Date,
 
+  // Reschedule tracking
+  rescheduleReason: String,
+
   // Google Calendar integration
   googleCalendarEventId: String,
 

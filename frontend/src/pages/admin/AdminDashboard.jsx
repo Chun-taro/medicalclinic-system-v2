@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import Calendar from "react-calendar";
 import axios from "axios";
 import AdminLayout from "./AdminLayout";
 import { Bar } from "react-chartjs-2";
@@ -13,9 +12,125 @@ import {
   Legend,
 } from "chart.js";
 import "./Style/admindashboard1.css";
-
+import "./Style/medical-calendar.css";
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
+
+// Modern Medical Calendar Component
+const MedicalCalendar = ({ appointments, selectedDate, onDateChange }) => {
+  const [currentMonth, setCurrentMonth] = useState(new Date());
+
+  const getDaysInMonth = (date) => {
+    return new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
+  };
+
+  const getFirstDayOfMonth = (date) => {
+    return new Date(date.getFullYear(), date.getMonth(), 1).getDay();
+  };
+
+  const getAppointmentCount = (day) => {
+    const date = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day);
+    return appointments.filter(
+      (app) => new Date(app.appointmentDate).toDateString() === date.toDateString()
+    ).length;
+  };
+
+  const isToday = (day) => {
+    const date = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day);
+    return date.toDateString() === new Date().toDateString();
+  };
+
+  const isSelected = (day) => {
+    const date = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day);
+    return date.toDateString() === selectedDate.toDateString();
+  };
+
+  const handleDayClick = (day) => {
+    onDateChange(new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day));
+  };
+
+  const monthNames = [
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December"
+  ];
+
+  const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+  const prevMonth = () => {
+    setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1));
+  };
+
+  const nextMonth = () => {
+    setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1));
+  };
+
+  const daysInMonth = getDaysInMonth(currentMonth);
+  const firstDay = getFirstDayOfMonth(currentMonth);
+  const days = [];
+
+  for (let i = 0; i < firstDay; i++) {
+    days.push(null);
+  }
+
+  for (let day = 1; day <= daysInMonth; day++) {
+    days.push(day);
+  }
+
+  return (
+    <div className="medical-calendar-container">
+      <div className="medical-calendar-header">
+        <button className="calendar-nav-btn" onClick={prevMonth}>
+          ‹
+        </button>
+        <h3 className="calendar-month-year">
+          {monthNames[currentMonth.getMonth()]} {currentMonth.getFullYear()}
+        </h3>
+        <button className="calendar-nav-btn" onClick={nextMonth}>
+          ›
+        </button>
+      </div>
+
+      <div className="medical-calendar">
+        <div className="calendar-weekdays">
+          {dayNames.map((day) => (
+            <div key={day} className="calendar-weekday">
+              {day}
+            </div>
+          ))}
+        </div>
+
+        <div className="calendar-days">
+          {days.map((day, index) => {
+            if (day === null) {
+              return <div key={`empty-${index}`} className="calendar-day empty"></div>;
+            }
+
+            const count = getAppointmentCount(day);
+            const today = isToday(day);
+            const selected = isSelected(day);
+
+            return (
+              <div
+                key={day}
+                className={`calendar-day ${today ? "today" : ""} ${selected ? "selected" : ""} ${
+                  count > 0 ? "has-appointments" : ""
+                }`}
+                onClick={() => handleDayClick(day)}
+              >
+                <div className="day-number">{day}</div>
+                {count > 0 && (
+                  <div className="appointment-badge">
+                    <span className="appointment-count-badge">{count}</span>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+};
 
 export default function SuperadminDashboard() {
   const [appointments, setAppointments] = useState([]);
@@ -88,28 +203,6 @@ export default function SuperadminDashboard() {
       new Date(app.appointmentDate).toDateString() === selectedDate.toDateString()
   );
 
-  const dateCount = {};
-  appointments.forEach((app) => {
-    const dateStr = new Date(app.appointmentDate).toDateString();
-    dateCount[dateStr] = (dateCount[dateStr] || 0) + 1;
-  });
-
-  const highlightDates = ({ date, view }) => {
-    if (view === "month") {
-      const hasAppointment = appointments.some(
-        (app) =>
-          new Date(app.appointmentDate).toDateString() === date.toDateString()
-      );
-      return hasAppointment ? "has-appointment" : null;
-    }
-  };
-
-  const tileContent = ({ date, view }) => {
-    if (view === "month") {
-      const count = dateCount[date.toDateString()];
-      return count ? <span className="appointment-count">{count}</span> : null;
-    }
-  };
 
   const chartData = {
     labels: ["Total Appointments", "Total Users", "Today's Appointments"],
@@ -171,12 +264,10 @@ export default function SuperadminDashboard() {
           </div>
           <div className="calendar-card">
             <h2 className="dashboard-heading">📅 Calendar</h2>
-            <Calendar
-              value={selectedDate}
-              onChange={setSelectedDate}
-              className="styled-calendar"
-              tileClassName={highlightDates}
-              tileContent={tileContent}
+            <MedicalCalendar
+              appointments={appointments}
+              selectedDate={selectedDate}
+              onDateChange={setSelectedDate}
             />
           </div>
         </div>

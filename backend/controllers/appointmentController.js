@@ -95,7 +95,7 @@ const getPatientAppointments = async (req, res) => {
 
     // Include management and medicinesPrescribed so the patient view shows consultation details
     const appointments = await Appointment.find({ patientId: requestedPatientId })
-      .select('appointmentDate status purpose reasonForVisit typeOfVisit diagnosis management medicinesPrescribed consultationCompletedAt')
+      .select('appointmentDate status purpose reasonForVisit typeOfVisit diagnosis management medicinesPrescribed consultationCompletedAt rescheduleReason')
       .sort({ appointmentDate: -1 })
       .lean();
 
@@ -669,7 +669,7 @@ const updateAppointment = async (req, res) => {
 
     // Track changes
     const changes = [];
-    const allowedFields = ['appointmentDate', 'purpose', 'typeOfVisit', 'diagnosis', 'status'];
+    const allowedFields = ['appointmentDate', 'purpose', 'typeOfVisit', 'diagnosis', 'status', 'rescheduleReason'];
     allowedFields.forEach(field => {
       if (req.body[field] !== undefined && req.body[field] !== appointment[field]) {
         appointment[field] = req.body[field];
@@ -717,6 +717,10 @@ const updateAppointment = async (req, res) => {
       if (changes.includes('diagnosis')) {
         message += ` Diagnosis: ${appointment.diagnosis}.`;
         emailDetails += `<p><strong>Diagnosis:</strong> ${appointment.diagnosis}</p>`;
+      }
+      if (changes.includes('rescheduleReason')) {
+        message += ` Reason: ${appointment.rescheduleReason}.`;
+        emailDetails += `<p><strong>Reschedule Reason:</strong> ${appointment.rescheduleReason}</p>`;
       }
 
       // In-app notification

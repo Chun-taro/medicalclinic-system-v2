@@ -12,6 +12,7 @@ export default function AllAppointments() {
   const [editId, setEditId] = useState(null);
   const [editDate, setEditDate] = useState('');
   const [editPurpose, setEditPurpose] = useState('');
+  const [rescheduleReason, setRescheduleReason] = useState('');
   // Filters
   const [searchQuery, setSearchQuery] = useState('');
   const [startDateFilter, setStartDateFilter] = useState('');
@@ -154,6 +155,7 @@ export default function AllAppointments() {
       setEditId(appointment._id);
       setEditDate(appointment.appointmentDate.split('T')[0]);
       setEditPurpose(appointment.purpose);
+      setRescheduleReason('');
       setShowModal(true);
     } catch (err) {
       const errorData = err.response?.data;
@@ -177,7 +179,8 @@ export default function AllAppointments() {
       const token = localStorage.getItem('token');
       await axios.patch(`http://localhost:5000/api/appointments/${editId}`, {
         appointmentDate: editDate,
-        purpose: editPurpose
+        purpose: editPurpose,
+        rescheduleReason: rescheduleReason
       }, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -190,6 +193,7 @@ export default function AllAppointments() {
       setAlertMessage('Appointment rescheduled and patient notified');
       setShowAlert(true);
       setShowModal(false);
+      setRescheduleReason('');
       fetchAppointments();
     } catch (err) {
       setAlertMessage('Failed to reschedule appointment');
@@ -271,6 +275,13 @@ export default function AllAppointments() {
                 type="text"
                 value={editPurpose}
                 onChange={(e) => setEditPurpose(e.target.value)}
+              />
+              <label>Reason for Reschedule:</label>
+              <textarea
+                value={rescheduleReason}
+                onChange={(e) => setRescheduleReason(e.target.value)}
+                placeholder="E.g., Doctor unavailable, room maintenance, etc."
+                rows="3"
               />
             </div>
             <div className="modal-footer">
@@ -378,13 +389,13 @@ export default function AllAppointments() {
   ) : (
     filteredAppointments.filter(app => app.status === 'pending').map(app => (
       <tr key={app._id}>
-        <td>{app.patientId?.firstName || app.firstName || 'N/A'} {app.patientId?.lastName || app.lastName || ''}</td>
-        <td>{new Date(app.appointmentDate).toLocaleString()}</td>
-        <td>{app.patientId?.email || app.email || 'N/A'}</td>
-        <td>{app.patientId?.contactNumber || app.phone || 'N/A'}</td>
-        <td>{app.purpose}</td>
-        <td><span className="status-tag pending">Pending</span></td>
-        <td className="action-cell">
+        <td data-label="Name">{app.patientId?.firstName || app.firstName || 'N/A'} {app.patientId?.lastName || app.lastName || ''}</td>
+        <td data-label="Date">{new Date(app.appointmentDate).toLocaleString()}</td>
+        <td data-label="Email">{app.patientId?.email || app.email || 'N/A'}</td>
+        <td data-label="Phone">{app.patientId?.contactNumber || app.phone || 'N/A'}</td>
+        <td data-label="Purpose">{app.purpose}</td>
+        <td data-label="Status"><span className="status-tag pending">Pending</span></td>
+        <td data-label="Actions" className="action-cell">
           <button onClick={() => handleApprove(app._id)} className="approve-btn">Approve</button>
           <button onClick={() => openEditModal(app)} className="edit-btn">Edit</button>
           <button onClick={() => handleDelete(app._id)} className="delete-btn">Delete</button>
@@ -424,13 +435,13 @@ export default function AllAppointments() {
   ) : (
     filteredAppointments.filter(app => app.status === 'approved').map(app => (
       <tr key={app._id}>
-        <td>{app.patientId?.firstName || app.firstName || 'N/A'} {app.patientId?.lastName || app.lastName || ''}</td>
-        <td>{new Date(app.appointmentDate).toLocaleDateString()}</td>
-        <td>{app.patientId?.email || app.email || 'N/A'}</td>
-        <td>{app.patientId?.contactNumber || app.phone || 'N/A'}</td>
-        <td>{app.purpose}</td>
-        <td><span className="status-tag confirmed">Approved</span></td>
-        <td className="action-cell">
+        <td data-label="Name">{app.patientId?.firstName || app.firstName || 'N/A'} {app.patientId?.lastName || app.lastName || ''}</td>
+        <td data-label="Date">{new Date(app.appointmentDate).toLocaleDateString()}</td>
+        <td data-label="Email">{app.patientId?.email || app.email || 'N/A'}</td>
+        <td data-label="Phone">{app.patientId?.contactNumber || app.phone || 'N/A'}</td>
+        <td data-label="Purpose">{app.purpose}</td>
+        <td data-label="Status"><span className="status-tag confirmed">Approved</span></td>
+        <td data-label="Actions" className="action-cell">
           <button onClick={() => openEditModal(app)} className="edit-btn">Edit</button>
           <button onClick={() => handleDelete(app._id)} className="delete-btn">Delete</button>
         </td>

@@ -1,0 +1,237 @@
+/* ──────────────── Modern Medical Calendar ──────────────── */
+.medical-calendar-container {
+  width: 100%;
+  padding: 0;
+}
+
+.medical-calendar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 0;
+  margin-bottom: 1.5rem;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.calendar-nav-btn {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+  border: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  font-size: 1.5rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.2);
+}
+
+.calendar-nav-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.calendar-nav-btn:active {
+  transform: translateY(0);
+}
+
+.calendar-month-year {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0;
+  letter-spacing: 0.5px;
+}
+
+.medical-calendar {
+  width: 100%;
+}
+
+.calendar-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0.8rem;
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid #f1f5f9;
+}
+
+.calendar-weekday {
+  text-align: center;
+  font-weight: 700;
+  color: #3b82f6;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 0.5rem 0;
+}
+
+.calendar-days {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0.8rem;
+}
+
+.calendar-day {
+  aspect-ratio: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  background-color: #f8fafc;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 2px solid transparent;
+  position: relative;
+  font-weight: 600;
+  color: #475569;
+}
+
+.calendar-day:not(.empty):hover {
+  background-color: #e0f2fe;
+  border-color: #3b82f6;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+}
+
+.calendar-day.empty {
+  background-color: transparent;
+  cursor: default;
+}
+
+.calendar-day.today {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+  border-color: #1e40af;
+  box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+  font-weight: 700;
+}
+
+.calendar-day.today:hover {
+  background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+}
+
+.calendar-day.selected {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  border-color: #047857;
+  box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+  font-weight: 700;
+}
+
+.calendar-day.selected:hover {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+}
+
+.calendar-day.has-appointments {
+  background-color: #fef3c7;
+  border-color: #f59e0b;
+}
+
+.calendar-day.has-appointments:hover {
+  background-color: #fde68a;
+  border-color: #d97706;
+}
+
+.calendar-day.today.has-appointments,
+.calendar-day.selected.has-appointments {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+}
+
+.day-number {
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.appointment-badge {
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+}
+
+.appointment-count-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: white;
+  border-radius: 50%;
+  font-size: 0.7rem;
+  font-weight: 800;
+  box-shadow: 0 2px 6px rgba(239, 68, 68, 0.4);
+}
+
+.calendar-day.today .appointment-count-badge {
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+}
+
+.calendar-day.selected .appointment-count-badge {
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+}
+
+/* Compact / Responsive adjustments to fit without scrolling */
+.medical-calendar {
+  max-width: 520px;
+  margin: 0 auto;
+}
+
+.medical-calendar-container {
+  padding: 0 8px;
+}
+
+.calendar-weekdays {
+  gap: 0.4rem;
+}
+
+.calendar-days {
+  gap: 0.4rem;
+}
+
+.calendar-weekday {
+  font-size: 0.72rem;
+  padding: 0.25rem 0;
+}
+
+.calendar-day {
+  font-size: 0.95rem;
+  min-height: 48px;
+  border-radius: 10px;
+}
+
+.day-number {
+  font-size: 0.95rem;
+}
+
+.appointment-count-badge {
+  width: 18px;
+  height: 18px;
+  font-size: 0.65rem;
+}
+
+@media (max-width: 900px) {
+  .medical-calendar { max-width: 420px; }
+  .calendar-day { min-height: 44px; }
+}
+
+@media (max-width: 480px) {
+  .medical-calendar { max-width: 100%; }
+  .calendar-weekdays { display: none; }
+  .calendar-weekday { display: none; }
+  .calendar-days { gap: 0.25rem; }
+  .calendar-day { min-height: 40px; font-size: 0.85rem; }
+  .calendar-nav-btn { width: 34px; height: 34px; font-size: 1.1rem; }
+}
+
+/* ensure parent card doesn't force scrolling */
+.calendar-card { overflow: visible; }

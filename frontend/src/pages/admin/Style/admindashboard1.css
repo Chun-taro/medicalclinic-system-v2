@@ -186,7 +186,8 @@
   padding: 1rem;
   border-radius: 16px;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
-  max-height: 300px;
+  /* Taller area to show more appointments before scrolling */
+  max-height: 700px; /* increased to be taller */
   overflow-y: auto;
   flex: 1;
 }
@@ -210,6 +211,20 @@
   background: #f9fafb;
   margin-bottom: 0.6rem;
   transition: background 0.2s ease;
+}
+
+/* ensure individual items have a predictable height so 6 fit nicely */
+.appointment-item {
+  min-height: 80px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+/* Table wrapper used in SuperadminAllAppointments */
+.appointment-table-wrapper {
+  max-height: 700px; /* match taller appointment-section */
+  overflow-y: auto;
 }
 
 .appointment-item:hover {

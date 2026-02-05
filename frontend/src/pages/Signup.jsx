@@ -19,6 +19,14 @@ export default function Signup() {
   const [modalData, setModalData] = useState({ title: '', icon: '', message: '', isSuccess: false });
   const navigate = useNavigate();
 
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setForm(prevForm => ({
+      ...prevForm,
+      [name]: value
+    }));
+  };
+
   const handleRecaptchaVerify = token => {
     setRecaptchaToken(token);
     setRecaptchaError('');
@@ -95,13 +103,13 @@ export default function Signup() {
           </a>
 
           {/* Personal Info */}
-          <input type="text" placeholder="First Name *" required value={form.firstName} onChange={e => setForm({ ...form, firstName: e.target.value })} />
-          <input type="text" placeholder="Last Name *" required value={form.lastName} onChange={e => setForm({ ...form, lastName: e.target.value })} />
-          <input type="text" placeholder="Middle Name" value={form.middleName} onChange={e => setForm({ ...form, middleName: e.target.value })} />
-          <input type="text" placeholder="ID Number *" required value={form.idNumber} onChange={e => setForm({ ...form, idNumber: e.target.value })} />
-          <input type="email" placeholder="Email Address *" required value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} />
-          <input type="password" placeholder="Password *" required value={form.password} onChange={e => setForm({ ...form, password: e.target.value })} />
-          <input type="tel" placeholder="Contact Number *" required value={form.contactNumber} onChange={e => setForm({ ...form, contactNumber: e.target.value })} />
+          <input type="text" name="firstName" placeholder="First Name *" required value={form.firstName} onChange={handleChange} />
+          <input type="text" name="lastName" placeholder="Last Name *" required value={form.lastName} onChange={handleChange} />
+          <input type="text" name="middleName" placeholder="Middle Name" value={form.middleName} onChange={handleChange} />
+          <input type="text" name="idNumber" placeholder="ID Number *" required value={form.idNumber} onChange={handleChange} />
+          <input type="email" name="email" placeholder="Email Address *" required value={form.email} onChange={handleChange} />
+          <input type="password" name="password" placeholder="Password *" required value={form.password} onChange={handleChange} />
+          <input type="tel" name="contactNumber" placeholder="Contact Number *" required value={form.contactNumber} onChange={handleChange} />
 
           {/* Recaptcha */}
           <div className="recaptcha-container">

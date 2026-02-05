@@ -5,6 +5,8 @@
   padding: 20px;
   border-radius: 12px;
   box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  max-height: 700px; /* taller viewport for appointments */
+  overflow-y: auto;
 }
 
 .all-appointments-table {
@@ -33,6 +35,64 @@
 
 .all-appointments-table tr:hover {
   background-color: #f9fafb;
+}
+
+/* Responsive stacked table for small screens (inspired by consultation.css) */
+@media (max-width: 768px) {
+  .all-appointments-table thead {
+    display: none;
+  }
+
+  .all-appointments-table,
+  .all-appointments-table tbody,
+  .all-appointments-table tr,
+  .all-appointments-table td {
+    display: block;
+    width: 100%;
+  }
+
+  .all-appointments-table tr {
+    margin-bottom: 16px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 12px;
+    background-color: #fff;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+  }
+
+  .all-appointments-table td {
+    padding: 10px 0;
+    border-bottom: 1px solid #f1f5f9;
+    white-space: normal;
+    text-align: left;
+  }
+
+  .all-appointments-table td:last-child {
+    border-bottom: none;
+  }
+
+  .all-appointments-table td::before {
+    content: attr(data-label);
+    font-weight: 600;
+    color: #475569;
+    display: block;
+    font-size: 0.85rem;
+    margin-bottom: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #6b7280;
+  }
+
+  .action-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .action-cell button {
+    width: 100%;
+    text-align: center;
+  }
 }
 
 /* Make Name column wider */
