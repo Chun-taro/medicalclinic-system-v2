@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
-import SuperadminLayout from './SuperadminLayout';
-import '../admin/Style/AllAppointments.css';
+import SuperadminLayout from './SuperadminLayout';import { showSuccess, showError } from '../../utils/toastNotifier';import '../admin/Style/AllAppointments.css';
 
 export default function AllAppointments() {
   const [appointments, setAppointments] = useState([]);
@@ -137,10 +136,10 @@ export default function AllAppointments() {
       await axios.patch(`http://localhost:5000/api/appointments/${id}/approve`, { version }, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      alert('Appointment approved');
+      showSuccess('Appointment approved');
       fetchAppointments();
     } catch (err) {
-      alert('Failed to approve appointment');
+      showError('Failed to approve appointment');
       console.error(err);
     }
   };

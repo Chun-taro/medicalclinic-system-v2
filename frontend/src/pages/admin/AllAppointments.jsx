@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import AdminLayout from './AdminLayout';
+import { showSuccess, showError } from '../../utils/toastNotifier';
 import './Style/AllAppointments.css';
 
 export default function AllAppointments() {
@@ -137,10 +138,10 @@ export default function AllAppointments() {
       await axios.patch(`http://localhost:5000/api/appointments/${id}/approve`, { version }, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      alert('Appointment approved');
+      showSuccess('Appointment approved');
       fetchAppointments();
     } catch (err) {
-      alert('Failed to approve appointment');
+      showError('Failed to approve appointment');
       console.error(err);
     }
   };

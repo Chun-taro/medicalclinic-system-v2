@@ -2,6 +2,7 @@ import './Style/Auth.css';
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
+import { showError, showSuccess } from '../utils/toastNotifier';
 
 export default function VerifyToken() {
   const [token, setToken] = useState('');
@@ -11,7 +12,10 @@ export default function VerifyToken() {
   const email = query.get('email');
 
   const handleVerify = async () => {
-    if (!token) return alert('Enter the code');
+    if (!token) {
+      showError('Please enter the verification code');
+      return;
+    }
     try {
       const res = await axios.post('http://localhost:5000/api/reset/verify-token', { email, token });
       setMessage(res.data.message);

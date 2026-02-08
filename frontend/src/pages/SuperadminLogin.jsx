@@ -2,6 +2,7 @@ import './Style/Auth.css';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { showError } from '../utils/toastNotifier';
 import logo from './assets/logo.png';
 import backgroundImage from './assets/building.png';
 
@@ -20,7 +21,7 @@ export default function SuperadminLogin() {
 
       navigate('/dashboard');
     } catch (err) {
-      alert(err.response?.data?.error || 'Login failed');
+      showError(err.response?.data?.error || 'Login failed');
     }
   };
 

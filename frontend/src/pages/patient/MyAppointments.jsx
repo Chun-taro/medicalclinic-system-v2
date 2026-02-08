@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import axios from 'axios';
 import PatientLayout from './PatientLayout';
 import FeedbackForm from '../../components/FeedbackForm';
+import { showError } from '../../utils/toastNotifier';
 import './Style/patient-appointments.css';
 
 export default function MyAppointments() {
@@ -48,7 +49,7 @@ const phone = localStorage.getItem('contactNumber') || 'N/A';
       });
       setAppointments(prev => prev.filter(app => app._id !== id));
     } catch (err) {
-      alert('Failed to cancel appointment');
+      showError('Failed to cancel appointment');
       console.error(err);
     }
   };

@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
-import SuperadminLayout from './SuperadminLayout';
-import './Style/Inventory.css';
+import SuperadminLayout from './SuperadminLayout';import { showSuccess, showError } from '../../utils/toastNotifier';import './Style/Inventory.css';
 
 
 export default function Inventory() {
@@ -120,12 +119,12 @@ export default function Inventory() {
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      alert('Medicine dispensed successfully');
+      showSuccess('Medicine dispensed successfully');
       setDispenseForm({ medId: '', quantity: '' });
       fetchInventory();
     } catch (err) {
       console.error('Error dispensing medicine:', err.message);
-      alert('Failed to dispense medicine');
+      showError('Failed to dispense medicine');
     }
   };
 
@@ -151,7 +150,7 @@ export default function Inventory() {
       link.remove();
     } catch (err) {
       console.error('Error generating PDF:', err.message);
-      alert('Failed to generate PDF report');
+      showError('Failed to generate PDF report');
     }
   };
 

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import feedbackService from '../services/feedbackService';
+import { showSuccess } from '../utils/toastNotifier';
 import './FeedbackForm.css';
 
 const FeedbackForm = ({ doctorId, doctorName, appointmentId, onClose, onSuccess }) => {
@@ -62,7 +63,7 @@ const FeedbackForm = ({ doctorId, doctorName, appointmentId, onClose, onSuccess 
       }
 
       // Show success message
-      alert('Thank you for your feedback!');
+      showSuccess('Thank you for your feedback!');
       onClose();
     } catch (err) {
       console.error('Failed to submit feedback', err);

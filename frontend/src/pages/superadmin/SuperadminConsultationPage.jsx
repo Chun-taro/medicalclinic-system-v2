@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import SuperadminLayout from './SuperadminLayout';
+import { showSuccess, showError, showWarning } from '../../utils/toastNotifier';
 import './Style/consultation.css';
 export default function ConsultationPage() {
   const [approvedAppointments, setApprovedAppointments] = useState([]);
@@ -65,7 +66,7 @@ export default function ConsultationPage() {
 
   const handleViewMRF = async (userId) => {
     if (!userId) {
-      alert('User ID is missing for this appointment.');
+      showError('User ID is missing for this appointment.');
       return;
     }
 
@@ -78,7 +79,7 @@ export default function ConsultationPage() {
       setShowMRFModal(true);
     } catch (err) {
       console.error('Error fetching patient profile:', err.message);
-      alert('Failed to load patient profile');
+      showError('Failed to load patient profile');
     }
   };
 
@@ -92,14 +93,14 @@ export default function ConsultationPage() {
         { status: 'completed' },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      alert('Medical certificate completed');
+      showSuccess('Medical certificate completed');
       setShowPDFModal(false);
       // Remove the completed appointment from the list immediately
       setApprovedAppointments(prev => prev.filter(app => app._id !== appointment._id));
       window.location.href = '/admin-reports?tab=medical-certificates';
     } catch (err) {
       console.error('Error finishing certificate:', err);
-      alert('Failed to finish certificate');
+      showError('Failed to finish certificate');
     }
   };
 
@@ -148,14 +149,14 @@ export default function ConsultationPage() {
   e.preventDefault();
   const token = localStorage.getItem('token');
   if (!token) {
-    alert('Authentication required');
+    showError('Authentication required');
     return;
   }
 
   const validPrescribedList = prescribedList.filter(med => parseInt(med.quantity) > 0);
 
   if (prescribedList.length > 0 && validPrescribedList.length === 0) {
-    alert('Please set quantities for prescribed medicines or remove them.');
+    showWarning('Please set quantities for prescribed medicines or remove them.');
     return;
   }
 
@@ -180,14 +181,14 @@ export default function ConsultationPage() {
       { headers: { Authorization: `Bearer ${token}` } }
     );
 
-    alert(' Consultation saved and inventory updated');
+    showSuccess('Consultation saved and inventory updated');
     setSelectedAppointment(null);
     setShowModal(false);
     fetchApprovedAppointments();
     fetchMedicines();
   } catch (err) {
     console.error('Error saving consultation:', err);
-    alert(err.response?.data?.error || ' Failed to save consultation or deduct inventory');
+    showError(err.response?.data?.error || 'Failed to save consultation or deduct inventory');
   }
 };
 

@@ -12,7 +12,8 @@ const initialFormState = {
   phone: '',
   address: '',
   appointmentDate: '',
-  purpose: ''
+  purpose: '',
+  additionalNotes: ''
 };
 
 export default function BookAppointment() {
@@ -120,7 +121,13 @@ export default function BookAppointment() {
               <input type="tel" name="phone" placeholder="Your phone" value={form.phone} onChange={handleChange} required />
               <input type="text" name="address" placeholder="Address" value={form.address} onChange={handleChange} />
               <input type="date" name="appointmentDate" placeholder="Pick the date" value={form.appointmentDate} onChange={handleChange} required />
-              <textarea name="purpose" placeholder="Reason for visit / Purpose of appointment" value={form.purpose} onChange={handleChange} rows={4} required />
+              <label htmlFor="purpose" style={{ display: 'block', marginTop: '12px', fontWeight: 'bold' }}>Appointment Type *</label>
+              <select name="purpose" value={form.purpose} onChange={handleChange} required style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid #ccc', fontSize: '16px' }}>
+                <option value="">-- Select Appointment Type --</option>
+                <option value="Checkup">🩺 Checkup</option>
+                <option value="Medical Certificate">📄 Medical Certificate</option>
+              </select>
+              <textarea name="additionalNotes" placeholder="Additional notes or details (optional)" style={{ marginTop: '12px' }} rows={3} />
               <button type="submit" className="schedule-button" disabled={loading}>
                 {loading ? 'Scheduling...' : 'SCHEDULE'}
               </button>
