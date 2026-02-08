@@ -33,6 +33,14 @@ export default function SuperadminLogs() {
   };
 
   useEffect(() => {
+    // Check user role
+    const role = localStorage.getItem('role');
+    if (role !== 'superadmin') {
+      setError('Access denied. Only superadmins can view activity logs.');
+      setLoading(false);
+      return;
+    }
+
     fetchLogs();
 
     const socket = io('http://localhost:5000');
@@ -87,8 +95,10 @@ export default function SuperadminLogs() {
   const filteredLogs = logs.filter(log => {
     if (adminFilter) {
       const q = adminFilter.toLowerCase();
-      const adminName = log.adminId?.firstName + ' ' + log.adminId?.lastName || '';
-      if (!adminName.toLowerCase().includes(q)) return false;
+      const adminName = (log.adminId?.firstName || '') + ' ' + (log.adminId?.lastName || '');
+      const actorName = (log.details?.userName || log.details?.patientName || log.details?.actorName || '').toString();
+      const combined = `${adminName} ${actorName}`.trim();
+      if (!combined.toLowerCase().includes(q)) return false;
     }
 
     if (actionFilter && log.action !== actionFilter) return false;
@@ -119,7 +129,10 @@ export default function SuperadminLogs() {
   if (error) {
     return (
       <SuperadminLayout>
-        <p className="error-text">{error}</p>
+        <div className="error-text" style={{ color: '#dc3545', padding: '20px' }}>
+          <h3>⚠️ Access Denied</h3>
+          <p>{error}</p>
+        </div>
       </SuperadminLayout>
     );
   }
@@ -143,15 +156,20 @@ export default function SuperadminLogs() {
             </div>
             <div className="filter-group">
               <label>Action:</label>
-              <select value={actionFilter} onChange={(e) => setActionFilter(e.target.value)}>
-                <option value="">All Actions</option>
-                <option value="approve_appointment">Approve Appointment</option>
-                <option value="reschedule_appointment">Reschedule Appointment</option>
-                <option value="complete_consultation">Complete Consultation</option>
-                <option value="dispense_medicine">Dispense Medicine</option>
-                <option value="update_user_role">Update User Role</option>
-                <option value="delete_appointment">Delete Appointment</option>
-              </select>
+                      <select value={actionFilter} onChange={(e) => setActionFilter(e.target.value)}>
+                        <option value="">All Actions</option>
+                        <option value="approve_appointment">Approve Appointment</option>
+                        <option value="reschedule_appointment">Reschedule Appointment</option>
+                        <option value="complete_consultation">Complete Consultation</option>
+                        <option value="dispense_medicine">Dispense Medicine</option>
+                        <option value="update_user_role">Update User Role</option>
+                        <option value="delete_appointment">Delete Appointment</option>
+                        <option value="user_login">User Login</option>
+                        <option value="user_signup">User Signup</option>
+                        <option value="Submitted feedback">Submitted Feedback</option>
+                        <option value="submit_feedback">Submit Feedback</option>
+                        <option value="create_feedback">Create Feedback</option>
+                      </select>
             </div>
             <div className="filter-group">
               <label>Start Date:</label>
@@ -194,7 +212,12 @@ export default function SuperadminLogs() {
                       <span className="action-icon">{getActionIcon(log.action)}</span>
                       <span className="action-text">{log.action.replace('_', ' ').toUpperCase()}</span>
                     </td>
-                    <td>{log.adminId?.firstName} {log.adminId?.lastName}</td>
+                    <td>
+                      { (log.adminId?.firstName || log.details?.userName || log.details?.patientName || log.details?.actorName)
+                        ? `${log.adminId?.firstName || log.details?.userName || log.details?.patientName || log.details?.actorName} ${log.adminId?.lastName || ''}`.trim()
+                        : 'System'
+                      }
+                    </td>
                     <td>{log.entityType}</td>
                     <td>{formatDateTime(log.timestamp)}</td>
                     <td>

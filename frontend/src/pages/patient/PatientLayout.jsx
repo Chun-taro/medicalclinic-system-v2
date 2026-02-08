@@ -119,70 +119,73 @@ export default function PatientLayout({ children }) {
 
       <main className="main-content">
         <nav className="navbar">
-  <div className="navbar-group">
-    <img src="../logo.png" alt="Logo" className="navbar-logo" />
-    <h1 className="fb-name">{user.firstName} {user.middleName} {user.lastName}</h1>
-
-    <div className="navbar-actions">
-      {/* Notification Bell */}
-      <div className="notification-wrapper" ref={notificationRef}>
-        <div onClick={() => setShowNotifications(!showNotifications)}>
-          <Bell className="notification-icon" />
-          {unreadCount > 0 && (
-            <span className="notification-badge">{unreadCount}</span>
-          )}
-        </div>
-
-        {showNotifications && (
-          <div className="notification-dropdown">
-            <h4 className="dropdown-header">Notifications</h4>
-            {loading ? (
-              <p className="loading-text">Loading...</p>
-            ) : notifications.length === 0 ? (
-              <p className="empty-text">No notifications</p>
-            ) : (
-              <ul className="dropdown-list">
-                {notifications.map((n) => (
-                  <li key={n._id} className={`dropdown-item ${n.read ? 'read' : 'unread'}`}>
-                    <div className="dropdown-message">
-                      <strong>{n.status.toUpperCase()}</strong>: {n.message}
-                    </div>
-                    <div className="dropdown-meta">
-                      <span>{new Date(n.timestamp).toLocaleString()}</span>
-                    </div>
-                    {!n.read && (
-                      <button className="mark-read-btn" onClick={() => markAsRead(n._id)}>
-                        Mark as Read
-                      </button>
-                    )}
-                  </li>
-                ))}
-              </ul>
-            )}
+          <div className="navbar-left">
+            <img src="../logo.png" alt="Logo" className="navbar-logo" />
+            <div className="user-info">
+              <h1 className="fb-name">{user.firstName} {user.middleName} {user.lastName}</h1>
+              <span className="user-role">{(localStorage.getItem('role') || 'patient').toUpperCase()}</span>
+            </div>
           </div>
-        )}
-      </div>
 
-      {/* Profile Dropdown */}
-      <div className="profile-menu" ref={dropdownRef}>
-        {user.profileImage ? (
-          <img src={user.profileImage} alt="Profile" className="profile-icon" onClick={() => setDropdownOpen(!dropdownOpen)} />
-        ) : (
-          <div className="profile-initials" onClick={() => setDropdownOpen(!dropdownOpen)}>
-            {getInitials(user.firstName, user.lastName)}
-          </div>
-        )}
+          <div className="navbar-right">
+            {/* Notification Bell */}
+            <div className="notification-wrapper" ref={notificationRef}>
+              <div onClick={() => setShowNotifications(!showNotifications)}>
+                <Bell className="notification-icon" />
+                {unreadCount > 0 && (
+                  <span className="notification-badge">{unreadCount}</span>
+                )}
+              </div>
 
-        {dropdownOpen && (
-          <div className="dropdown">
-            <button onClick={() => navigate('/patient-profile')}>View Profile</button>
-            <button onClick={handleLogout}>Logout</button>
+              {showNotifications && (
+                <div className="notification-dropdown">
+                  <h4 className="dropdown-header">Notifications</h4>
+                  {loading ? (
+                    <p className="loading-text">Loading...</p>
+                  ) : notifications.length === 0 ? (
+                    <p className="empty-text">No notifications</p>
+                  ) : (
+                    <ul className="dropdown-list">
+                      {notifications.map((n) => (
+                        <li key={n._id} className={`dropdown-item ${n.read ? 'read' : 'unread'}`}>
+                          <div className="dropdown-message">
+                            <strong>{n.status.toUpperCase()}</strong>: {n.message}
+                          </div>
+                          <div className="dropdown-meta">
+                            <span>{new Date(n.timestamp).toLocaleString()}</span>
+                          </div>
+                          {!n.read && (
+                            <button className="mark-read-btn" onClick={() => markAsRead(n._id)}>
+                              Mark as Read
+                            </button>
+                          )}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Profile Dropdown */}
+            <div className="profile-menu" ref={dropdownRef}>
+              {user.profileImage ? (
+                <img src={user.profileImage} alt="Profile" className="profile-icon" onClick={() => setDropdownOpen(!dropdownOpen)} />
+              ) : (
+                <div className="profile-initials" onClick={() => setDropdownOpen(!dropdownOpen)}>
+                  {getInitials(user.firstName, user.lastName)}
+                </div>
+              )}
+
+              {dropdownOpen && (
+                <div className="dropdown">
+                  <button onClick={() => navigate('/patient-profile')}>View Profile</button>
+                  <button onClick={handleLogout}>Logout</button>
+                </div>
+              )}
+            </div>
           </div>
-        )}
-      </div>
-    </div>
-  </div>
-</nav>
+        </nav>
 
         <section className="page-content">{children}</section>
       </main>

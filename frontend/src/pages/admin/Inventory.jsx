@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import AdminLayout from './AdminLayout';
+import { showSuccess, showError, showWarning, showConfirm } from '../../utils/toastNotifier';
 import './Style/Inventory.css';
 
 
@@ -89,28 +90,35 @@ export default function Inventory() {
   };
 
   const handleDelete = async id => {
-    if (!window.confirm('Are you sure you want to delete this medicine?')) return;
-    setError('');
-    const token = localStorage.getItem('token');
-    if (!token) {
-      setError('Not authenticated. Please log in.');
-      return;
-    }
+    showConfirm('Are you sure you want to delete this medicine?', {
+      onConfirm: async () => {
+        setError('');
+        const token = localStorage.getItem('token');
+        if (!token) {
+          setError('Not authenticated. Please log in.');
+          return;
+        }
 
-    try {
-      await axios.delete(`http://localhost:5000/api/medicines/${id}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      fetchInventory();
-    } catch (err) {
-      console.error('Error deleting medicine:', err);
-      setError('Delete failed.');
-    }
+        try {
+          await axios.delete(`http://localhost:5000/api/medicines/${id}`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          showSuccess('Medicine deleted successfully');
+          fetchInventory();
+        } catch (err) {
+          console.error('Error deleting medicine:', err);
+          showError('Delete failed.');
+        }
+      }
+    });
   };
 
   const handleDispense = async e => {
     e.preventDefault();
-    if (!dispenseForm.medId || !dispenseForm.quantity) return;
+    if (!dispenseForm.medId || !dispenseForm.quantity) {
+      showWarning('Please select a medicine and enter quantity');
+      return;
+    }
 
     try {
       const token = localStorage.getItem('token');
@@ -120,12 +128,12 @@ export default function Inventory() {
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      alert('Medicine dispensed successfully');
+      showSuccess('Medicine dispensed successfully');
       setDispenseForm({ medId: '', quantity: '' });
       fetchInventory();
     } catch (err) {
       console.error('Error dispensing medicine:', err.message);
-      alert('Failed to dispense medicine');
+      showError(err.response?.data?.error || 'Failed to dispense medicine');
     }
   };
 
@@ -190,13 +198,9 @@ export default function Inventory() {
         <h2>Medicine Inventory</h2>
         <p>Track capsules and expiry dates. Dispense to walk-in patients.</p>
 
-        {/*  View History Button */}
-        <button className="history-btn" onClick={fetchDispenseHistory}>
-          View Dispense History
-        </button>
-
-        {/* Add Medicine */}
+        {/* Add Medicine - MOVED TO TOP */}
         <form className="medicine-form" onSubmit={handleSubmit}>
+          <h3>Add New Medicine</h3>
           <input type="text" name="name" placeholder="Medicine Name" value={form.name} onChange={handleChange} required />
           <input type="number" name="quantityInStock" placeholder="Capsules in Stock" value={form.quantityInStock} onChange={handleChange} required min="0" />
           <input type="text" name="unit" placeholder="Unit (e.g. pcs, bottles)" value={form.unit} onChange={handleChange} required />
@@ -204,8 +208,14 @@ export default function Inventory() {
           <button type="submit" disabled={submitting}>{submitting ? 'Adding...' : 'Add Medicine'}</button>
         </form>
 
+        {/*  View History Button */}
+        <button className="history-btn" onClick={fetchDispenseHistory}>
+          View Dispense History
+        </button>
+
         {/* Dispense Medicine */}
         <form className="dispense-form" onSubmit={handleDispense}>
+          <h3>Dispense Medicine</h3>
           <select value={dispenseForm.medId} onChange={e => setDispenseForm({ ...dispenseForm, medId: e.target.value })} required>
             <option value="">Select Medicine</option>
             {medicines.map(med => (

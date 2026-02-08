@@ -10,6 +10,7 @@ import {
   Package,
   Stethoscope,
   Bell,
+  Star,
 } from 'lucide-react';
 import { io } from 'socket.io-client';
 import { toast } from 'react-toastify';
@@ -121,6 +122,7 @@ export default function AdminLayout({ children }) {
     { name: 'Reports', path: '/admin-reports', icon: <BarChart3 size={18} /> },
     { name: 'Consultation', path: '/admin-consultation/preview', icon: <Stethoscope size={18} /> },
     { name: 'Inventory', path: '/admin-inventory', icon: <Package size={18} /> },
+    { name: 'Feedback Management', path: '/admin-doctor-feedback', icon: <Star size={18} /> },
   ];
 
   return (

@@ -11,6 +11,7 @@ import {
   Stethoscope,
   Bell,
   FileText,
+  Star,
 } from 'lucide-react';
 import { io } from 'socket.io-client';
 import { toast } from 'react-toastify';
@@ -123,6 +124,7 @@ export default function SuperadminLayout({ children }) {
     { name: 'Consultation', path: '/superadmin-consultation/preview', icon: <Stethoscope size={18} /> },
     { name: 'Inventory', path: '/superadmin-inventory', icon: <Package size={18} /> },
     { name: 'Activity Logs', path: '/superadmin-logs', icon: <FileText size={18} /> },
+    { name: 'Feedback Management', path: '/superadmin-doctor-feedback', icon: <Star size={18} /> },
   ];
 
   return (

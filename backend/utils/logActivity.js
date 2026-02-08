@@ -2,9 +2,24 @@ const Log = require('../models/Log');
 
 const logActivity = async (adminId, adminName, adminRole, action, entityType, entityId, details = {}) => {
   try {
+    // Support being called with an options object: logActivity({ adminId, adminName, adminRole, action, entityType, entityId, details })
+    if (typeof adminId === 'object' && !Array.isArray(adminId) && adminId !== null) {
+      const opts = adminId;
+      adminId = opts.adminId || opts.userId || null;
+      adminName = opts.adminName || opts.userName || opts.userName || '';
+      adminRole = opts.adminRole || opts.userRole || '';
+      action = opts.action;
+      entityType = opts.entityType || opts.type || 'system';
+      entityId = opts.entityId || opts.id || null;
+      details = opts.details || {};
+    }
+
+    // Ensure action is a string
+    const actionStr = (typeof action === 'string') ? action : String(action || 'action');
+
     // Generate description based on action
     let description = '';
-    switch (action) {
+    switch (actionStr) {
       case 'approve_appointment':
         description = `${adminName} (${adminRole}) approved an appointment for ${details.patientName}`;
         break;
@@ -17,6 +32,11 @@ const logActivity = async (adminId, adminName, adminRole, action, entityType, en
       case 'dispense_medicine':
         description = `${adminName} (${adminRole}) dispensed medicine`;
         break;
+      case 'create_feedback':
+      case 'submit_feedback':
+      case 'create_feedback_by_admin':
+        description = `${adminName || details.userName || details.patientName || 'User'} (${adminRole || 'user'}) submitted feedback: ${details.rating || ''} star`;
+        break;
       case 'update_user_role':
         description = `${adminName} (${adminRole}) updated a user's role`;
         break;
@@ -24,12 +44,12 @@ const logActivity = async (adminId, adminName, adminRole, action, entityType, en
         description = `${adminName} (${adminRole}) deleted an appointment for ${details.patientName}`;
         break;
       default:
-        description = `${adminName} (${adminRole}) performed ${action.replace('_', ' ')}`;
+        description = `${adminName || details.userName || details.patientName || 'User'} (${adminRole || 'user'}) performed ${actionStr.replace(/_/g, ' ')}`;
     }
 
     const log = new Log({
       adminId,
-      action,
+      action: actionStr,
       entityType,
       entityId,
       details,

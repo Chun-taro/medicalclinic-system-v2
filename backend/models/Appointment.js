@@ -8,6 +8,19 @@ const appointmentSchema = new mongoose.Schema({
     required: true
   },
 
+  // Assigned clinician (doctor, nurse, admin who started consultation)
+  doctorId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  },
+
+  // Date and time tracking
+  dateOfRequest: {
+    type: Date,
+    default: Date.now,
+    description: 'Timestamp when the appointment request was submitted'
+  },
+
   // Status tracking
   status: {
     type: String,

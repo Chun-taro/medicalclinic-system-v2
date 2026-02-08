@@ -131,10 +131,10 @@ export default function AllAppointments() {
     }
   };
 
-  const handleApprove = async id => {
+  const handleApprove = async (id, version) => {
     try {
       const token = localStorage.getItem('token');
-      await axios.patch(`http://localhost:5000/api/appointments/${id}/approve`, {}, {
+      await axios.patch(`http://localhost:5000/api/appointments/${id}/approve`, { version }, {
         headers: { Authorization: `Bearer ${token}` }
       });
       alert('Appointment approved');
@@ -396,7 +396,7 @@ export default function AllAppointments() {
         <td data-label="Purpose">{app.purpose}</td>
         <td data-label="Status"><span className="status-tag pending">Pending</span></td>
         <td data-label="Actions" className="action-cell">
-          <button onClick={() => handleApprove(app._id)} className="approve-btn">Approve</button>
+          <button onClick={() => handleApprove(app._id, app.version)} className="approve-btn">Approve</button>
           <button onClick={() => openEditModal(app)} className="edit-btn">Edit</button>
           <button onClick={() => handleDelete(app._id)} className="delete-btn">Delete</button>
         </td>

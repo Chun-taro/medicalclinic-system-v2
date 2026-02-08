@@ -56,6 +56,23 @@ const createMedicine = async (req, res) => {
     });
 
     await newMedicine.save();
+
+    // Log the activity
+    await logActivity(
+      req.user.userId,
+      `${req.user.firstName} ${req.user.lastName}`,
+      req.user.role,
+      'create_medicine',
+      'medicine',
+      newMedicine._id,
+      {
+        medicineName: name,
+        quantity: quantityInStock,
+        unit,
+        expiryDate
+      }
+    );
+
     res.status(201).json(newMedicine);
   } catch (err) {
     console.error('Create medicine error:', err);

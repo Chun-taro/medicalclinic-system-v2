@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { auth } = require('../middleware/auth');
+const { auth, requireRole } = require('../middleware/auth');
 
 const {
   getAllUsers,
@@ -12,9 +12,14 @@ const {
   uploadAvatar
 } = require('../controllers/userController');
 
-router.get('/', auth, getAllUsers);
-router.put('/:id/role', auth, updateUserRole);
+// Admin/superadmin only routes
+router.get('/', auth, requireRole('superadmin', 'admin'), getAllUsers);
+router.put('/:id/role', auth, requireRole('superadmin'), updateUserRole);
+
+// Public/non-authenticated route for Google OAuth
 router.get('/role-by-google/:googleId', getRoleByGoogleId);
+
+// Authenticated user routes
 router.get('/profile', auth, getProfile);
 router.get('/profile/:id', auth, getProfileById);
 router.put('/profile', auth, updateProfile);

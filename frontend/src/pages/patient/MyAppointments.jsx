@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import PatientLayout from './PatientLayout';
+import FeedbackForm from '../../components/FeedbackForm';
 import './Style/patient-appointments.css';
 
 export default function MyAppointments() {
@@ -8,6 +9,9 @@ export default function MyAppointments() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [expandedId, setExpandedId] = useState(null);
+  const [showFeedbackForm, setShowFeedbackForm] = useState(false);
+  const [selectedAppointment, setSelectedAppointment] = useState(null);
+  const [submittedFeedback, setSubmittedFeedback] = useState({});
 
   const firstName = localStorage.getItem('firstName') || 'N/A';
   const lastName = localStorage.getItem('lastName') || '';
@@ -53,6 +57,24 @@ const phone = localStorage.getItem('contactNumber') || 'N/A';
     setExpandedId(prevId => (prevId === id ? null : id));
   };
 
+  const handleOpenFeedback = (appointment) => {
+    setSelectedAppointment(appointment);
+    setShowFeedbackForm(true);
+  };
+
+  const handleCloseFeedback = () => {
+    setShowFeedbackForm(false);
+    setSelectedAppointment(null);
+  };
+
+  const handleFeedbackSubmitted = (appointmentId) => {
+    // Mark this appointment as having feedback submitted
+    setSubmittedFeedback(prev => ({
+      ...prev,
+      [appointmentId]: true
+    }));
+  };
+
   return (
     <PatientLayout>
       <div className="patient-appointments-container">
@@ -94,10 +116,24 @@ const phone = localStorage.getItem('contactNumber') || 'N/A';
                         : 'None'}
                     </p>
                     <div className="card-actions">
+                      {app.status === 'completed' && !submittedFeedback[app._id] && (
+                        <button
+                          className="feedback-btn"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleOpenFeedback(app);
+                          }}
+                        >
+                          Leave Feedback
+                        </button>
+                      )}
+                      {submittedFeedback[app._id] && app.status === 'completed' && (
+                        <span className="feedback-submitted">✓ Feedback Submitted</span>
+                      )}
                       <button
                         className="delete-btn"
                         onClick={(e) => {
-                          e.stopPropagation(); // Prevent card from toggling
+                          e.stopPropagation();
                           handleDelete(app._id);
                         }}
                       >
@@ -111,6 +147,16 @@ const phone = localStorage.getItem('contactNumber') || 'N/A';
           </div>
         )}
       </div>
+
+      {showFeedbackForm && selectedAppointment && (
+        <FeedbackForm
+          appointmentId={selectedAppointment._id}
+          doctorId={selectedAppointment.doctorId?._id || selectedAppointment.doctorId}
+          doctorName={selectedAppointment.doctorName || 'Your Doctor'}
+          onClose={handleCloseFeedback}
+          onSuccess={() => handleFeedbackSubmitted(selectedAppointment._id)}
+        />
+      )}
     </PatientLayout>
   );
 }

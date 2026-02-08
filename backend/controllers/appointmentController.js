@@ -5,6 +5,7 @@ const { google } = require('googleapis');
 const { sendNotification } = require('../utils/sendNotification');
 const sendEmail = require('../utils/mailer');
 const logActivity = require('../utils/logActivity');
+const mongoose = require('mongoose');
 
 
 
@@ -70,6 +71,7 @@ const getMyAppointments = async (req, res) => {
 
     const appointments = await Appointment.find({ patientId: req.user.userId })
       .populate('patientId', 'firstName lastName email contactNumber')
+      .populate('doctorId', 'firstName lastName role')
       .sort({ appointmentDate: -1 })
       .skip(page * limit)
       .limit(limit)
@@ -118,7 +120,7 @@ const getAllAppointments = async (req, res) => {
 
     const appointments = await Appointment.find()
       .populate('patientId', 'firstName lastName email contactNumber')
-      .select('appointmentDate status purpose typeOfVisit patientId')
+      .select('appointmentDate status purpose typeOfVisit patientId version')
       .sort({ appointmentDate: -1 })
       .skip(page * limit)
       .limit(limit)
@@ -203,176 +205,193 @@ const updateAppointmentStatus = async (req, res) => {
 };
 
 
-// Approve appointment
+// Approve appointment with retry for transient write conflicts
 const approveAppointment = async (req, res) => {
-  const session = await mongoose.startSession();
-  session.startTransaction();
+  const maxRetries = 3;
+  let attempt = 0;
 
-  try {
-    if (req.user.role !== 'admin' && req.user.role !== 'superadmin') {
-      await session.abortTransaction();
-      session.endSession();
-      return res.status(403).json({ error: 'Access denied' });
-    }
+  const version = req.body?.version;
 
-    const { version } = req.body;
-
-    const updated = await optimisticUpdate(
-      Appointment,
-      { _id: req.params.id, version: version },
-      { status: 'approved', $inc: { version: 1 } },
-      { new: true, session }
-    ).populate('patientId');
-
-    if (!updated || !updated.patientId) {
-      await session.abortTransaction();
-      session.endSession();
-      return res.status(404).json({ error: 'Appointment or patient not found' });
-    }
-
-    const patient = updated.patientId;
-
-    // Log the activity
-    await logActivity(
-      req.user.userId,
-      req.user.name || `${req.user.firstName} ${req.user.lastName}`,
-      req.user.role,
-      'approve_appointment',
-      'appointment',
-      updated._id,
-      {
-        patientName: `${patient.firstName} ${patient.lastName}`,
-        appointmentDate: updated.appointmentDate
-      }
-    );
-
-    // In-app notification
-    await sendNotification({
-      userId: patient._id,
-      status: 'approved',
-      message: `Your appointment on ${updated.appointmentDate.toDateString()} has been approved.`,
-      recipientType: 'patient',
-      appointmentId: updated._id
-    });
-
-    // Email notification
-    if (patient.email) {
-      try {
-        await sendEmail({
-          to: patient.email,
-          subject: 'Your appointment has been approved',
-          html: `
-            <div style="font-family: Arial, sans-serif; padding: 20px;">
-              <h2 style="color: #2E86C1;">Appointment Approved</h2>
-              <p>Hi ${patient.firstName},</p>
-              <p>Your appointment scheduled for <strong>${updated.appointmentDate.toDateString()}</strong> has been <strong>approved</strong>.</p>
-              <p>Please arrive 10 minutes early and bring any necessary documents.</p>
-              <p style="margin-top: 20px;">Thank you,<br/>Clinic Team</p>
-            </div>
-          `
-        });
-      } catch (emailErr) {
-        console.error('Email send error:', emailErr.message);
-        
-      }
-    }
-
-    // Create Google Calendar event in patient's calendar if they have connected Google
+  while (attempt < maxRetries) {
+    const session = await mongoose.startSession();
+    session.startTransaction();
     try {
-      const startDate = new Date(updated.appointmentDate);
-      const endDate = new Date(startDate.getTime() + (30 * 60 * 1000));
-
-      const event = {
-        summary: 'Clinic Appointment',
-        description: `Appointment for ${patient.firstName || ''} ${patient.lastName || ''} - ${updated.purpose || ''}`,
-        start: { dateTime: startDate.toISOString(), timeZone: 'Asia/Manila' },
-        end: { dateTime: endDate.toISOString(), timeZone: 'Asia/Manila' },
-        attendees: patient.email ? [{ email: patient.email }] : [],
-        reminders: { useDefault: true }
-      };
-
-      // Try to create the event as the patient (best UX)
-      if (patient.googleRefreshToken || patient.googleAccessToken) {
-        const oauth2Client = new google.auth.OAuth2(
-          process.env.GOOGLE_CLIENT_ID,
-          process.env.GOOGLE_CLIENT_SECRET,
-          process.env.GOOGLE_REDIRECT_URI
-        );
-
-        if (patient.googleRefreshToken) {
-          // Use refresh token to obtain a fresh access token
-          oauth2Client.setCredentials({ refresh_token: patient.googleRefreshToken });
-          try {
-            const access = await oauth2Client.getAccessToken();
-            if (access && access.token) {
-              oauth2Client.setCredentials({ access_token: access.token, refresh_token: patient.googleRefreshToken });
-            }
-          } catch (refreshErr) {
-            // If refresh fails, throw to trigger fallback
-            throw refreshErr;
-          }
-        } else {
-          oauth2Client.setCredentials({ access_token: patient.googleAccessToken });
-        }
-
-        const calendar = google.calendar({ version: 'v3', auth: oauth2Client });
-        const resp = await calendar.events.insert({ calendarId: 'primary', resource: event });
-        console.log('Google Calendar event created (patient):', resp.data.id);
-
-        // Store the Google Calendar event ID in the appointment
-        updated.googleCalendarEventId = resp.data.id;
-        await updated.save();
-      } else {
-        // No patient tokens — fall through to clinic invite flow
-        throw new Error('No patient Google tokens');
+      if (req.user.role !== 'admin' && req.user.role !== 'superadmin') {
+        await session.abortTransaction();
+        session.endSession();
+        return res.status(403).json({ error: 'Access denied' });
       }
-    } catch (patientErr) {
-      // Fallback: create event on clinic account and invite patient by email
-      try {
-        if (!patient.email) throw new Error('No patient email to invite');
 
-        const clinicOauth = new google.auth.OAuth2(
-          process.env.GOOGLE_CALENDAR_CLIENT_ID,
-          process.env.GOOGLE_CALENDAR_CLIENT_SECRET,
-          process.env.GOOGLE_CALENDAR_REDIRECT_URI
-        );
+      const updated = await Appointment.findOneAndUpdate(
+        { _id: req.params.id, version: version },
+        { status: 'approved', $inc: { version: 1 } },
+        { new: true, session }
+      ).populate('patientId');
 
-        if (process.env.GOOGLE_CALENDAR_REFRESH_TOKEN) {
-          clinicOauth.setCredentials({ refresh_token: process.env.GOOGLE_CALENDAR_REFRESH_TOKEN });
-          const access = await clinicOauth.getAccessToken();
-          if (access && access.token) clinicOauth.setCredentials({ access_token: access.token, refresh_token: process.env.GOOGLE_CALENDAR_REFRESH_TOKEN });
-        } else if (process.env.GOOGLE_CALENDAR_ACCESS_TOKEN) {
-          clinicOauth.setCredentials({ access_token: process.env.GOOGLE_CALENDAR_ACCESS_TOKEN });
-        } else {
-          throw new Error('Clinic calendar credentials not configured');
+      if (!updated || !updated.patientId) {
+        await session.abortTransaction();
+        session.endSession();
+        return res.status(404).json({ error: 'Appointment or patient not found' });
+      }
+
+      const patient = updated.patientId;
+
+      // Log the activity
+      await logActivity(
+        req.user.userId,
+        req.user.name || `${req.user.firstName} ${req.user.lastName}`,
+        req.user.role,
+        'approve_appointment',
+        'appointment',
+        updated._id,
+        {
+          patientName: `${patient.firstName} ${patient.lastName}`,
+          appointmentDate: updated.appointmentDate
         }
+      );
 
-        const calendar = google.calendar({ version: 'v3', auth: clinicOauth });
+      // In-app notification
+      await sendNotification({
+        userId: patient._id,
+        status: 'approved',
+        message: `Your appointment on ${updated.appointmentDate.toDateString()} has been approved.`,
+        recipientType: 'patient',
+        appointmentId: updated._id
+      });
 
+      // Email notification
+      if (patient.email) {
+        try {
+          await sendEmail({
+            to: patient.email,
+            subject: 'Your appointment has been approved',
+            html: `
+              <div style="font-family: Arial, sans-serif; padding: 20px;">
+                <h2 style="color: #2E86C1;">Appointment Approved</h2>
+                <p>Hi ${patient.firstName},</p>
+                <p>Your appointment scheduled for <strong>${updated.appointmentDate.toDateString()}</strong> has been <strong>approved</strong>.</p>
+                <p>Please arrive 10 minutes early and bring any necessary documents.</p>
+                <p style="margin-top: 20px;">Thank you,<br/>Clinic Team</p>
+              </div>
+            `
+          });
+        } catch (emailErr) {
+          console.error('Email send error:', emailErr.message);
+        }
+      }
+
+      // Create Google Calendar event in patient's calendar if they have connected Google
+      try {
         const startDate = new Date(updated.appointmentDate);
         const endDate = new Date(startDate.getTime() + (30 * 60 * 1000));
 
-        const inviteEvent = {
+        const event = {
           summary: 'Clinic Appointment',
           description: `Appointment for ${patient.firstName || ''} ${patient.lastName || ''} - ${updated.purpose || ''}`,
           start: { dateTime: startDate.toISOString(), timeZone: 'Asia/Manila' },
           end: { dateTime: endDate.toISOString(), timeZone: 'Asia/Manila' },
-          attendees: [{ email: patient.email }],
+          attendees: patient.email ? [{ email: patient.email }] : [],
           reminders: { useDefault: true }
         };
 
-        const resp = await calendar.events.insert({ calendarId: 'primary', resource: inviteEvent, sendUpdates: 'all' });
-        console.log('Google Calendar invite created (clinic):', resp.data.id);
-      } catch (clinicErr) {
-        console.error('Clinic calendar invite error:', clinicErr && clinicErr.message ? clinicErr.message : clinicErr);
-        console.error('Patient calendar error:', patientErr && patientErr.message ? patientErr.message : patientErr);
-      }
-    }
+        // Try to create the event as the patient (best UX)
+        if (patient.googleRefreshToken || patient.googleAccessToken) {
+          const oauth2Client = new google.auth.OAuth2(
+            process.env.GOOGLE_CLIENT_ID,
+            process.env.GOOGLE_CLIENT_SECRET,
+            process.env.GOOGLE_REDIRECT_URI
+          );
 
-    res.json({ message: 'Appointment approved and notification sent', appointment: updated });
-  } catch (err) {
-    console.error('Approval error:', err.message);
-    res.status(500).json({ error: 'Internal server error' });
+          if (patient.googleRefreshToken) {
+            oauth2Client.setCredentials({ refresh_token: patient.googleRefreshToken });
+            try {
+              const access = await oauth2Client.getAccessToken();
+              if (access && access.token) {
+                oauth2Client.setCredentials({ access_token: access.token, refresh_token: patient.googleRefreshToken });
+              }
+            } catch (refreshErr) {
+              throw refreshErr;
+            }
+          } else {
+            oauth2Client.setCredentials({ access_token: patient.googleAccessToken });
+          }
+
+          const calendar = google.calendar({ version: 'v3', auth: oauth2Client });
+          const resp = await calendar.events.insert({ calendarId: 'primary', resource: event });
+          console.log('Google Calendar event created (patient):', resp.data.id);
+
+          // Store the Google Calendar event ID in the appointment (within transaction)
+          updated.googleCalendarEventId = resp.data.id;
+          await updated.save({ session });
+        } else {
+          throw new Error('No patient Google tokens');
+        }
+      } catch (patientErr) {
+        // Fallback: create event on clinic account and invite patient by email
+        try {
+          if (!patient.email) throw new Error('No patient email to invite');
+
+          const clinicOauth = new google.auth.OAuth2(
+            process.env.GOOGLE_CALENDAR_CLIENT_ID,
+            process.env.GOOGLE_CALENDAR_CLIENT_SECRET,
+            process.env.GOOGLE_CALENDAR_REDIRECT_URI
+          );
+
+          if (process.env.GOOGLE_CALENDAR_REFRESH_TOKEN) {
+            clinicOauth.setCredentials({ refresh_token: process.env.GOOGLE_CALENDAR_REFRESH_TOKEN });
+            const access = await clinicOauth.getAccessToken();
+            if (access && access.token) clinicOauth.setCredentials({ access_token: access.token, refresh_token: process.env.GOOGLE_CALENDAR_REFRESH_TOKEN });
+          } else if (process.env.GOOGLE_CALENDAR_ACCESS_TOKEN) {
+            clinicOauth.setCredentials({ access_token: process.env.GOOGLE_CALENDAR_ACCESS_TOKEN });
+          } else {
+            throw new Error('Clinic calendar credentials not configured');
+          }
+
+          const calendar = google.calendar({ version: 'v3', auth: clinicOauth });
+
+          const startDate = new Date(updated.appointmentDate);
+          const endDate = new Date(startDate.getTime() + (30 * 60 * 1000));
+
+          const inviteEvent = {
+            summary: 'Clinic Appointment',
+            description: `Appointment for ${patient.firstName || ''} ${patient.lastName || ''} - ${updated.purpose || ''}`,
+            start: { dateTime: startDate.toISOString(), timeZone: 'Asia/Manila' },
+            end: { dateTime: endDate.toISOString(), timeZone: 'Asia/Manila' },
+            attendees: [{ email: patient.email }],
+            reminders: { useDefault: true }
+          };
+
+          const resp = await calendar.events.insert({ calendarId: 'primary', resource: inviteEvent, sendUpdates: 'all' });
+          console.log('Google Calendar invite created (clinic):', resp.data.id);
+        } catch (clinicErr) {
+          console.error('Clinic calendar invite error:', clinicErr && clinicErr.message ? clinicErr.message : clinicErr);
+          console.error('Patient calendar error:', patientErr && patientErr.message ? patientErr.message : patientErr);
+        }
+      }
+
+      await session.commitTransaction();
+      session.endSession();
+
+      return res.json({ message: 'Appointment approved and notification sent', appointment: updated });
+    } catch (err) {
+      // Abort and decide whether to retry
+      try { await session.abortTransaction(); } catch (e) {}
+      session.endSession();
+
+      const isTransient =
+        (err && Array.isArray(err.errorLabels) && err.errorLabels.includes('TransientTransactionError')) ||
+        (err && err.message && (err.message.includes('Write conflict') || err.message.includes('Please retry')));
+
+      attempt += 1;
+      if (attempt >= maxRetries || !isTransient) {
+        console.error('Approval error:', err && err.message ? err.message : err);
+        return res.status(500).json({ error: 'Internal server error' });
+      }
+
+      // small backoff before retrying
+      await new Promise((r) => setTimeout(r, 100 * attempt));
+      continue;
+    }
   }
 };
 
@@ -385,6 +404,12 @@ const startConsultation = async (req, res) => {
 
     if (appointment.status !== 'approved') {
       return res.status(400).json({ error: 'Only approved appointments can begin consultation' });
+    }
+
+    // Mark caller as the clinician for this appointment so feedback targets them
+    const clinicianRoles = ['doctor', 'admin', 'superadmin', 'nurse'];
+    if (clinicianRoles.includes(req.user.role)) {
+      appointment.doctorId = req.user.userId;
     }
 
     appointment.status = 'in-consultation';
@@ -885,6 +910,7 @@ module.exports = {
   getMedicalCertificates,
   getConsultationById,
   updateAppointment,
+  updateAppointmentStatus,
   saveConsultation,
   prescribeMedicines,
   lockAppointmentForEdit,

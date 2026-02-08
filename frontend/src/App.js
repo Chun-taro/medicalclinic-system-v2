@@ -1,5 +1,12 @@
+import React, { useEffect } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { PatientProvider } from './context/PatientContext';
+import { applyTheme } from './utils/themeManager';
+
+// Import theme CSS files
+import './pages/Style/theme-superadmin.css';
+import './pages/Style/theme-admin.css';
+import './pages/Style/theme-patient.css';
 
 // Auth pages
 import Login from './pages/Login';
@@ -23,6 +30,7 @@ import Reports from './pages/admin/Reports';
 import ConsultationPage from './pages/admin/ConsultationPage';
 import Inventory from './pages/admin/Inventory';
 import AdminProfile from './pages/admin/AdminProfile';
+import AdminDoctorFeedback from './pages/admin/AdminDoctorFeedback';
 
 // Superadmin pages
 import SuperadminDashboard from './pages/superadmin/SuperadminDashboard';
@@ -33,6 +41,7 @@ import SuperadminConsultationPage from './pages/superadmin/SuperadminConsultatio
 import SuperadminInventory from './pages/superadmin/SuperadminInventory';
 import SuperadminProfile from './pages/superadmin/SuperadminProfile';
 import SuperadminLogs from './pages/superadmin/SuperadminLogs';
+import SuperadminDoctorFeedback from './pages/superadmin/SuperadminDoctorFeedback';
 
 
 
@@ -42,8 +51,18 @@ import MyAppointments from './pages/patient/MyAppointments';
 import BookAppointment from './pages/patient/BookAppointment';
 import Profile from './pages/patient/Profile';
 import Notifications from './pages/patient/Notifications';
+// Doctor pages
+import DoctorFeedback from './pages/doctor/DoctorFeedback';
 
 function App() {
+  useEffect(() => {
+    // Apply theme based on user role
+    const userRole = localStorage.getItem('role');
+    if (userRole) {
+      applyTheme(userRole);
+    }
+  }, []);
+
   return (
     <BrowserRouter>
       <PatientProvider>
@@ -118,6 +137,14 @@ function App() {
           </ProtectedRoute>
         }
       />
+      <Route
+        path="/admin-doctor-feedback"
+        element={
+          <ProtectedRoute requiredRole="admin">
+            <AdminDoctorFeedback />
+          </ProtectedRoute>
+        }
+      />
 
 
       {/* Superadmin Routes */}
@@ -185,6 +212,14 @@ function App() {
           </ProtectedRoute>
         }
       />
+      <Route
+        path="/superadmin-doctor-feedback"
+        element={
+          <ProtectedRoute requiredRole="superadmin">
+            <SuperadminDoctorFeedback />
+          </ProtectedRoute>
+        }
+      />
 
 
       {/*  Patient Routes */}
@@ -225,6 +260,16 @@ function App() {
         element={
           <ProtectedRoute requiredRole="patient">
             <Notifications />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Doctor Routes */}
+      <Route
+        path="/doctor-feedback"
+        element={
+          <ProtectedRoute requiredRole="doctor">
+            <DoctorFeedback />
           </ProtectedRoute>
         }
       />

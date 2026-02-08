@@ -22,6 +22,7 @@ const notificationRoutes = require('./routes/notification');
 const systemRoutes = require('./routes/system');
 const weatherRoutes = require('./routes/weather');
 const logsRoutes = require('./routes/logs');
+const feedbackRoutes = require('./routes/feedback');
 
 
 require('./passport');
@@ -78,6 +79,7 @@ app.use('/api/system', systemRoutes);
 app.use('/api/calendar', calendarRoutes);
 app.use('/api/weather', weatherRoutes);
 app.use('/api/logs', logsRoutes);
+app.use('/api/feedback', feedbackRoutes);
 
 
 // MongoDB connection

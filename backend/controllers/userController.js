@@ -111,6 +111,21 @@ const updateProfile = async (req, res) => {
     ).select('-password');
 
     if (!updatedUser) return res.status(404).json({ error: 'User not found' });
+
+    // Log profile update
+    await logActivity(
+      req.user.userId,
+      `${updatedUser.firstName} ${updatedUser.lastName}`,
+      req.user.role,
+      'update_user_profile',
+      'user',
+      req.user.userId,
+      {
+        fieldsUpdated: Object.keys(updates),
+        updateTime: new Date()
+      }
+    );
+
     res.json({ message: 'Profile updated successfully', user: updatedUser, version: updatedUser.version });
   } catch (err) {
     if (err.message.includes('version conflict')) {
@@ -124,7 +139,22 @@ const updateProfile = async (req, res) => {
 const uploadAvatar = async (req, res) => {
   try {
     const imagePath = `/uploads/${req.file.filename}`;
-    await User.findByIdAndUpdate(req.user.userId, { avatar: imagePath });
+    const updatedUser = await User.findByIdAndUpdate(req.user.userId, { avatar: imagePath }, { new: true });
+
+    // Log avatar upload
+    await logActivity(
+      req.user.userId,
+      `${updatedUser.firstName} ${updatedUser.lastName}`,
+      req.user.role,
+      'upload_profile_picture',
+      'user',
+      req.user.userId,
+      {
+        fileName: req.file.filename,
+        filePath: imagePath
+      }
+    );
+
     res.json({ message: 'Avatar updated', avatar: imagePath });
   } catch (err) {
     res.status(500).json({ error: 'Failed to upload avatar' });

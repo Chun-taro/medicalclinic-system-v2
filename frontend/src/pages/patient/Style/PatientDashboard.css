@@ -136,6 +136,30 @@
   width: 100%;
 }
 
+.navbar-left {
+  margin-left: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+}
+
+.navbar-logo {
+  width: 40px;
+  height: auto;
+}
+
+.user-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.user-role {
+  font-size: 0.7rem;
+  color: var(--text-light);
+  font-weight: 600;
+}
+
 .fb-name {
   font-weight: 600;
   font-size: var(--font-size-base);
@@ -472,14 +496,19 @@
 
 /* Mobile */
 @media (max-width: 480px) {
+  /* Keep sidebar at the very top on mobile so navbar appears below it */
   .sidebar {
     width: 100%;
     flex-direction: row;
     align-items: center;
     justify-content: space-around;
-    padding: var(--spacing-xs);
-    padding-top: calc(var(--spacing-xs) + 60px);
-    height: auto;
+    padding: var(--spacing-xs) 8px;
+    height: 56px; /* fixed mobile sidebar height */
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 5; /* lowered so navbar can appear above */
     box-shadow: none;
   }
 
@@ -511,6 +540,21 @@
     align-items: flex-start;
     gap: var(--spacing-xs);
     padding: var(--spacing-sm);
+    /* place navbar below the fixed sidebar */
+    position: fixed;
+    top: 56px;
+    left: 0;
+    right: 0;
+    width: 100%;
+    z-index: 999; /* ensure navbar sits above the fixed sidebar on mobile */
+    box-sizing: border-box;
+  }
+
+  /* ensure inner navbar content stacks above sidebar */
+  .navbar-group {
+    position: relative;
+    z-index: 1000;
+    width: 100%;
   }
 
   .navbar-group {
@@ -564,7 +608,8 @@
 
   .page-content {
     padding: var(--spacing-xs);
-    padding-top: calc(var(--spacing-xs) + 65px);
+    /* account for fixed sidebar + fixed navbar heights */
+    padding-top: calc(56px + 65px);
   }
 
   .notification-dropdown {

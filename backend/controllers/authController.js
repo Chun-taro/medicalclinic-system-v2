@@ -3,6 +3,7 @@ const bcrypt = require('bcryptjs');
 const axios = require('axios');
 const jwt = require('jsonwebtoken');
 const { google } = require('googleapis');
+const logActivity = require('../utils/logActivity');
 
 // Local signup
 const signup = async (req, res) => {
@@ -29,6 +30,20 @@ const signup = async (req, res) => {
     });
 
     await newUser.save();
+
+    // Log the user signup
+    await logActivity(
+      newUser._id,
+      `${newUser.firstName} ${newUser.lastName}`,
+      'patient',
+      'user_signup',
+      'auth',
+      newUser._id,
+      {
+        email: newUser.email,
+        roll: 'patient'
+      }
+    );
 
     const token = jwt.sign(
       { userId: newUser._id, role: newUser.role },
@@ -68,6 +83,17 @@ const superadminLogin = async (req, res) => {
       { expiresIn: '1d' }
     );
 
+    // Log superadmin login
+    await logActivity(
+      user._id,
+      `${user.firstName} ${user.lastName}`,
+      'superadmin',
+      'user_login',
+      'auth',
+      user._id,
+      { email: user.email, role: 'superadmin' }
+    );
+
     res.json({ message: 'Superadmin login successful', token, userId: user._id, role: user.role });
   } catch (err) {
     console.error('Superadmin login error:', err.message);
@@ -97,6 +123,17 @@ const login = async (req, res) => {
       { userId: user._id, role: user.role },
       process.env.JWT_SECRET,
       { expiresIn: '1d' }
+    );
+
+    // Log successful login
+    await logActivity(
+      user._id,
+      `${user.firstName} ${user.lastName}`,
+      user.role,
+      'user_login',
+      'auth',
+      user._id,
+      { email: user.email }
     );
 
     res.json({ message: 'Login successful', token, userId: user._id, role: user.role });

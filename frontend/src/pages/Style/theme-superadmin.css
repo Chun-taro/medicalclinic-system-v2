@@ -1,0 +1,144 @@
+/* ============================================
+   Superadmin Theme - Purple & Gold
+============================================ */
+
+:root.theme-superadmin {
+  /* Primary Colors - Purple */
+  --primary-color: #6f42c1;
+  --primary-hover: #5a32a3;
+  --primary-light: #8b5fbf;
+  --primary-lighter: #f8f6ff;
+
+  /* Accent Colors - Gold */
+  --accent-color: #ffc107;
+  --accent-hover: #ffb300;
+  --accent-light: #fff3cd;
+
+  /* Secondary Colors */
+  --secondary-color: #6c757d;
+  --secondary-hover: #5a6268;
+
+  /* UI Colors */
+  --success-color: #28a745;
+  --danger-color: #dc3545;
+  --warning-color: #ffc107;
+  --info-color: #17a2b8;
+
+  /* Text and Background */
+  --text-color: #212529;
+  --text-light: #6c757d;
+  --bg-color: #ffffff;
+  --bg-light: #f8f9fa;
+  --bg-dark: #343a40;
+
+  /* Borders */
+  --border-color: #dee2e6;
+  --border-radius: 8px;
+
+  /* Shadows */
+  --shadow: 0 2px 8px rgba(111, 66, 193, 0.1);
+  --shadow-hover: 0 4px 16px rgba(111, 66, 193, 0.2);
+
+  /* Transitions */
+  --transition: all 0.3s ease;
+
+  /* Typography */
+  --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  --font-size-sm: 0.875rem;
+  --font-size-base: 1rem;
+  --font-size-lg: 1.25rem;
+  --font-size-xl: 1.5rem;
+
+  /* Spacing */
+  --spacing-xs: 0.25rem;
+  --spacing-sm: 0.5rem;
+  --spacing-md: 1rem;
+  --spacing-lg: 1.5rem;
+  --spacing-xl: 2rem;
+}
+
+/* Superadmin specific component styling */
+.superadmin-header {
+  background: linear-gradient(135deg, #6f42c1 0%, #8b5fbf 100%);
+  color: white;
+}
+
+.superadmin-nav {
+  background-color: #f8f6ff;
+  border-left: 4px solid #ffc107;
+}
+
+.superadmin-nav a:hover {
+  background-color: #e9d7f7;
+  color: #6f42c1;
+  font-weight: 600;
+}
+
+.superadmin-dashboard-card {
+  border-left: 5px solid #ffc107;
+  background: white;
+  box-shadow: 0 2px 8px rgba(111, 66, 193, 0.08);
+}
+
+.superadmin-dashboard-card:hover {
+  box-shadow: 0 4px 16px rgba(111, 66, 193, 0.15);
+}
+
+.superadmin-button {
+  background-color: #6f42c1;
+  color: white;
+  border: none;
+  transition: all 0.3s ease;
+}
+
+.superadmin-button:hover {
+  background-color: #5a32a3;
+  box-shadow: 0 4px 16px rgba(111, 66, 193, 0.3);
+  transform: translateY(-2px);
+}
+
+.superadmin-button-secondary {
+  background-color: #ffc107;
+  color: #6f42c1;
+  font-weight: 600;
+}
+
+.superadmin-button-secondary:hover {
+  background-color: #ffb300;
+  transform: translateY(-2px);
+}
+
+.superadmin-form-input {
+  border-color: #6f42c1;
+}
+
+.superadmin-form-input:focus {
+  border-color: #8b5fbf;
+  box-shadow: 0 0 0 3px rgba(111, 66, 193, 0.1);
+  outline: none;
+}
+
+.superadmin-badge {
+  background-color: #f8f6ff;
+  color: #6f42c1;
+  border: 2px solid #6f42c1;
+}
+
+/* Status indicators for superadmin */
+.status-critical {
+  background-color: #fce0e0;
+  color: #c82333;
+  border-left: 4px solid #dc3545;
+}
+
+.status-warning {
+  background-color: #fff3cd;
+  color: #856404;
+  border-left: 4px solid #ffc107;
+}
+
+.status-success {
+  background-color: #d4edda;
+  color: #155724;
+  border-left: 4px solid #28a745;
+}
