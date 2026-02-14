@@ -1,24 +1,13 @@
 {
-  "dependencies": {
-    "axios": "^1.12.2",
-    "bcrypt": "^6.0.0",
-    "cloudinary": "^2.8.0",
-    "cors": "^2.8.5",
-    "express": "^5.1.0",
-    "express-winston": "^4.2.0",
-    "google-auth-library": "^10.5.0",
-    "googleapis": "^164.1.0",
-    "jsonwebtoken": "^9.0.2",
-    "lucide-react": "^0.548.0",
-    "mongodb": "4.0",
-    "mongoose": "^8.19.1",
-    "morgan": "^1.10.1",
-    "multer": "^2.0.2",
-    "nodemailer": "^7.0.10",
-    "puppeteer": "^24.30.0",
-    "react-router-dom": "^7.9.4",
-    "recharts": "^3.3.0",
-    "winston": "^3.18.3",
-    "winston-daily-rotate-file": "^5.0.0"
+  "name": "medicalclinic-system-v2",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "install-backend": "cd backend && npm install",
+    "install-frontend": "cd frontend && npm install",
+    "build-frontend": "cd frontend && npm run build",
+    "build": "npm run install-backend && npm run install-frontend && npm run build-frontend",
+    "start": "cd backend && npm start",
+    "dev": "npm run dev --prefix backend & npm run dev --prefix frontend"
   }
 }

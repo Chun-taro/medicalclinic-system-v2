@@ -9,6 +9,7 @@ const http = require('http');
 const socketIo = require('socket.io');
 const helmet = require('helmet');
 const cookieParser = require('cookie-parser');
+const path = require('path');
 const requestLogger = require('./middleware/requestLogger');
 const calendarRoutes = require('./routes/calendar');
 
@@ -141,4 +142,15 @@ io.on('connection', (socket) => {
   socket.on('disconnect', () => {
     console.log(' Client disconnected:', socket.id);
   });
+});
+
+// Serve frontend static files from the Vite build directory
+const frontendPath = path.join(__dirname, '../frontend/dist');
+app.use(express.static(frontendPath));
+
+// Handle React routing, return all requests to React app
+app.get('*', (req, res) => {
+  if (!req.path.startsWith('/api')) {
+    res.sendFile(path.join(frontendPath, 'index.html'));
+  }
 });
