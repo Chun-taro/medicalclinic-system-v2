@@ -8,6 +8,8 @@ const jwt = require('jsonwebtoken');
 const http = require('http');
 const socketIo = require('socket.io');
 const helmet = require('helmet');
+const cookieParser = require('cookie-parser');
+const requestLogger = require('./middleware/requestLogger');
 const calendarRoutes = require('./routes/calendar');
 
 
@@ -47,6 +49,8 @@ app.use(cors({
   credentials: true
 }));
 app.use(express.json());
+app.use(cookieParser());
+app.use(requestLogger);
 
 // Session setup
 app.use(session({

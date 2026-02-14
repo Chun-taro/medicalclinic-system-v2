@@ -1,5 +1,5 @@
 const morgan = require('morgan');
-const logger = require('../utils/enhancedLogger');
+const logger = require('../utils/logger');
 
 // Custom Morgan token for user ID
 morgan.token('userId', (req) => req.user?.userId || 'anonymous');
@@ -41,20 +41,14 @@ const requestLogger = morgan(
         const userAgent = parts.slice(12, -1).join(' '); // Everything between IP and body
         const body = parts[parts.length - 1];
 
-        // Log HTTP requests with appropriate level based on status
-        const level = status >= 400 ? 'warn' : status >= 500 ? 'error' : 'http';
-
-        logger.log(level, 'HTTP_REQUEST', {
-          method,
-          url,
-          status,
-          responseTime,
-          contentLength,
-          userId,
-          ip,
-          userAgent,
-          body: body && body !== '-' ? body : undefined
-        });
+        // Map status to level
+        if (status >= 500) {
+          logger.error(`HTTP ${status} [${method}] ${url} - Body: ${body}`);
+        } else if (status >= 400) {
+          logger.warn(`HTTP ${status} [${method}] ${url} - Body: ${body}`);
+        } else {
+          logger.info(`HTTP ${status} [${method}] ${url} - ${responseTime}ms`);
+        }
       }
     },
     skip: (req, res) => {
