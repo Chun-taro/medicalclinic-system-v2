@@ -1,532 +1,353 @@
-import { useEffect, useState } from 'react';
-import axios from 'axios';
-import AdminLayout from './AdminLayout';
-import './Style/consultation.css';
+import React, { useState, useEffect } from 'react';
+import api from '../../services/api'; // Use api instance
+import { toast } from 'react-toastify';
+import {
+    Users, Calendar, FileText, CheckCircle, Clock,
+    Activity, ChevronRight, Search, X
+} from 'lucide-react';
+import './ConsultationPage.css';
 
-export default function ConsultationPage() {
-  const [approvedAppointments, setApprovedAppointments] = useState([]);
-  const [selectedAppointment, setSelectedAppointment] = useState(null);
-  const [medicineOptions, setMedicineOptions] = useState([]);
-  const [prescribedList, setPrescribedList] = useState([]);
-  const [medicineSearch, setMedicineSearch] = useState('');
-  const [showModal, setShowModal] = useState(false);
-  // Filters
-  const [searchQuery, setSearchQuery] = useState('');
-  const [startDateFilter, setStartDateFilter] = useState('');
-  const [endDateFilter, setEndDateFilter] = useState('');
+const ConsultationPage = () => {
+    const [queue, setQueue] = useState([]);
+    const [selectedApp, setSelectedApp] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [medicines, setMedicines] = useState([]);
+    const [medSearch, setMedSearch] = useState('');
+    const [prescribed, setPrescribed] = useState([]);
 
-  const [showMRFModal, setShowMRFModal] = useState(false);
-  const [patientProfile, setPatientProfile] = useState(null);
+    // Consultation Form
+    const [form, setForm] = useState({
+        bloodPressure: '', temperature: '', oxygenSaturation: '',
+        heartRate: '', bmi: '', bmiIntervention: '',
+        diagnosis: '', management: '',
+        referredToPhysician: false, physicianName: '',
+        firstAidDone: 'n', firstAidWithin30Mins: 'n/a'
+    });
 
-  const [showPDFModal, setShowPDFModal] = useState(false);
-  const [selectedPDFAppointment, setSelectedPDFAppointment] = useState(null);
+    // MRF State
+    const [showMRFModal, setShowMRFModal] = useState(false);
+    const [patientProfile, setPatientProfile] = useState(null);
 
+    useEffect(() => {
+        fetchQueue();
+        fetchMedicines();
+    }, []);
 
-
-  const [form, setForm] = useState({
-    bloodPressure: '',
-    temperature: '',
-    oxygenSaturation: '',
-    heartRate: '',
-    bmi: '',
-    bmiIntervention: '',
-    diagnosis: '',
-    management: '',
-    medicinesPrescribed: '',
-    referredToPhysician: false,
-    physicianName: '',
-    firstAidDone: 'n',
-    firstAidWithin30Mins: 'n/a'
-  });
-
-  const fetchApprovedAppointments = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      const res = await axios.get('http://localhost:5000/api/appointments', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      const approved = res.data.filter(app => app.status === 'approved');
-      setApprovedAppointments(approved);
-    } catch (err) {
-      console.error('Error fetching appointments:', err.message);
-    }
-  };
-
-  const fetchMedicines = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      const res = await axios.get('http://localhost:5000/api/medicines', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setMedicineOptions(res.data);
-    } catch (err) {
-      console.error('Error fetching medicines:', err.message);
-    }
-  };
-
-  const handleViewMRF = async (userId) => {
-    if (!userId) {
-      alert('User ID is missing for this appointment.');
-      return;
-    }
-
-    try {
-      const token = localStorage.getItem('token');
-      const res = await axios.get(`http://localhost:5000/api/users/profile/${userId}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setPatientProfile(res.data);
-      setShowMRFModal(true);
-    } catch (err) {
-      console.error('Error fetching patient profile:', err.message);
-      alert('Failed to load patient profile');
-    }
-  };
-
-
-
-  const handleFinishCertificate = async (appointment) => {
-    try {
-      const token = localStorage.getItem('token');
-      await axios.patch(
-        `http://localhost:5000/api/appointments/${appointment._id}`,
-        { status: 'completed' },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      alert('Medical certificate completed');
-      setShowPDFModal(false);
-      // Remove the completed appointment from the list immediately
-      setApprovedAppointments(prev => prev.filter(app => app._id !== appointment._id));
-      window.location.href = '/admin-reports?tab=medical-certificates';
-    } catch (err) {
-      console.error('Error finishing certificate:', err);
-      alert('Failed to finish certificate');
-    }
-  };
-
-  useEffect(() => {
-    fetchApprovedAppointments();
-    fetchMedicines();
-  }, []);
-
-  // Only disable body scrolling while a modal is open
-  useEffect(() => {
-    if (showModal || showMRFModal || showPDFModal) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-    }
-    return () => {
-      document.body.style.overflow = '';
+    const fetchQueue = async () => {
+        try {
+            setLoading(true);
+            const res = await api.get('/appointments');
+            // Filter queue: approved appointments (and maybe not completed yet?)
+            // Assuming 'approved' is waiting for consultation. 'completed' is done.
+            setQueue(res.data.filter(a => a.status === 'approved'));
+        } catch (err) {
+            toast.error('Failed to load queue');
+        } finally {
+            setLoading(false);
+        }
     };
-  }, [showModal, showMRFModal, showPDFModal]);
 
-  const handleStartConsultation = appointment => {
-    setSelectedAppointment(appointment);
-    setPrescribedList([]);
-    setShowModal(true);
-  };
+    const fetchMedicines = async () => {
+        try {
+            const res = await api.get('/medicines');
+            setMedicines(res.data);
+        } catch (err) {
+            console.error('Failed to load medicines');
+        }
+    };
 
-  const handleChange = e => {
-    const { name, value, type, checked } = e.target;
-    setForm(prev => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value
-    }));
-  };
+    const handleViewMRF = async (patientId) => {
+        console.log('handleViewMRF clicked with ID:', patientId);
+        if (!patientId) {
+            console.error('No patient ID provided');
+            return;
+        }
+        try {
+            const res = await api.get(`/users/profile/${patientId}`);
+            console.log('Profile fetched:', res.data);
+            if (!res.data) {
+                throw new Error('Empty profile data');
+            }
+            setPatientProfile(res.data);
+            setShowMRFModal(true);
+        } catch (err) {
+            console.error('Error fetching profile:', err);
+            toast.error('Failed to load patient profile');
+        }
+    };
 
-  const handleQuantityChange = (medicineId, qty) => {
-    setPrescribedList(prev =>
-      prev.map(p =>
-        p.medicineId === medicineId
-          ? { ...p, quantity: parseInt(qty) || 0 }
-          : p
-      )
-    );
-  };
+    const handleStart = (app) => {
+        setSelectedApp(app);
+        // Reset form
+        setForm({
+            bloodPressure: '', temperature: '', oxygenSaturation: '',
+            heartRate: '', bmi: '', bmiIntervention: '',
+            diagnosis: '', management: '',
+            referredToPhysician: false, physicianName: '',
+            firstAidDone: 'n', firstAidWithin30Mins: 'n/a'
+        });
+        setPrescribed([]);
+    };
 
-  const handleSubmit = async (e) => {
-  e.preventDefault();
-  const token = localStorage.getItem('token');
-  if (!token) {
-    alert('Authentication required');
-    return;
-  }
+    const handlePrescribe = (med) => {
+        if (!prescribed.find(p => p.medicineId === med._id)) {
+            setPrescribed([...prescribed, {
+                medicineId: med._id,
+                name: med.name,
+                quantity: 1,
+                max: med.quantityInStock
+            }]);
+        }
+        setMedSearch('');
+    };
 
-  const validPrescribedList = prescribedList.filter(med => parseInt(med.quantity) > 0);
+    const updatePrescription = (id, qty) => {
+        setPrescribed(prescribed.map(p => p.medicineId === id ? { ...p, quantity: parseInt(qty) } : p));
+    };
 
-  if (prescribedList.length > 0 && validPrescribedList.length === 0) {
-    alert('Please set quantities for prescribed medicines or remove them.');
-    return;
-  }
+    const removePrescription = (id) => {
+        setPrescribed(prescribed.filter(p => p.medicineId !== id));
+    };
 
-  try {
-    // Step 1: Deduct inventory if needed
-    if (validPrescribedList.length > 0) {
-      await axios.post(
-        'http://localhost:5000/api/medicines/deduct',
-        { prescribed: validPrescribedList },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-    }
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        try {
+            // Deduct inventory first
+            if (prescribed.length > 0) {
+                await api.post('/medicines/deduct', { prescribed });
+            }
 
-    // Step 2: Save consultation
-    await axios.patch(
-      `http://localhost:5000/api/appointments/${selectedAppointment._id}/consultation`,
-      {
-        ...form,
-        medicinesPrescribed: validPrescribedList,
-        consultationCompletedAt: new Date().toISOString()
-      },
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
-
-    alert(' Consultation saved and inventory updated');
-    setSelectedAppointment(null);
-    setShowModal(false);
-    fetchApprovedAppointments();
-    fetchMedicines();
-  } catch (err) {
-    console.error('Error saving consultation:', err);
-    alert(err.response?.data?.error || ' Failed to save consultation or deduct inventory');
-  }
-};
-
-  const filteredMedicines = medicineOptions.filter(med =>
-    med.name.toLowerCase().includes(medicineSearch.toLowerCase())
-  );
-
-  return (
-    <AdminLayout>
-      <div className="consultation-container">
-        <h2>Consultation Queue</h2>
-        {/* Filters */}
-      
-      <div className="filters-container">
-        <input
-          type="text"
-          placeholder="Search by name, email, phone, or purpose"
-          value={searchQuery}
-          onChange={e => setSearchQuery(e.target.value)}
-        />
-        <div className="date-group">
-          <label>From:</label>
-          <input
-            type="date"
-            value={startDateFilter}
-            onChange={e => setStartDateFilter(e.target.value)}
-          />
-        </div>
-        <div className="date-group">
-          <label>To:</label>
-          <input
-            type="date"
-            value={endDateFilter}
-            onChange={e => setEndDateFilter(e.target.value)}
-          />
-        </div>
-        </div>
-        
-        {approvedAppointments.length === 0 ? (
-          <p>No approved appointments waiting for consultation.</p>
-        ) : (
-          // apply filters client-side
-          (() => {
-            const filtered = approvedAppointments.filter(app => {
-              // search query filter
-              if (searchQuery) {
-                const q = searchQuery.toLowerCase();
-                const fullName = `${app.patientId?.firstName || ''} ${app.patientId?.lastName || ''}`.toLowerCase();
-                const email = (app.patientId?.email || '').toLowerCase();
-                const phone = (app.patientId?.contactNumber || '').toLowerCase();
-                const purpose = (app.purpose || '').toLowerCase();
-                if (!fullName.includes(q) && !email.includes(q) && !phone.includes(q) && !purpose.includes(q)) return false;
-              }
-
-              // date filter
-              if (startDateFilter) {
-                const start = new Date(startDateFilter);
-                const appDate = new Date(app.appointmentDate);
-                // compare dates ignoring time
-                if (appDate < new Date(start.getFullYear(), start.getMonth(), start.getDate())) return false;
-              }
-              if (endDateFilter) {
-                const end = new Date(endDateFilter);
-                const appDate = new Date(app.appointmentDate);
-                if (appDate > new Date(end.getFullYear(), end.getMonth(), end.getDate(), 23, 59, 59)) return false;
-              }
-
-              return true;
+            // Save consultation
+            await api.patch(`/appointments/${selectedApp._id}/consultation`, {
+                ...form,
+                medicinesPrescribed: prescribed,
+                consultationCompletedAt: new Date()
             });
 
-            return (
-              <div className="appointment-table-wrapper">
-                <table className="all-appointments-table">
-                <thead>
-                  <tr>
-                    <th>Patient</th>
-                    <th>Email</th>
-                    <th>Date</th>
-                    <th>Purpose</th>
-                    <th>Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filtered.map(app => (
-                    <tr key={app._id}>
-                      <td>
-                        <span
-                          className="clickable-name"
-                          onClick={() => handleViewMRF(app.patientId?._id)}
-                        >
-                          {app.patientId?.firstName} {app.patientId?.lastName}
-                        </span>
-                      </td>
-                      <td>{app.patientId?.email}</td>
-                      <td>{new Date(app.appointmentDate).toLocaleDateString()}</td>
-                      <td>{app.purpose}</td>
-                      <td className="action-cell">
-                        {app.purpose === 'Medical Certificate' ? (
-                          <button onClick={() => { setSelectedPDFAppointment(app); setShowPDFModal(true); }}>📄 Certificate</button>
+            toast.success('Consultation completed');
+            setSelectedApp(null);
+            fetchQueue();
+            fetchMedicines(); // Update stock
+        } catch (err) {
+            toast.error(err.response?.data?.error || 'Failed to complete consultation');
+        }
+    };
+
+    if (loading) return <div className="loading-spinner-container"><div className="loading-spinner"></div></div>;
+
+    return (
+        <div className="consultation-page">
+            {!selectedApp ? (
+                <>
+                    <div className="page-header">
+                        <h1>Consultation Queue</h1>
+                        <p>Select a patient to start consultation.</p>
+                    </div>
+
+                    <div className="queue-list">
+                        {queue.length === 0 ? (
+                            <div className="no-data">No patients in queue.</div>
                         ) : (
-                          <button onClick={() => handleStartConsultation(app)}>🩺 Start</button>
+                            queue.map(app => (
+                                <div key={app._id} className="queue-card">
+                                    <div className="patient-info">
+                                        <div className="avatar">
+                                            {app.patientId?.firstName ? app.patientId.firstName[0] : 'P'}
+                                        </div>
+                                        <div>
+                                            <h3>
+                                                <span
+                                                    className="clickable"
+                                                    style={{ cursor: 'pointer', color: 'var(--primary)', textDecoration: 'underline' }}
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        console.log('Clicked name:', app.patientId?._id);
+                                                        handleViewMRF(app.patientId?._id);
+                                                    }}
+                                                    title="View Medical Record"
+                                                >
+                                                    {app.patientId ? `${app.patientId.firstName} ${app.patientId.lastName}` : 'Unknown'}
+                                                </span>
+                                            </h3>
+                                            <span className="purpose">{app.purpose}</span>
+                                        </div>
+                                    </div>
+                                    <div className="queue-actions">
+                                        <div className="time-waiting">
+                                            <Clock size={16} /> {new Date(app.appointmentDate).toLocaleDateString()}
+                                        </div>
+                                        {app.purpose === 'Medical Certificate' ? (
+                                            <button className="btn-secondary" onClick={() => handleStart(app)}>
+                                                <FileText size={16} /> Certificate
+                                            </button>
+                                        ) : (
+                                            <button className="btn-primary" onClick={() => handleStart(app)}>
+                                                Start <ChevronRight size={16} />
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
+                            ))
                         )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-                </table>
-              </div>
-            );
-          })()
-        )}
+                    </div>
+                </>
+            ) : (
+                <div className="consultation-view">
+                    <div className="consultation-header">
+                        <button className="btn-secondary" onClick={() => setSelectedApp(null)}>Cancel</button>
+                        <h2>Consultation: {selectedApp.patientId?.firstName} {selectedApp.patientId?.lastName}</h2>
+                    </div>
 
-        {/* MRF Modal */}
-        {showMRFModal && patientProfile && (
-          <div className="modal-overlay">
-            <div className="modal-content mrf-modal">
-              <div className="mrf-header">
-                <h3>🩺 Medical Record Form</h3>
-                <button className="close-button" onClick={() => setShowMRFModal(false)}>✖</button>
-              </div>
-              <div className="mrf-body">
-                <div className="mrf-section">
-                  {/* Personal Info */}
-                  <p><strong>Name:</strong> {patientProfile.firstName} {patientProfile.middleName} {patientProfile.lastName}</p>
-                  <p><strong>Email:</strong> {patientProfile.email}</p>
-                  <p><strong>Birthday:</strong> {patientProfile.birthday?.slice(0, 10)}</p>
-                  <p><strong>Sex:</strong> {patientProfile.sex}</p>
-                  <p><strong>Civil Status:</strong> {patientProfile.civilStatus}</p>
-                  <p><strong>Address:</strong> {patientProfile.homeAddress}</p>
-                  <p><strong>Contact:</strong> {patientProfile.contactNumber}</p>
-                  <p><strong>Blood Type:</strong> {patientProfile.bloodType}</p>
+                    {selectedApp.purpose === 'Medical Certificate' ? (
+                        <div className="certificate-view">
+                            <div className="cert-preview">
+                                <FileText size={48} className="text-primary" />
+                                <h3>Medical Certificate Ongoing</h3>
+                                <p><strong>Patient:</strong> {selectedApp.patientId?.firstName} {selectedApp.patientId?.lastName}</p>
+                                <p><strong>Purpose:</strong> {selectedApp.purpose}</p>
+                                <p><strong>Date:</strong> {new Date(selectedApp.appointmentDate).toLocaleDateString()}</p>
+                                <div className="cert-actions">
+                                    <button
+                                        className="btn-primary big"
+                                        onClick={async () => {
+                                            try {
+                                                await api.patch(`/appointments/${selectedApp._id}`, { status: 'completed' });
+                                                toast.success('Medical Certificate completed');
+                                                setSelectedApp(null);
+                                                fetchQueue();
+                                            } catch (err) {
+                                                toast.error('Failed to complete certificate');
+                                            }
+                                        }}
+                                    >
+                                        Mark as Done
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    ) : (
+                        <form onSubmit={handleSubmit} className="consultation-form">
+                            <div className="form-section">
+                                <h3><Activity size={20} /> Vitals</h3>
+                                <div className="grid-2">
+                                    <div className="input-group">
+                                        <label>Blood Pressure</label>
+                                        <input value={form.bloodPressure} onChange={e => setForm({ ...form, bloodPressure: e.target.value })} placeholder="e.g. 120/80" />
+                                    </div>
+                                    <div className="input-group">
+                                        <label>Temperature (°C)</label>
+                                        <input value={form.temperature} onChange={e => setForm({ ...form, temperature: e.target.value })} placeholder="36.5" />
+                                    </div>
+                                    <div className="input-group">
+                                        <label>Heart Rate (bpm)</label>
+                                        <input value={form.heartRate} onChange={e => setForm({ ...form, heartRate: e.target.value })} placeholder="72" />
+                                    </div>
+                                    <div className="input-group">
+                                        <label>Sat (%)</label>
+                                        <input value={form.oxygenSaturation} onChange={e => setForm({ ...form, oxygenSaturation: e.target.value })} placeholder="98" />
+                                    </div>
+                                </div>
+                            </div>
 
-                  {/* Emergency */}
-                  <p><strong>Emergency Contact:</strong> {patientProfile.emergencyContact?.name} ({patientProfile.emergencyContact?.relationship}) - {patientProfile.emergencyContact?.phone}</p>
+                            <div className="form-section">
+                                <h3><FileText size={20} /> Assessment</h3>
+                                <div className="input-group full">
+                                    <label>Diagnosis</label>
+                                    <textarea rows={3} value={form.diagnosis} onChange={e => setForm({ ...form, diagnosis: e.target.value })} required />
+                                </div>
+                                <div className="input-group full">
+                                    <label>Management Plan</label>
+                                    <textarea rows={3} value={form.management} onChange={e => setForm({ ...form, management: e.target.value })} />
+                                </div>
+                            </div>
 
-                  {/* Medical */}
-                  <p><strong>Allergies:</strong> {patientProfile.allergies?.join(', ') || '—'}</p>
-                  <p><strong>Medical History:</strong> {patientProfile.medicalHistory?.join(', ') || '—'}</p>
-                  <p><strong>Current Medications:</strong> {patientProfile.currentMedications?.join(', ') || '—'}</p>
+                            <div className="form-section">
+                                <h3><Activity size={20} /> Prescription</h3>
+                                <div className="med-search">
+                                    <Search size={18} className="search-icon" />
+                                    <input
+                                        className="med-search-input"
+                                        placeholder="Search medicine to prescribe..."
+                                        value={medSearch}
+                                        onChange={e => setMedSearch(e.target.value)}
+                                    />
+                                    {medSearch && (
+                                        <div className="med-results">
+                                            {medicines.filter(m => m.name.toLowerCase().includes(medSearch.toLowerCase())).slice(0, 5).map(m => (
+                                                <div key={m._id} className="med-result-item" onClick={() => handlePrescribe(m)}>
+                                                    {m.name} ({m.quantityInStock} avail)
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
 
-                  {/* Family History */}
-                  <p><strong>Family History:</strong> {
-                    Object.entries(patientProfile.familyHistory || {}).map(([key, val]) =>
-                      typeof val === 'boolean' ? (val ? `${key}, ` : '') : val ? `Other: ${val}` : ''
-                    )
-                  }</p>
+                                <div className="prescribed-list">
+                                    {prescribed.map(p => (
+                                        <div key={p.medicineId} className="prescribed-item">
+                                            <span>{p.name}</span>
+                                            <div className="qty-control">
+                                                <input type="number" min="1" max={p.max} value={p.quantity} onChange={e => updatePrescription(p.medicineId, e.target.value)} />
+                                                <button type="button" className="btn-icon danger" onClick={() => removePrescription(p.medicineId)}><X size={16} /></button>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
 
-                  {/* Personal-Social History */}
-                  <h4>🧠 Personal-Social History</h4>
-                  <p><strong>Smoker:</strong> {patientProfile.personalSocialHistory?.smoking || '—'}</p>
-                  <p><strong>Sticks/Day:</strong> {patientProfile.personalSocialHistory?.smokingSticks || '—'}</p>
-                  <p><strong>Drinker:</strong> {patientProfile.personalSocialHistory?.drinking || '—'}</p>
-                  <p><strong>Drinking Since:</strong> {patientProfile.personalSocialHistory?.drinkingStartYear || '—'}</p>
-                  <p><strong>Drinking Frequency:</strong> {patientProfile.personalSocialHistory?.drinkingFrequency || '—'}</p>
-
-                  {/* Past Medical History */}
-                  <h4>🩹 Past Medical History</h4>
-                  <p><strong>Conditions:</strong> {
-                    Object.entries(patientProfile.pastMedicalHistory || {}).filter(([_, v]) => v).map(([k]) => `${k}, `)
-                  }</p>
-
-                  {/* Admissions & Operations */}
-                  <h4>🏥 Hospitalization</h4>
-                  <p><strong>Admissions:</strong> {patientProfile.admissionCount || '—'} ({patientProfile.admissionReason || '—'})</p>
-                  <p><strong>Operation Date:</strong> {patientProfile.operationDate?.slice(0, 10) || '—'}</p>
-                  <p><strong>Procedure:</strong> {patientProfile.operationProcedure || '—'}</p>
-
-                  {/* Immunization */}
-                  <h4>💉 Immunization History</h4>
-                  <p><strong>Vaccines:</strong> {
-                    Object.entries(patientProfile.immunization || {}).filter(([_, v]) => v).map(([k]) => `${k}, `)
-                  }</p>
-                  <p><strong>Last Admission:</strong> {patientProfile.lastAdmissionDate?.slice(0, 10) || '—'} ({patientProfile.lastAdmissionTypeLocation || '—'})</p>
+                            <div className="form-actions">
+                                <button type="submit" className="btn-primary big">Complete Consultation</button>
+                            </div>
+                        </form>
+                    )}
                 </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* PDF Modal */}
-        {showPDFModal && selectedPDFAppointment && (
-          <div className="modal-overlay">
-            <div className="consultation-modal">
-              <button className="close-button" onClick={() => setShowPDFModal(false)}>✖</button>
-              <h3 className="modal-title">Medical Certificate Ongoing</h3>
-              <div style={{ textAlign: 'center', padding: '20px' }}>
-                <p>Medical certificate ongoing</p>
-                <p>Patient: {selectedPDFAppointment.patientId?.firstName} {selectedPDFAppointment.patientId?.lastName}</p>
-                <p>Purpose: {selectedPDFAppointment.purpose}</p>
-                <p>Date: {new Date(selectedPDFAppointment.appointmentDate).toLocaleDateString()}</p>
-                <button
-                  onClick={() => handleFinishCertificate(selectedPDFAppointment)}
-                  style={{
-                    padding: '10px 20px',
-                    backgroundColor: '#007bff',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '5px',
-                    cursor: 'pointer',
-                    marginTop: '20px'
-                  }}
-                >
-                  Done
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {showModal && selectedAppointment && (
-  <div className="modal-overlay">
-    <div className="consultation-modal">
-      <div className="consultation-modal-header">
-        <h3 className="modal-title">🩺 Consultation Form</h3>
-        <button className="close-button" onClick={() => setShowModal(false)}>✖</button>
-      </div>
-      <div className="consultation-modal-body">
-        <form onSubmit={handleSubmit} className="consultation-form">
-          {/* Vital Signs */}
-          <div className="form-section">
-            <h4 className="section-label">Vital Signs</h4>
-            <input name="bloodPressure" placeholder="Blood Pressure" value={form.bloodPressure} onChange={handleChange} />
-            <input name="temperature" placeholder="Temperature (°C)" value={form.temperature} onChange={handleChange} />
-            <input name="oxygenSaturation" placeholder="Oxygen Saturation (%)" value={form.oxygenSaturation} onChange={handleChange} />
-            <input name="heartRate" placeholder="Heart Rate (bpm)" value={form.heartRate} onChange={handleChange} />
-            <input name="bmi" placeholder="BMI" value={form.bmi} onChange={handleChange} />
-            <input name="bmiIntervention" placeholder="BMI Intervention" value={form.bmiIntervention} onChange={handleChange} />
-          </div>
-
-          {/* Clinical Assessment */}
-          <div className="form-section">
-            <h4 className="section-label">Clinical Assessment</h4>
-            <textarea name="diagnosis" placeholder="Diagnosis" value={form.diagnosis} onChange={handleChange} rows={3} />
-            <textarea name="management" placeholder="Management Plan" value={form.management} onChange={handleChange} rows={3} />
-          </div>
-
-          {/* Prescribe Medicines */}
-          <div className="form-section">
-            <h4 className="section-label">Prescribe Medicines</h4>
-            <input
-              type="text"
-              placeholder="Type medicine name..."
-              value={medicineSearch}
-              onChange={e => setMedicineSearch(e.target.value)}
-              // Removed onBlur event that was clearing the search input prematurely
-              className="medicine-autocomplete"
-            />
-            {medicineSearch && (
-              <ul className="autocomplete-suggestions">
-                {filteredMedicines
-                  .filter(med => !prescribedList.some(p => p.medicineId === med._id))
-                  .slice(0, 5)
-                  .map(med => (
-                    <li
-                      key={med._id}
-                      onClick={() => {
-                        setPrescribedList(prev => [
-                          ...prev,
-                          {
-                            medicineId: med._id,
-                            name: med.name,
-                            quantity: 0,
-                            expiryDate: med.expiryDate
-                          }
-                        ]);
-                        setMedicineSearch('');
-                      }}
-                    >
-                      {med.name} ({med.quantityInStock} caps) — Exp: {med.expiryDate ? new Date(med.expiryDate).toLocaleDateString() : '—'}
-                    </li>
-                  ))}
-              </ul>
             )}
 
-            {prescribedList.length > 0 && (
-              <div className="prescribed-list">
-                <h5>Prescribed Medicines:</h5>
-                {prescribedList.map(p => (
-                  <div key={p.medicineId} className="prescribed-row">
-                    <div className="medicine-info">
-                      <span className="medicine-name">{p.name}</span>
-                      <span className="expiry-date">Exp: {p.expiryDate ? new Date(p.expiryDate).toLocaleDateString() : '—'}</span>
+            {/* MRF Modal */}
+            {
+                showMRFModal && patientProfile && (
+                    <div className="modal-overlay">
+                        <div className="modal-card wide">
+                            <div className="modal-header">
+                                <h3>🩺 Medical Record Form</h3>
+                                <button className="close-btn" onClick={() => setShowMRFModal(false)}><X size={24} /></button>
+                            </div>
+                            <div className="modal-body">
+                                <div className="mrf-section">
+                                    <p><strong>Name:</strong> {patientProfile.firstName} {patientProfile.middleName} {patientProfile.lastName}</p>
+                                    <p><strong>Email:</strong> {patientProfile.email}</p>
+                                    <p><strong>Birthday:</strong> {patientProfile.birthday ? new Date(patientProfile.birthday).toLocaleDateString() : '—'}</p>
+                                    <p><strong>Sex:</strong> {patientProfile.sex}</p>
+                                    <p><strong>Contact:</strong> {patientProfile.contactNumber}</p>
+                                    <p><strong>Address:</strong> {patientProfile.homeAddress}</p>
+                                    <p><strong>Blood Type:</strong> {patientProfile.bloodType}</p>
+                                    <p><strong>Emergency Contact:</strong> {patientProfile.emergencyContact?.name} ({patientProfile.emergencyContact?.relationship}) - {patientProfile.emergencyContact?.phone}</p>
+
+                                    <h4>Medical History</h4>
+                                    <p><strong>Allergies:</strong> {patientProfile.allergies?.join(', ') || '—'}</p>
+                                    <p><strong>Conditions:</strong> {patientProfile.medicalHistory?.join(', ') || '—'}</p>
+                                    <p><strong>Current Meds:</strong> {patientProfile.currentMedications?.join(', ') || '—'}</p>
+
+                                    <h4>Personal & Social History</h4>
+                                    <p><strong>Smoker:</strong> {patientProfile.personalSocialHistory?.smoking || '—'} ({patientProfile.personalSocialHistory?.smokingSticks || 0} sticks/day)</p>
+                                    <p><strong>Drinker:</strong> {patientProfile.personalSocialHistory?.drinking || '—'}</p>
+
+                                    <h4>Past Medical History</h4>
+                                    <p><strong>Illnesses:</strong> {Object.entries(patientProfile.pastMedicalHistory || {}).filter(([_, v]) => v).map(([k]) => k).join(', ') || '—'}</p>
+
+                                    <h4>Immunization</h4>
+                                    <p><strong>Vaccines:</strong> {Object.entries(patientProfile.immunization || {}).filter(([_, v]) => v).map(([k]) => k).join(', ') || '—'}</p>
+                                </div>
+                            </div>
+                            <div className="modal-footer">
+                                <button className="btn-primary" onClick={() => setShowMRFModal(false)}>Close</button>
+                            </div>
+                        </div>
                     </div>
-                    <div className="quantity-controls">
-                      <label>Quantity:</label>
-                      <input
-                        type="number"
-                        min="0"
-                        max="999"
-                        value={p.quantity}
-                        onChange={e => handleQuantityChange(p.medicineId, e.target.value)}
-                        placeholder="0"
-                        className="quantity-input"
-                      />
-                      <span className="capsules-label">capsules</span>
-                    </div>
-                    <button
-                      type="button"
-                      className="remove-medicine"
-                      onClick={() => setPrescribedList(prev => prev.filter(m => m.medicineId !== p.medicineId))}
-                      title="Remove medicine"
-                    >
-                      ❌ Remove
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+                )
+            }
+        </div>
+    );
+};
 
-          {/* Referral */}
-          <div className="form-section">
-            <h4 className="section-label">Referral</h4>
-            <label className="checkbox-label">
-              <input type="checkbox" name="referredToPhysician" checked={form.referredToPhysician} onChange={handleChange} />
-              Referred to Physician
-            </label>
-            <input name="physicianName" placeholder="Physician Name" value={form.physicianName} onChange={handleChange} />
-          </div>
-
-          {/* First Aid */}
-          <div className="form-section">
-            <h4 className="section-label">First Aid</h4>
-            <label>First Aid Done Within 30 Minutes</label>
-            <select name="firstAidWithin30Mins" value={form.firstAidWithin30Mins} onChange={handleChange}>
-              <option value="y">Yes</option>
-              <option value="n">No</option>
-              <option value="n/a">N/A</option>
-            </select>
-          </div>
-
-          <button type="submit">✅ Save Consultation</button>
-        </form>
-      </div>
-    </div>
-  </div>
-  ) }
-</div>
-</AdminLayout>
-  );
-}
+export default ConsultationPage;

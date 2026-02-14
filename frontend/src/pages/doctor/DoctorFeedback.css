@@ -1,0 +1,138 @@
+.doctor-feedback-page {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.stats-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.stat-card {
+    background: white;
+    padding: 1.5rem;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.stat-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.stat-icon.warning {
+    background: #fef9c3;
+    color: #ca8a04;
+}
+
+.stat-icon.primary {
+    background: #eff6ff;
+    color: #3b82f6;
+}
+
+.stat-info h3 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-main);
+    line-height: 1;
+    margin-bottom: 0.25rem;
+}
+
+.stat-info p {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+}
+
+.feedback-list-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.feedback-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.feedback-card {
+    background: white;
+    padding: 1.5rem;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+}
+
+.feedback-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+}
+
+.patient-info {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.avatar-circle {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--bg-body);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-secondary);
+}
+
+.patient-name {
+    display: block;
+    font-weight: 600;
+    color: var(--text-main);
+}
+
+.feedback-date {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+.rating-display {
+    display: flex;
+    gap: 0.1rem;
+}
+
+.star-filled {
+    color: #eab308;
+}
+
+.star-empty {
+    color: #d1d5db;
+}
+
+.feedback-content {
+    color: var(--text-secondary);
+    line-height: 1.6;
+    font-style: italic;
+    padding-left: 1rem;
+    border-left: 3px solid var(--border);
+}
+
+.no-data {
+    text-align: center;
+    padding: 3rem;
+    color: var(--text-muted);
+}

@@ -1,163 +1,141 @@
-import { useEffect, useState } from 'react';
-import axios from 'axios';
-import PatientLayout from './PatientLayout';
-import FeedbackForm from '../../components/FeedbackForm';
-import { showError } from '../../utils/toastNotifier';
-import './Style/patient-appointments.css';
+import React, { useState, useEffect } from 'react';
+import api from '../../services/api';
+import { toast } from 'react-toastify';
+import FeedbackForm from '../../components/feature/FeedbackForm';
+import { Calendar, Clock, MapPin, ChevronDown, ChevronUp } from 'lucide-react';
+import './MyAppointments.css';
 
-export default function MyAppointments() {
-  const [appointments, setAppointments] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [expandedId, setExpandedId] = useState(null);
-  const [showFeedbackForm, setShowFeedbackForm] = useState(false);
-  const [selectedAppointment, setSelectedAppointment] = useState(null);
-  const [submittedFeedback, setSubmittedFeedback] = useState({});
+const MyAppointments = () => {
+    const [appointments, setAppointments] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [expandedId, setExpandedId] = useState(null);
+    const [feedbackApt, setFeedbackApt] = useState(null);
 
-  const firstName = localStorage.getItem('firstName') || 'N/A';
-  const lastName = localStorage.getItem('lastName') || '';
-const phone = localStorage.getItem('contactNumber') || 'N/A';
+    useEffect(() => {
+        fetchAppointments();
+    }, []);
 
-  useEffect(() => {
     const fetchAppointments = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        if (!token) throw new Error('Missing token');
-
-        const res = await axios.get('http://localhost:5000/api/appointments/my', {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-
-        setAppointments(res.data);
-      } catch (err) {
-        console.error('Error fetching appointments:', err.response?.data || err.message);
-        setError(err.response?.data?.error || 'Failed to load appointments');
-      } finally {
-        setLoading(false);
-      }
+        try {
+            setLoading(true);
+            const res = await api.get('/appointments/my');
+            setAppointments(res.data);
+        } catch (err) {
+            toast.error('Failed to load appointments');
+        } finally {
+            setLoading(false);
+        }
     };
 
-    fetchAppointments();
-  }, []);
+    const handleCancel = async (id) => {
+        if (!window.confirm('Are you sure you want to cancel this appointment?')) return;
+        try {
+            await api.delete(`/appointments/${id}`);
+            toast.success('Appointment cancelled');
+            fetchAppointments();
+        } catch (err) {
+            toast.error('Failed to cancel appointment');
+        }
+    };
 
-  const handleDelete = async id => {
-    if (!window.confirm('Are you sure you want to cancel this appointment?')) return;
-    try {
-      const token = localStorage.getItem('token');
-      await axios.delete(`http://localhost:5000/api/appointments/${id}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setAppointments(prev => prev.filter(app => app._id !== id));
-    } catch (err) {
-      showError('Failed to cancel appointment');
-      console.error(err);
-    }
-  };
+    const toggleExpand = (id) => {
+        setExpandedId(expandedId === id ? null : id);
+    };
 
-  const handleToggle = id => {
-    setExpandedId(prevId => (prevId === id ? null : id));
-  };
+    return (
+        <div className="appointments-page">
+            <div className="page-header">
+                <h1>My Appointments</h1>
+                <p>View and manage all your scheduled visits.</p>
+            </div>
 
-  const handleOpenFeedback = (appointment) => {
-    setSelectedAppointment(appointment);
-    setShowFeedbackForm(true);
-  };
-
-  const handleCloseFeedback = () => {
-    setShowFeedbackForm(false);
-    setSelectedAppointment(null);
-  };
-
-  const handleFeedbackSubmitted = (appointmentId) => {
-    // Mark this appointment as having feedback submitted
-    setSubmittedFeedback(prev => ({
-      ...prev,
-      [appointmentId]: true
-    }));
-  };
-
-  return (
-    <PatientLayout>
-      <div className="patient-appointments-container">
-        <h2>My Appointments</h2>
-        <p>Here are your scheduled appointments.</p>
-
-        {loading ? (
-          <p>Loading appointments...</p>
-        ) : error ? (
-          <p style={{ color: 'red' }}>{error}</p>
-        ) : appointments.length === 0 ? (
-          <p>No appointments found.</p>
-        ) : (
-          <div className="appointments-card-container">
-            {appointments.map(app => (
-              <div
-                key={app._id}
-                className={`appointment-card ${expandedId === app._id ? 'expanded' : ''}`}
-                onClick={() => handleToggle(app._id)}
-              >
-                <div className="card-header">
-                  <div className="card-header-info">
-                    <span className="card-purpose">{app.purpose || '—'}</span>
-                    <span className="card-date">{new Date(app.appointmentDate).toLocaleDateString()}</span>
-                  </div>
-                  <span className={`card-status status-${app.status.toLowerCase()}`}>{app.status}</span>
+            {loading ? (
+                <div className="loading-spinner"></div>
+            ) : appointments.length === 0 ? (
+                <div className="empty-state">
+                    <Calendar size={64} className="text-muted" />
+                    <h3>No appointments found</h3>
+                    <p>Book your first appointment to get started.</p>
                 </div>
-                {expandedId === app._id && (
-                  <div className="card-details">
-                    <p><strong>Name:</strong> {app.patientId?.firstName || firstName} {app.patientId?.lastName || lastName}</p>
-                    <p><strong>Date:</strong> {new Date(app.appointmentDate).toLocaleString()}</p>
-                    <p><strong>Phone:</strong> {app.patientId?.contactNumber || phone}</p>
-                    <p><strong>Reason for Visit:</strong> {app.purpose || '—'}</p>
-                    <p><strong>Management:</strong> {app.management || 'Not available'}</p>
-                    <p>
-                      <strong>Medication:</strong>{' '}
-                      {app.medicinesPrescribed && app.medicinesPrescribed.length > 0
-                        ? app.medicinesPrescribed.map(med => `${med.name} (x${med.quantity})`).join(', ')
-                        : 'None'}
-                    </p>
-                    <div className="card-actions">
-                      {app.status === 'completed' && !submittedFeedback[app._id] && (
-                        <button
-                          className="feedback-btn"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleOpenFeedback(app);
-                          }}
-                        >
-                          Leave Feedback
-                        </button>
-                      )}
-                      {submittedFeedback[app._id] && app.status === 'completed' && (
-                        <span className="feedback-submitted">✓ Feedback Submitted</span>
-                      )}
-                      <button
-                        className="delete-btn"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDelete(app._id);
-                        }}
-                      >
-                        Cancel Appointment
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+            ) : (
+                <div className="appointments-list">
+                    {appointments.map(apt => (
+                        <div key={apt._id} className={`appointment-item ${expandedId === apt._id ? 'expanded' : ''}`}>
+                            <div className="apt-summary" onClick={() => toggleExpand(apt._id)}>
+                                <div className="apt-main-info">
+                                    <div className="apt-date">
+                                        <Calendar size={18} className="icon" />
+                                        <span>{new Date(apt.appointmentDate).toLocaleDateString()}</span>
+                                    </div>
+                                    <div className="apt-purpose">
+                                        {apt.purpose || apt.reasonForVisit || 'General Visit'}
+                                    </div>
+                                </div>
 
-      {showFeedbackForm && selectedAppointment && (
-        <FeedbackForm
-          appointmentId={selectedAppointment._id}
-          doctorId={selectedAppointment.doctorId?._id || selectedAppointment.doctorId}
-          doctorName={selectedAppointment.doctorName || 'Your Doctor'}
-          onClose={handleCloseFeedback}
-          onSuccess={() => handleFeedbackSubmitted(selectedAppointment._id)}
-        />
-      )}
-    </PatientLayout>
-  );
-}
+                                <div className="apt-status-wrapper">
+                                    <span className={`status-badge status-${apt.status.toLowerCase()}`}>
+                                        {apt.status}
+                                    </span>
+                                    {expandedId === apt._id ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+                                </div>
+                            </div>
+
+                            {expandedId === apt._id && (
+                                <div className="apt-details-panel">
+                                    <div className="detail-grid">
+                                        <div className="detail-item">
+                                            <label>Time</label>
+                                            <p>{new Date(apt.appointmentDate).toLocaleTimeString()}</p>
+                                        </div>
+                                        <div className="detail-item">
+                                            <label>Doctor</label>
+                                            <p>{apt.doctorName || 'Assigned Doctor'}</p>
+                                        </div>
+                                        <div className="detail-item full-width">
+                                            <label>Notes/Management</label>
+                                            <p>{apt.management || 'No notes available yet.'}</p>
+                                        </div>
+                                    </div>
+
+                                    <div className="apt-actions">
+                                        {apt.status === 'completed' && (
+                                            <button
+                                                className="btn-secondary"
+                                                onClick={() => setFeedbackApt(apt)}
+                                            >
+                                                Leave Feedback
+                                            </button>
+                                        )}
+
+                                        {['pending', 'approved'].includes(apt.status.toLowerCase()) && (
+                                            <button
+                                                className="btn-danger-outline"
+                                                onClick={() => handleCancel(apt._id)}
+                                            >
+                                                Cancel Appointment
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    ))}
+                </div>
+            )}
+
+            {feedbackApt && (
+                <FeedbackForm
+                    appointmentId={feedbackApt._id}
+                    doctorName={feedbackApt.doctorName}
+                    doctorId={feedbackApt.doctorId}
+                    onClose={() => setFeedbackApt(null)}
+                    onSuccess={() => {
+                        fetchAppointments(); // Refresh to update status if needed
+                    }}
+                />
+            )}
+        </div>
+    );
+};
+
+export default MyAppointments;

@@ -234,11 +234,11 @@ const googleCalendarCallback = async (req, res) => {
     });
 
     // Redirect to frontend success page
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
     res.redirect(`${frontendUrl}/auth/google-calendar-success?userId=${userId}`);
   } catch (err) {
     console.error('Google Calendar OAuth error:', err.message);
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
     res.redirect(`${frontendUrl}/auth/google-calendar-failure?error=${encodeURIComponent(err.message)}`);
   }
 };

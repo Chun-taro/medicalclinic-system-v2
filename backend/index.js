@@ -43,7 +43,7 @@ app.use((req, res, next) => {
 // Middleware
 app.use(helmet()); // security headers
 app.use(cors({
-  origin: process.env.CLIENT_URL || 'http://localhost:3000',
+  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
   credentials: true
 }));
 app.use(express.json());
@@ -56,7 +56,7 @@ app.use(session({
   cookie: {
     secure: process.env.NODE_ENV === 'production',
     httpOnly: true,
-    maxAge: 1000 * 60 * 60 * 24 
+    maxAge: 1000 * 60 * 60 * 24
   }
 }));
 
@@ -109,50 +109,7 @@ mongoose.connection.on('error', err => {
 
 mongoose.set('debug', process.env.NODE_ENV !== 'production');
 
-// Google OAuth callback
-app.get('/api/auth/google/callback',
-  passport.authenticate('google', { failureRedirect: '/api/auth/google/failure' }),
-  async (req, res) => {
-    try {
-      const user = req.user;
-      if (!user) {
-        console.error(' No user returned from Passport');
-        return res.redirect(`${process.env.CLIENT_URL}/oauth-failure`);
-      }
-
-      if (user.isNewUser) {
-        const signupUrl = new URL(`${process.env.CLIENT_URL}/google-signup`);
-        signupUrl.searchParams.set('googleId', user.googleId);
-        signupUrl.searchParams.set('email', user.email);
-        signupUrl.searchParams.set('firstName', user.firstName);
-        signupUrl.searchParams.set('lastName', user.lastName);
-        return res.redirect(signupUrl.toString());
-      }
-
-      const validRoles = ['admin', 'patient', 'doctor', 'nurse'];
-      if (!validRoles.includes(user.role)) {
-        return res.redirect(`${process.env.CLIENT_URL}/oauth-failure`);
-      }
-
-      const token = jwt.sign(
-        { userId: user._id, role: user.role },
-        process.env.JWT_SECRET,
-        { expiresIn: '1d' }
-      );
-
-      const redirectUrl = new URL(`${process.env.CLIENT_URL}/oauth-success`);
-      redirectUrl.searchParams.set('token', token);
-      redirectUrl.searchParams.set('role', user.role);
-      redirectUrl.searchParams.set('userId', user._id.toString());
-      redirectUrl.searchParams.set('googleId', user.googleId);
-
-      res.redirect(redirectUrl.toString());
-    } catch (err) {
-      console.error(' Google OAuth callback error:', err.message);
-      res.redirect(`${process.env.CLIENT_URL}/oauth-failure`);
-    }
-  }
-);
+// Google OAuth callback is handled in routes/auth.js
 
 // Debug route
 const { auth } = require('./middleware/auth');

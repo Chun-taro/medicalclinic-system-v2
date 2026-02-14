@@ -1,286 +1,193 @@
-import React, { useEffect, useState } from 'react';
-import axios from 'axios';
-import AdminLayout from './AdminLayout';
-import feedbackService from '../../services/feedbackService';
-import './Style/ManageUsers.css';
+import React, { useState, useEffect } from 'react';
+import api from '../../services/api';
+import { toast } from 'react-toastify';
+import { MessageSquare, Star, User, Calendar, RefreshCw, TrendingUp, Users } from 'lucide-react';
+import './AdminDoctorFeedback.css';
 
 const AdminDoctorFeedback = () => {
-  const [doctors, setDoctors] = useState([]);
-  const [feedbacks, setFeedbacks] = useState([]);
-  const [selectedDoctorId, setSelectedDoctorId] = useState('');
-  const [selectedDoctorName, setSelectedDoctorName] = useState('');
-  const [loading, setLoading] = useState(true);
-  const [feedbackLoading, setFeedbackLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [page, setPage] = useState(1);
-  const [analytics, setAnalytics] = useState(null);
-  const [analyticsLoading, setAnalyticsLoading] = useState(false);
-  const limit = 10;
+    const [doctors, setDoctors] = useState([]);
+    const [feedbacks, setFeedbacks] = useState([]);
+    const [selectedDoctorId, setSelectedDoctorId] = useState('');
+    const [loading, setLoading] = useState(true); // Initial loading for doctors & analytics
+    const [feedbackLoading, setFeedbackLoading] = useState(false);
 
-  // Fetch all doctors on mount
-  useEffect(() => {
-    const fetchDoctors = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        const res = await axios.get('http://localhost:5000/api/users', {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        // Filter for doctors, admins, and superadmins
-        const doctorList = res.data.filter(user => 
-          ['doctor', 'admin', 'superadmin'].includes(user.role)
-        );
-        setDoctors(doctorList);
-        setLoading(false);
-      } catch (err) {
-        console.error('Error fetching doctors:', err);
-        setError('Failed to load doctors');
-        setLoading(false);
-      }
+    // Analytics
+    const [analytics, setAnalytics] = useState({
+        totalFeedback: 0,
+        averageRating: 0,
+        ratingDistribution: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
+        topRecipients: []
+    });
+
+    useEffect(() => {
+        fetchInitialData();
+        fetchAllFeedback();
+    }, []);
+
+    useEffect(() => {
+        if (selectedDoctorId) {
+            fetchDoctorFeedback(selectedDoctorId);
+        } else {
+            fetchAllFeedback();
+        }
+    }, [selectedDoctorId]);
+
+    const fetchInitialData = async () => {
+        try {
+            setLoading(true);
+            const [usersRes, analyticsRes] = await Promise.all([
+                api.get('/users'), // Get all users to filter doctors
+                api.get('/feedback/analytics/overall') // Ensure correct endpoint
+            ]);
+
+            const doctorList = usersRes.data.filter(u => ['doctor', 'admin', 'superadmin'].includes(u.role));
+            setDoctors(doctorList);
+
+            if (analyticsRes.data && analyticsRes.data.analytics) {
+                setAnalytics(analyticsRes.data.analytics);
+            }
+        } catch (err) {
+            console.error(err);
+        } finally {
+            setLoading(false);
+        }
     };
 
-    fetchDoctors();
-  }, []);
-
-  // Fetch analytics on mount
-  useEffect(() => {
-    const fetchAnalytics = async () => {
-      setAnalyticsLoading(true);
-      try {
-        const data = await feedbackService.getFeedbackAnalytics();
-        setAnalytics(data.analytics);
-      } catch (err) {
-        console.error('Error fetching analytics:', err);
-      } finally {
-        setAnalyticsLoading(false);
-      }
+    const fetchAllFeedback = async () => {
+        try {
+            setFeedbackLoading(true);
+            const res = await api.get('/feedback/all');
+            setFeedbacks(res.data.feedback || []);
+        } catch (err) {
+            toast.error('Failed to load feedback');
+            setFeedbacks([]);
+        } finally {
+            setFeedbackLoading(false);
+        }
     };
 
-    fetchAnalytics();
-  }, []);
-
-  // Fetch feedback when doctor is selected
-  useEffect(() => {
-    if (!selectedDoctorId) {
-      setFeedbacks([]);
-      return;
-    }
-
-    const fetchFeedback = async () => {
-      setFeedbackLoading(true);
-      setError('');
-      try {
-        const data = await feedbackService.getDoctorFeedback(selectedDoctorId, page, limit);
-        setFeedbacks(Array.isArray(data) ? data : data.feedbacks || []);
-      } catch (err) {
-        console.error('Error fetching feedback:', err);
-        setError(err.message || 'Failed to load feedback');
-      } finally {
-        setFeedbackLoading(false);
-      }
+    const fetchDoctorFeedback = async (id) => {
+        try {
+            setFeedbackLoading(true);
+            const res = await api.get(`/feedback/doctor/${id}`);
+            setFeedbacks(res.data.feedbacks || res.data || []); // Handle different response structures
+        } catch (err) {
+            toast.error('Failed to load feedback');
+            setFeedbacks([]);
+        } finally {
+            setFeedbackLoading(false);
+        }
     };
 
-    fetchFeedback();
-  }, [selectedDoctorId, page]);
+    const renderStars = (rating) => {
+        return [...Array(5)].map((_, i) => (
+            <Star
+                key={i}
+                size={14}
+                className={i < rating ? "star-filled" : "star-empty"}
+                fill={i < rating ? "#eab308" : "none"}
+            />
+        ));
+    };
 
-  const handleDoctorChange = (doctorId) => {
-    const doctor = doctors.find(d => d._id === doctorId);
-    setSelectedDoctorId(doctorId);
-    setSelectedDoctorName(doctor ? `${doctor.firstName} ${doctor.lastName}` : '');
-    setPage(1); // Reset to first page
-  };
+    if (loading) return <div className="loading-spinner-container"><div className="loading-spinner"></div></div>;
 
-  const avgRating = feedbacks.length > 0
-    ? (feedbacks.reduce((sum, fb) => sum + (fb.rating || 0), 0) / feedbacks.length).toFixed(1)
-    : 0;
-
-  return (
-    <AdminLayout>
-      <div className="container" style={{ padding: '24px' }}>
-        <h1>Feedback Management</h1>
-
-        {/* Analytics Section */}
-        {analyticsLoading ? (
-          <p>Loading analytics...</p>
-        ) : analytics ? (
-          <div style={{ marginBottom: '32px', backgroundColor: '#f9f9f9', padding: '20px', borderRadius: '8px' }}>
-            <h2 style={{ marginTop: 0 }}>📊 Analytics Overview</h2>
-            
-            {/* Key Metrics */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '20px' }}>
-              <div style={{ backgroundColor: '#fff', padding: '16px', borderRadius: '6px', border: '1px solid #ddd', textAlign: 'center' }}>
-                <div style={{ fontSize: '32px', fontWeight: 'bold', color: '#2E86C1' }}>{analytics.totalFeedback}</div>
-                <div style={{ fontSize: '14px', color: '#666' }}>Total Feedback</div>
-              </div>
-              <div style={{ backgroundColor: '#fff', padding: '16px', borderRadius: '6px', border: '1px solid #ddd', textAlign: 'center' }}>
-                <div style={{ fontSize: '32px', fontWeight: 'bold', color: '#27AE60' }}>{analytics.averageRating}</div>
-                <div style={{ fontSize: '14px', color: '#666' }}>Average Rating (out of 5)</div>
-              </div>
+    return (
+        <div className="admin-feedback-page">
+            <div className="page-header">
+                <h1>Feedback Management</h1>
+                <p>Monitor staff performance and patient reviews.</p>
             </div>
 
-            {/* Rating Distribution */}
-            <div style={{ marginBottom: '20px' }}>
-              <h3 style={{ marginTop: 0 }}>Rating Distribution</h3>
-              <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-end', height: '150px' }}>
-                {[5, 4, 3, 2, 1].map((stars) => (
-                  <div key={stars} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                    <div
-                      style={{
-                        width: '100%',
-                        backgroundColor: stars >= 4 ? '#27AE60' : stars >= 3 ? '#F39C12' : '#E74C3C',
-                        height: `${Math.max(10, (analytics.ratingDistribution[stars] / Math.max(...Object.values(analytics.ratingDistribution)) || 1) * 120)}px`,
-                        borderRadius: '4px'
-                      }}
-                      title={`${stars} stars: ${analytics.ratingDistribution[stars]}`}
-                    />
-                    <div style={{ marginTop: '8px', fontSize: '12px', fontWeight: 'bold' }}>{stars}⭐</div>
-                    <div style={{ fontSize: '12px', color: '#666' }}>{analytics.ratingDistribution[stars]}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Top Recipients */}
-            {analytics.topRecipients && analytics.topRecipients.length > 0 && (
-              <div>
-                <h3 style={{ marginTop: 0 }}>Top Staff Members</h3>
-                <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-                  {analytics.topRecipients.map((recipient, idx) => (
-                    <li
-                      key={recipient.recipientId}
-                      style={{
-                        padding: '10px',
-                        marginBottom: '8px',
-                        backgroundColor: '#fff',
-                        borderRadius: '6px',
-                        border: '1px solid #ddd',
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center'
-                      }}
-                    >
-                      <span><strong>{idx + 1}.</strong> {recipient.name}</span>
-                      <span style={{ color: '#666' }}>
-                        {recipient.count} feedback(s) · Avg: {recipient.avgRating}⭐
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-          </div>
-        ) : null}
-
-        {/* Doctor Selector */}
-        <div style={{ marginBottom: '24px', padding: '16px', backgroundColor: '#f5f5f5', borderRadius: '8px' }}>
-          <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>
-            Select a Staff Member:
-          </label>
-          <select
-            value={selectedDoctorId}
-            onChange={(e) => handleDoctorChange(e.target.value)}
-            style={{
-              width: '100%',
-              padding: '10px',
-              fontSize: '16px',
-              borderRadius: '4px',
-              border: '1px solid #ddd',
-              cursor: 'pointer'
-            }}
-          >
-            <option value="">-- Choose a Staff Member --</option>
-            {doctors.map((doctor) => (
-              <option key={doctor._id} value={doctor._id}>
-                {doctor.firstName} {doctor.lastName} ({doctor.role})
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {/* Feedback Section */}
-        {selectedDoctorId && (
-          <div>
-            <h2>{selectedDoctorName}</h2>
-            {feedbackLoading && <p>Loading feedback…</p>}
-            {error && <p style={{ color: 'red' }}>{error}</p>}
-            {!feedbackLoading && !error && (
-              <div>
-                {/* Rating Summary */}
-                <div style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  marginBottom: '16px',
-                  padding: '12px',
-                  backgroundColor: '#e8f5e9',
-                  borderRadius: '4px'
-                }}>
-                  <div>
-                    <strong>Total Feedback:</strong> {feedbacks.length}
-                  </div>
-                  <div>
-                    <strong>Average Rating:</strong> {avgRating}/5 ⭐
-                  </div>
+            {/* Analytics Dashboard */}
+            <div className="analytics-grid">
+                <div className="metric-card">
+                    <div className="metric-icon primary"><MessageSquare size={24} /></div>
+                    <div className="metric-info">
+                        <h3>{analytics.totalFeedback}</h3>
+                        <p>Total Reviews</p>
+                    </div>
                 </div>
+                <div className="metric-card">
+                    <div className="metric-icon success"><Star size={24} /></div>
+                    <div className="metric-info">
+                        <h3>{analytics.averageRating}</h3>
+                        <p>Global Average</p>
+                    </div>
+                </div>
+                <div className="metric-card distribution-card">
+                    <h4>Rating Distribution</h4>
+                    <div className="distribution-bars">
+                        {[5, 4, 3, 2, 1].map(star => {
+                            const count = analytics.ratingDistribution[star] || 0;
+                            const max = Math.max(...Object.values(analytics.ratingDistribution), 1);
+                            const percent = (count / max) * 100;
+                            return (
+                                <div key={star} className="dist-row">
+                                    <span className="star-label">{star} <Star size={10} fill="currentColor" /></span>
+                                    <div className="bar-track">
+                                        <div className="bar-fill" style={{ width: `${percent}%` }}></div>
+                                    </div>
+                                    <span className="count-label">{count}</span>
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+            </div>
 
-                {/* Feedback List */}
-                {feedbacks.length === 0 ? (
-                  <p>No feedback found for this doctor.</p>
+            <div className="staff-selector-section">
+                <div className="selector-header">
+                    <h3><Users size={20} /> Latest Feedback</h3>
+                    <div className="select-wrapper">
+                        <select
+                            value={selectedDoctorId}
+                            onChange={e => setSelectedDoctorId(e.target.value)}
+                            className="staff-select"
+                        >
+                            <option value="">All Staff</option>
+                            {doctors.map(d => (
+                                <option key={d._id} value={d._id}>{d.firstName} {d.lastName} ({d.role})</option>
+                            ))}
+                        </select>
+                    </div>
+                </div>
+                {feedbackLoading ? (
+                    <div className="loading-skeleton">Loading feedback...</div>
+                ) : feedbacks.length === 0 ? (
+                    <div className="no-data-msg">No feedback found.</div>
                 ) : (
-                  <ul style={{ listStyle: 'none', padding: 0 }}>
-                    {feedbacks.map((fb) => (
-                      <li
-                        key={fb._id || fb.id}
-                        style={{
-                          border: '1px solid #ddd',
-                          padding: '12px',
-                          marginBottom: '8px',
-                          borderRadius: '6px',
-                          backgroundColor: '#fafafa'
-                        }}
-                      >
-                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                          <strong>{fb.patientName || (fb.patient && fb.patient.name) || 'Anonymous Patient'}</strong>
-                          <span style={{ color: '#ff9800', fontWeight: 'bold' }}>{fb.rating || 0}/5 ⭐</span>
-                        </div>
-                        <div style={{ marginBottom: '8px', color: '#333' }}>
-                          {fb.comment || fb.message || '(No comment provided)'}
-                        </div>
-                        <div style={{ fontSize: '12px', color: '#999' }}>
-                          {new Date(fb.createdAt || fb.date || Date.now()).toLocaleString()}
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
+                    <div className="reviews-list">
+                        {feedbacks.map(fb => (
+                            <div key={fb._id} className="review-card">
+                                <div className="review-header">
+                                    <div className="reviewer-info">
+                                        <div className="avatar">{fb.patientId?.firstName ? fb.patientId.firstName[0] : 'A'}</div>
+                                        <div>
+                                            <span className="name">
+                                                {fb.patientId ? `${fb.patientId.firstName} ${fb.patientId.lastName}` : 'Anonymous'}
+                                            </span>
+                                            <span className="date">{new Date(fb.createdAt).toLocaleDateString()}</span>
+                                            {/* Show recipient if viewing 'All' */}
+                                            {!selectedDoctorId && fb.recipientId && (
+                                                <span className="recipient-badge">
+                                                    For: {fb.recipientId.firstName} {fb.recipientId.lastName}
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
+                                    <div className="rating">
+                                        {renderStars(fb.rating)}
+                                    </div>
+                                </div>
+                                <p className="review-text">"{fb.comment}"</p>
+                            </div>
+                        ))}
+                    </div>
                 )}
-
-                {/* Pagination */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '16px' }}>
-                  <button
-                    onClick={() => setPage((p) => Math.max(1, p - 1))}
-                    disabled={page === 1}
-                    style={{ padding: '8px 16px', cursor: 'pointer' }}
-                  >
-                    ← Previous
-                  </button>
-                  <span>Page {page}</span>
-                  <button
-                    onClick={() => setPage((p) => p + 1)}
-                    disabled={feedbacks.length < limit}
-                    style={{ padding: '8px 16px', cursor: 'pointer' }}
-                  >
-                    Next →
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-
-        {!selectedDoctorId && !loading && doctors.length === 0 && (
-          <p style={{ color: '#999' }}>No staff members found in the system.</p>
-        )}
-      </div>
-    </AdminLayout>
-  );
+            </div>
+        </div>
+    );
 };
 
 export default AdminDoctorFeedback;

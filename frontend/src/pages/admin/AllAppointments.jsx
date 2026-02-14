@@ -1,461 +1,370 @@
-import { useEffect, useState } from 'react';
-import axios from 'axios';
-import AdminLayout from './AdminLayout';
-import { showSuccess, showError } from '../../utils/toastNotifier';
-import './Style/AllAppointments.css';
+import React, { useState, useEffect } from 'react';
+import api from '../../services/api';
+import { toast } from 'react-toastify';
+import {
+    Search, Calendar, Filter, CheckCircle, XCircle, Edit, Trash2,
+    Lock, AlertTriangle, Clock, RefreshCw
+} from 'lucide-react';
+import './AllAppointments.css';
 
-export default function AllAppointments() {
-  const [appointments, setAppointments] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [activeTab, setActiveTab] = useState('pending');
-  const [showModal, setShowModal] = useState(false);
-  const [editId, setEditId] = useState(null);
-  const [editDate, setEditDate] = useState('');
-  const [editPurpose, setEditPurpose] = useState('');
-  const [rescheduleReason, setRescheduleReason] = useState('');
-  // Filters
-  const [searchQuery, setSearchQuery] = useState('');
-  const [startDateFilter, setStartDateFilter] = useState('');
-  const [endDateFilter, setEndDateFilter] = useState('');
-  const [purposeFilter, setPurposeFilter] = useState('');
-  // Alert popup
-  const [alertMessage, setAlertMessage] = useState('');
-  const [showAlert, setShowAlert] = useState(false);
-  const [userName, setUserName] = useState('');
-  const [showLockModal, setShowLockModal] = useState(false);
-  const [lockModalData, setLockModalData] = useState({ editorName: '', editorId: '' });
+const AllAppointments = () => {
+    const [appointments, setAppointments] = useState([]);
+    const [filteredAppointments, setFilteredFilteredAppointments] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [activeTab, setActiveTab] = useState('pending');
 
-  const fetchAppointments = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      const res = await axios.get('http://localhost:5000/api/appointments', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setAppointments(res.data);
-    } catch (err) {
-      console.error('Error fetching appointments:', err.response?.data || err.message);
-      setError(err.response?.data?.error || 'Failed to load appointments');
-    } finally {
-      setLoading(false);
-    }
-  };
+    // Filters
+    const [searchQuery, setSearchQuery] = useState('');
+    const [dateRange, setDateRange] = useState({ start: '', end: '' });
+    const [purposeFilter, setPurposeFilter] = useState('');
 
-  useEffect(() => {
-    fetchAppointments();
-  }, []);
+    // Modal State
+    const [showEditModal, setShowEditModal] = useState(false);
+    const [editingApt, setEditingApt] = useState(null);
+    const [editForm, setEditForm] = useState({ date: '', purpose: '', rescheduleReason: '' });
+    const [showNotesModal, setShowNotesModal] = useState(false);
+    const [selectedNotes, setSelectedNotes] = useState('');
 
-  useEffect(() => {
-    const fetchUserProfile = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        const res = await axios.get('http://localhost:5000/api/profile', {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        setUserName(`${res.data.firstName} ${res.data.lastName}`);
-      } catch (err) {
-        console.error('Failed to fetch user profile:', err);
-        setUserName('Superadmin');
-      }
-    };
-    fetchUserProfile();
-  }, []);
+    // Lock State
+    const [lockConflict, setLockConflict] = useState(null);
 
-  // Unlock appointment when modal is closed without clicking Cancel/Confirm
-  useEffect(() => {
-    const handleBeforeUnload = async () => {
-      if (showModal && editId) {
+    useEffect(() => {
+        fetchAppointments();
+    }, []);
+
+    useEffect(() => {
+        filterAppointments();
+    }, [appointments, activeTab, searchQuery, dateRange, purposeFilter]);
+
+    // Unlock on unmount
+    useEffect(() => {
+        return () => {
+            if (editingApt) unlockAppointment(editingApt._id);
+        };
+    }, [editingApt]);
+
+    const fetchAppointments = async () => {
         try {
-          const token = localStorage.getItem('token');
-          await axios.post(`http://localhost:5000/api/appointments/${editId}/unlock`, {}, {
-            headers: { Authorization: `Bearer ${token}` }
-          });
+            setLoading(true);
+            const res = await api.get('/appointments');
+            setAppointments(res.data);
         } catch (err) {
-          console.error('Failed to unlock appointment on page unload:', err);
+            toast.error('Failed to load appointments');
+        } finally {
+            setLoading(false);
         }
-      }
     };
 
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    return () => {
-      window.removeEventListener('beforeunload', handleBeforeUnload);
+    const filterAppointments = () => {
+        let result = appointments;
+
+        // Status Tab
+        if (activeTab !== 'all') {
+            result = result.filter(apt => apt.status.toLowerCase() === activeTab);
+        }
+
+        // Search
+        if (searchQuery) {
+            const q = searchQuery.toLowerCase();
+            result = result.filter(apt =>
+                (apt.patientId?.firstName?.toLowerCase().includes(q)) ||
+                (apt.patientId?.lastName?.toLowerCase().includes(q)) ||
+                (apt.email?.toLowerCase().includes(q)) ||
+                (apt.purpose?.toLowerCase().includes(q))
+            );
+        }
+
+        // Date Range
+        if (dateRange.start) {
+            result = result.filter(apt => new Date(apt.appointmentDate) >= new Date(dateRange.start));
+        }
+        if (dateRange.end) {
+            const endDate = new Date(dateRange.end);
+            endDate.setHours(23, 59, 59);
+            result = result.filter(apt => new Date(apt.appointmentDate) <= endDate);
+        }
+
+        // Purpose
+        if (purposeFilter) {
+            result = result.filter(apt => apt.purpose === purposeFilter);
+        }
+
+        setFilteredFilteredAppointments(result);
     };
-  }, [showModal, editId]);
 
-  // Apply client-side filters to appointments list
-  const filteredAppointments = appointments.filter(app => {
-    // Search query: match across name, email, phone, purpose
-    if (searchQuery) {
-      const q = searchQuery.toLowerCase().trim();
-      const first = app.patientId?.firstName || app.firstName || '';
-      const last = app.patientId?.lastName || app.lastName || '';
-      const fullName = (first + ' ' + last).toLowerCase();
-      const email = (app.patientId?.email || app.email || '').toLowerCase();
-      const phone = (app.patientId?.contactNumber || app.phone || '').toLowerCase();
-      const purpose = app.purpose.toLowerCase();
-      if (!fullName.includes(q) && !email.includes(q) && !phone.includes(q) && !purpose.includes(q)) return false;
-    }
+    const handleApprove = async (id, version) => {
+        try {
+            await api.patch(`/appointments/${id}/approve`, { version });
+            toast.success('Appointment approved');
+            fetchAppointments();
+        } catch (err) {
+            toast.error('Failed to approve appointment');
+        }
+    };
 
-    // Date filters (inclusive)
-    if (startDateFilter) {
-      const start = new Date(startDateFilter);
-      const appDate = new Date(app.appointmentDate);
-      if (appDate < new Date(start.getFullYear(), start.getMonth(), start.getDate())) return false;
-    }
-    if (endDateFilter) {
-      const end = new Date(endDateFilter);
-      const appDate = new Date(app.appointmentDate);
-      if (appDate > new Date(end.getFullYear(), end.getMonth(), end.getDate(), 23, 59, 59)) return false;
-    }
+    const handleDelete = async (id) => {
+        if (!window.confirm('Are you sure you want to delete this appointment?')) return;
+        try {
+            await api.delete(`/appointments/${id}`);
+            setAppointments(prev => prev.filter(a => a._id !== id));
+            toast.success('Appointment deleted');
+        } catch (err) {
+            toast.error('Failed to delete appointment');
+        }
+    };
 
-    // Purpose filter
-    if (purposeFilter) {
-      if (purposeFilter === 'checkup' && !app.purpose.startsWith('Checkup:')) return false;
-      if (purposeFilter === 'medical-certificate' && app.purpose !== 'Medical Certificate') return false;
-    }
+    const unlockAppointment = async (id) => {
+        try {
+            await api.post(`/appointments/${id}/unlock`);
+        } catch (err) {
+            console.error('Unlock failed', err);
+        }
+    };
 
-    return true;
-  });
+    const openEditModal = async (apt) => {
+        try {
+            await api.post(`/appointments/${apt._id}/lock`);
+            setEditingApt(apt);
+            setEditForm({
+                date: apt.appointmentDate.split('T')[0],
+                time: new Date(apt.appointmentDate).toTimeString().slice(0, 5), // Extract time if needed
+                purpose: apt.purpose,
+                rescheduleReason: ''
+            });
+            setShowEditModal(true);
+        } catch (err) {
+            if (err.response?.data?.editorName) {
+                setLockConflict(err.response.data);
+            } else {
+                toast.error('Failed to lock appointment');
+            }
+        }
+    };
 
-  const handleDelete = async id => {
-    if (!window.confirm('Are you sure you want to delete this appointment?')) return;
-    try {
-      const token = localStorage.getItem('token');
-      await axios.delete(`http://localhost:5000/api/appointments/${id}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setAppointments(prev => prev.filter(app => app._id !== id));
-    } catch (err) {
-      setAlertMessage('Failed to delete appointment');
-      setShowAlert(true);
-      console.error(err);
-    }
-  };
+    const closeEditModal = async () => {
+        if (editingApt) await unlockAppointment(editingApt._id);
+        setShowEditModal(false);
+        setEditingApt(null);
+    };
 
-  const handleApprove = async (id, version) => {
-    try {
-      const token = localStorage.getItem('token');
-      await axios.patch(`http://localhost:5000/api/appointments/${id}/approve`, { version }, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      showSuccess('Appointment approved');
-      fetchAppointments();
-    } catch (err) {
-      showError('Failed to approve appointment');
-      console.error(err);
-    }
-  };
+    const handleEditSubmit = async (e) => {
+        e.preventDefault();
+        try {
+            const newDateTime = new Date(`${editForm.date}T${editForm.time || '00:00'}`); // Combine date time if logic supports
 
-  const openEditModal = async appointment => {
-    try {
-      const token = localStorage.getItem('token');
-      await axios.post(`http://localhost:5000/api/appointments/${appointment._id}/lock`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+            await api.patch(`/appointments/${editingApt._id}`, {
+                appointmentDate: editForm.date, // Backend expects simple date string or ISO? Assuming date string from old code
+                purpose: editForm.purpose,
+                rescheduleReason: editForm.rescheduleReason
+            });
 
-      setEditId(appointment._id);
-      setEditDate(appointment.appointmentDate.split('T')[0]);
-      setEditPurpose(appointment.purpose);
-      setRescheduleReason('');
-      setShowModal(true);
-    } catch (err) {
-      const errorData = err.response?.data;
-      if (errorData?.editorName) {
-        // Show lock conflict modal
-        setLockModalData({
-          editorName: errorData.editorName,
-          editorId: errorData.editorId
-        });
-        setShowLockModal(true);
-      } else {
-        setAlertMessage(errorData?.error || 'Failed to lock appointment for editing');
-        setShowAlert(true);
-      }
-      console.error(err);
-    }
-  };
+            await unlockAppointment(editingApt._id);
+            toast.success('Appointment updated');
+            setShowEditModal(false);
+            setEditingApt(null);
+            fetchAppointments();
+        } catch (err) {
+            toast.error('Failed to update appointment');
+        }
+    };
 
-  const handleReschedule = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      await axios.patch(`http://localhost:5000/api/appointments/${editId}`, {
-        appointmentDate: editDate,
-        purpose: editPurpose,
-        rescheduleReason: rescheduleReason
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+    if (loading) return <div className="loading-spinner-container"><div className="loading-spinner"></div></div>;
 
-      // Unlock the appointment after successful update
-      await axios.post(`http://localhost:5000/api/appointments/${editId}/unlock`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-
-      setAlertMessage('Appointment rescheduled and patient notified');
-      setShowAlert(true);
-      setShowModal(false);
-      setRescheduleReason('');
-      fetchAppointments();
-    } catch (err) {
-      setAlertMessage('Failed to reschedule appointment');
-      setShowAlert(true);
-      console.error(err);
-    }
-  };
-
-  return (
-    <AdminLayout>
-      <h2>All Appointments</h2>
-
-      {/* Filters */}
-      <div className="filters-container">
-        <input
-          type="text"
-          placeholder="Search by name, email, phone, or purpose"
-          value={searchQuery}
-          onChange={e => setSearchQuery(e.target.value)}
-        />
-        <div className="date-group">
-          <label>From:</label>
-          <input
-            type="date"
-            value={startDateFilter}
-            onChange={e => setStartDateFilter(e.target.value)}
-          />
-        </div>
-        <div className="date-group">
-          <label>To:</label>
-          <input
-            type="date"
-            value={endDateFilter}
-            onChange={e => setEndDateFilter(e.target.value)}
-          />
-        </div>
-        <select value={purposeFilter} onChange={e => setPurposeFilter(e.target.value)}>
-          <option value="">All Purposes</option>
-          <option value="checkup">Checkup</option>
-          <option value="medical-certificate">Medical Certificate</option>
-        </select>
-        <button onClick={() => { setSearchQuery(''); setStartDateFilter(''); setEndDateFilter(''); setPurposeFilter(''); }}>Clear</button>
-      </div>
-
-     {/* Tab Navigation */}
-<div className="tab-header">
-  <button
-    className={`tab pending ${activeTab === 'pending' ? 'active' : ''}`}
-    onClick={() => setActiveTab('pending')}
-  >
-     Pending
-  </button>
-  <button
-    className={`tab approved ${activeTab === 'approved' ? 'active' : ''}`}
-    onClick={() => setActiveTab('approved')}
-  >
-     Approved
-  </button>
-</div>
-
-
-      {/* Modal */}
-      {showModal && (
-        <div className="modal-overlay">
-          <div className="modal-content appointment-modal">
-            <div className="modal-header">
-              <h3>Reschedule Appointment</h3>
-              <p className="editor-info">Currently editing by: {userName}</p>
+    return (
+        <div className="all-appointments-page">
+            <div className="page-header">
+                <h1>All Appointments</h1>
+                <p>Manage pending and approved appointments.</p>
             </div>
-            <div className="modal-body">
-              <label>Date:</label>
-              <input
-                type="date"
-                value={editDate}
-                onChange={(e) => setEditDate(e.target.value)}
-              />
-              <label>Purpose:</label>
-              <input
-                type="text"
-                value={editPurpose}
-                onChange={(e) => setEditPurpose(e.target.value)}
-              />
-              <label>Reason for Reschedule:</label>
-              <textarea
-                value={rescheduleReason}
-                onChange={(e) => setRescheduleReason(e.target.value)}
-                placeholder="E.g., Doctor unavailable, room maintenance, etc."
-                rows="3"
-              />
-            </div>
-            <div className="modal-footer">
-              <button onClick={handleReschedule}>Confirm</button>
-              <button onClick={async () => {
-                try {
-                  const token = localStorage.getItem('token');
-                  await axios.post(`http://localhost:5000/api/appointments/${editId}/unlock`, {}, {
-                    headers: { Authorization: `Bearer ${token}` }
-                  });
-                  setShowModal(false);
-                } catch (err) {
-                  console.error('Failed to unlock appointment:', err);
-                  setAlertMessage('Failed to unlock appointment. Please try again.');
-                  setShowAlert(true);
-                }
-              }}>Cancel</button>
-            </div>
-          </div>
-        </div>
-      )}
 
-      {/* Alert Modal */}
-      {showAlert && (
-        <div className="modal-overlay">
-          <div className="modal-content">
-            <p>{alertMessage}</p>
-            <button onClick={() => setShowAlert(false)}>OK</button>
-          </div>
-        </div>
-      )}
-
-      {/* Lock Conflict Modal */}
-      {showLockModal && (
-        <div className="modal-overlay">
-          <div className="modal-content appointment-modal">
-            <div className="modal-header">
-              <h3>⚠️ Appointment Locked</h3>
-            </div>
-            <div className="modal-body">
-              <div style={{ textAlign: 'center', padding: '20px' }}>
-                <div style={{ fontSize: '3rem', marginBottom: '15px' }}>🔒</div>
-                <p style={{ fontSize: '1.1rem', marginBottom: '10px', color: '#374151' }}>
-                  This appointment is currently being edited by another user.
-                </p>
-                <div style={{
-                  backgroundColor: '#f3f4f6',
-                  padding: '15px',
-                  borderRadius: '8px',
-                  border: '2px solid #e5e7eb',
-                  margin: '15px 0'
-                }}>
-                  <strong style={{ color: '#1f2937', fontSize: '1.2rem' }}>
-                    {lockModalData.editorName}
-                  </strong>
-                  <br />
-                  <span style={{ color: '#6b7280', fontSize: '0.9rem' }}>
-                    Currently editing this appointment
-                  </span>
+            <div className="controls-panel">
+                <div className="search-group">
+                    <Search className="icon" size={20} />
+                    <input
+                        type="text"
+                        placeholder="Search patient, email, purpose..."
+                        value={searchQuery}
+                        onChange={e => setSearchQuery(e.target.value)}
+                    />
                 </div>
-                <p style={{ color: '#6b7280', fontSize: '0.9rem' }}>
-                  Please wait for them to finish or contact an administrator if needed.
-                </p>
-              </div>
+
+                <div className="filters-group">
+                    <div className="date-input">
+                        <span className="label">From</span>
+                        <input type="date" value={dateRange.start} onChange={e => setDateRange({ ...dateRange, start: e.target.value })} />
+                    </div>
+                    <div className="date-input">
+                        <span className="label">To</span>
+                        <input type="date" value={dateRange.end} onChange={e => setDateRange({ ...dateRange, end: e.target.value })} />
+                    </div>
+                </div>
+
+                <div className="actions-group">
+                    <button className="btn-icon" onClick={() => { setSearchQuery(''); setDateRange({ start: '', end: '' }); }} title="Reset Filters">
+                        <RefreshCw size={18} />
+                    </button>
+                </div>
             </div>
-            <div className="modal-footer">
-              <button onClick={() => setShowLockModal(false)}>OK</button>
+
+            <div className="tabs-container">
+                <button className={`tab-btn ${activeTab === 'pending' ? 'active' : ''}`} onClick={() => setActiveTab('pending')}>
+                    <Clock size={16} /> Pending
+                </button>
+                <button className={`tab-btn ${activeTab === 'approved' ? 'active' : ''}`} onClick={() => setActiveTab('approved')}>
+                    <CheckCircle size={16} /> Approved
+                </button>
+                <button className={`tab-btn ${activeTab === 'all' ? 'active' : ''}`} onClick={() => setActiveTab('all')}>
+                    All
+                </button>
             </div>
-          </div>
+
+            <div className="table-container">
+                <table className="data-table">
+                    <thead>
+                        <tr>
+                            <th>Patient</th>
+                            <th>Date & Time</th>
+                            <th>Purpose</th>
+                            <th>Contact</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {filteredAppointments.length === 0 ? (
+                            <tr><td colSpan="6" className="no-data">No appointments found.</td></tr>
+                        ) : (
+                            filteredAppointments.map(apt => (
+                                <tr key={apt._id}>
+                                    <td>
+                                        <div className="patient-info">
+                                            <span className="name">{apt.patientId ? `${apt.patientId.firstName} ${apt.patientId.lastName}` : apt.firstName + ' ' + apt.lastName}</span>
+                                            <span className="email">{apt.patientId?.email || apt.email}</span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div className="datetime">
+                                            <span className="date">{new Date(apt.appointmentDate).toLocaleDateString()}</span>
+                                            {/* <span className="time">{new Date(apt.appointmentDate).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span> */}
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span
+                                            className="purpose-tag clickable"
+                                            onClick={() => {
+                                                setSelectedNotes(apt.additionalNotes || 'No additional notes provided.');
+                                                setShowNotesModal(true);
+                                            }}
+                                            title="View Notes"
+                                        >
+                                            {apt.purpose}
+                                        </span>
+                                    </td>
+                                    <td>{apt.patientId?.contactNumber || apt.phone}</td>
+                                    <td>
+                                        <span className={`status-badge status-${apt.status.toLowerCase()}`}>{apt.status}</span>
+                                    </td>
+                                    <td>
+                                        <div className="action-buttons">
+                                            {apt.status === 'pending' && (
+                                                <button className="btn-icon success" onClick={() => handleApprove(apt._id, apt.version)} title="Approve">
+                                                    <CheckCircle size={18} />
+                                                </button>
+                                            )}
+                                            <button className="btn-icon primary" onClick={() => openEditModal(apt)} title="Edit">
+                                                <Edit size={18} />
+                                            </button>
+                                            <button className="btn-icon danger" onClick={() => handleDelete(apt._id)} title="Delete">
+                                                <Trash2 size={18} />
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))
+                        )}
+                    </tbody>
+                </table>
+            </div>
+
+            {/* Edit Modal */}
+            {showEditModal && (
+                <div className="modal-overlay">
+                    <div className="modal-card">
+                        <div className="modal-header">
+                            <h3>Reschedule Appointment</h3>
+                            <button className="close-btn" onClick={closeEditModal}><XCircle size={24} /></button>
+                        </div>
+                        <form onSubmit={handleEditSubmit}>
+                            <div className="modal-body">
+                                <div className="form-group">
+                                    <label>Date</label>
+                                    <input type="date" required value={editForm.date} onChange={e => setEditForm({ ...editForm, date: e.target.value })} />
+                                </div>
+                                <div className="form-group">
+                                    <label>Purpose</label>
+                                    <input type="text" required value={editForm.purpose} onChange={e => setEditForm({ ...editForm, purpose: e.target.value })} />
+                                </div>
+                                <div className="form-group">
+                                    <label>Reason for change</label>
+                                    <textarea
+                                        rows={3}
+                                        placeholder="Explain why this is being rescheduled..."
+                                        value={editForm.rescheduleReason}
+                                        onChange={e => setEditForm({ ...editForm, rescheduleReason: e.target.value })}
+                                    />
+                                </div>
+                            </div>
+                            <div className="modal-footer">
+                                <button type="button" className="btn-secondary" onClick={closeEditModal}>Cancel</button>
+                                <button type="submit" className="btn-primary">Save Changes</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Notes Modal */}
+            {showNotesModal && (
+                <div className="modal-overlay">
+                    <div className="modal-card">
+                        <div className="modal-header">
+                            <h3>Appointment Notes</h3>
+                            <button className="close-btn" onClick={() => setShowNotesModal(false)}><XCircle size={24} /></button>
+                        </div>
+                        <div className="modal-body">
+                            <div className="notes-content">
+                                {selectedNotes}
+                            </div>
+                        </div>
+                        <div className="modal-footer">
+                            <button className="btn-primary" onClick={() => setShowNotesModal(false)}>Close</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Lock Conflict Modal */}
+            {lockConflict && (
+                <div className="modal-overlay">
+                    <div className="modal-card warning">
+                        <div className="modal-header">
+                            <h3><Lock size={20} /> Record Locked</h3>
+                        </div>
+                        <div className="modal-body">
+                            <p>This record is currently being edited by:</p>
+                            <div className="editor-badge">
+                                <strong>{lockConflict.editorName}</strong>
+                            </div>
+                            <p>Please try again later.</p>
+                        </div>
+                        <div className="modal-footer">
+                            <button className="btn-primary" onClick={() => setLockConflict(null)}>OK</button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
-      )}
+    );
+};
 
-      {/* Appointment Tables */}
-      {loading ? (
-        <p>Loading appointments...</p>
-      ) : error ? (
-        <p style={{ color: 'red' }}>{error}</p>
-      ) : appointments.length === 0 ? (
-        <p>No appointments found.</p>
-      ) : (
-        <>
-          {activeTab === 'pending' && (
-            <>
-              <h3>Pending Appointments</h3>
-              <div className="appointment-table-wrapper">
-                <table className="all-appointments-table">
-                  <thead>
-                    <tr>
-                      <th>Name</th>
-                      <th>Date</th>
-                      <th>Email</th>
-                      <th>Phone</th>
-                      <th>Purpose</th>
-                      <th>Status</th>
-                      <th>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-  {filteredAppointments.filter(app => app.status === 'pending').length === 0 ? (
-    <tr>
-      <td colSpan="7" style={{ textAlign: 'center', padding: '20px', fontStyle: 'italic', color: '#666' }}>
-        No pending appointments
-      </td>
-    </tr>
-  ) : (
-    filteredAppointments.filter(app => app.status === 'pending').map(app => (
-      <tr key={app._id}>
-        <td data-label="Name">{app.patientId?.firstName || app.firstName || 'N/A'} {app.patientId?.lastName || app.lastName || ''}</td>
-        <td data-label="Date">{new Date(app.appointmentDate).toLocaleString()}</td>
-        <td data-label="Email">{app.patientId?.email || app.email || 'N/A'}</td>
-        <td data-label="Phone">{app.patientId?.contactNumber || app.phone || 'N/A'}</td>
-        <td data-label="Purpose">{app.purpose}</td>
-        <td data-label="Status"><span className="status-tag pending">Pending</span></td>
-        <td data-label="Actions" className="action-cell">
-          <button onClick={() => handleApprove(app._id, app.version)} className="approve-btn">Approve</button>
-          <button onClick={() => openEditModal(app)} className="edit-btn">Edit</button>
-          <button onClick={() => handleDelete(app._id)} className="delete-btn">Delete</button>
-        </td>
-      </tr>
-    ))
-  )}
-</tbody>
-                </table>
-              </div>
-            </>
-          )}
-
-          {activeTab === 'approved' && (
-            <>
-              <h3>Approved Appointments</h3>
-              <div className="appointment-table-wrapper">
-                <table className="all-appointments-table">
-                  <thead>
-                    <tr>
-                      <th>Name</th>
-                      <th>Date</th>
-                      <th>Email</th>
-                      <th>Phone</th>
-                      <th>Purpose</th>
-                      <th>Status</th>
-                      <th>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-  {filteredAppointments.filter(app => app.status === 'approved').length === 0 ? (
-    <tr>
-      <td colSpan="7" style={{ textAlign: 'center', padding: '20px', fontStyle: 'italic', color: '#666' }}>
-        No approved appointments
-      </td>
-    </tr>
-  ) : (
-    filteredAppointments.filter(app => app.status === 'approved').map(app => (
-      <tr key={app._id}>
-        <td data-label="Name">{app.patientId?.firstName || app.firstName || 'N/A'} {app.patientId?.lastName || app.lastName || ''}</td>
-        <td data-label="Date">{new Date(app.appointmentDate).toLocaleDateString()}</td>
-        <td data-label="Email">{app.patientId?.email || app.email || 'N/A'}</td>
-        <td data-label="Phone">{app.patientId?.contactNumber || app.phone || 'N/A'}</td>
-        <td data-label="Purpose">{app.purpose}</td>
-        <td data-label="Status"><span className="status-tag confirmed">Approved</span></td>
-        <td data-label="Actions" className="action-cell">
-          <button onClick={() => openEditModal(app)} className="edit-btn">Edit</button>
-          <button onClick={() => handleDelete(app._id)} className="delete-btn">Delete</button>
-        </td>
-      </tr>
-    ))
-  )}
-</tbody>
-                </table>
-              </div>
-            </>
-          )}
-        </>
-      )}
-    </AdminLayout>
-  );
-}
+export default AllAppointments;

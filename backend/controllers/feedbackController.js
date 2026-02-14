@@ -9,7 +9,7 @@ const logActivity = require('../utils/logActivity');
  */
 const submitFeedback = async (req, res) => {
   try {
-    if (!req.user || !['patient','admin','superadmin','doctor'].includes(req.user.role)) {
+    if (!req.user || !['patient', 'admin', 'superadmin', 'doctor'].includes(req.user.role)) {
       return res.status(403).json({ error: 'Only patients, doctors, admins, or superadmins can submit feedback' });
     }
 
@@ -84,7 +84,7 @@ const submitFeedback = async (req, res) => {
     }
 
     // If submitter is admin/doctor/superadmin and no explicit recipient provided, record them as recipient
-    if (!finalRecipientId && ['admin','superadmin','doctor','nurse'].includes(req.user.role)) {
+    if (!finalRecipientId && ['admin', 'superadmin', 'doctor', 'nurse'].includes(req.user.role)) {
       finalRecipientId = req.user.userId;
       finalRecipientRole = req.user.role;
     }
@@ -105,10 +105,10 @@ const submitFeedback = async (req, res) => {
 
     // Log the activity (use structured logActivity object)
     await logActivity({
-      adminId: (['admin','superadmin','doctor','nurse'].includes(req.user.role) ? req.user.userId : null),
+      adminId: (['admin', 'superadmin', 'doctor', 'nurse'].includes(req.user.role) ? req.user.userId : null),
       adminName: `${req.user.firstName || ''} ${req.user.lastName || ''}`.trim(),
       adminRole: req.user.role,
-      action: (['admin','superadmin','doctor','nurse'].includes(req.user.role) ? 'create_feedback_by_admin' : 'create_feedback'),
+      action: (['admin', 'superadmin', 'doctor', 'nurse'].includes(req.user.role) ? 'create_feedback_by_admin' : 'create_feedback'),
       entityType: 'feedback',
       entityId: feedback._id,
       details: {
@@ -149,14 +149,14 @@ const getDoctorFeedback = async (req, res) => {
     }
 
     // Fetch feedback addressing this recipient (support legacy doctorId field)
-    const feedback = await Feedback.find({ $or: [ { recipientId: doctorId }, { doctorId: doctorId } ] })
+    const feedback = await Feedback.find({ $or: [{ recipientId: doctorId }, { doctorId: doctorId }] })
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(parseInt(limit))
       .populate('patientId', 'firstName lastName')
       .populate('appointmentId', 'appointmentDate purpose');
 
-    const total = await Feedback.countDocuments({ $or: [ { recipientId: doctorId }, { doctorId: doctorId } ] });
+    const total = await Feedback.countDocuments({ $or: [{ recipientId: doctorId }, { doctorId: doctorId }] });
 
     res.status(200).json({
       message: 'Doctor feedback retrieved successfully',
@@ -191,7 +191,7 @@ const getDoctorRating = async (req, res) => {
     // Calculate average rating
     const ObjectId = require('mongoose').Types.ObjectId;
     const result = await Feedback.aggregate([
-      { $match: { $or: [ { recipientId: ObjectId(doctorId) }, { doctorId: ObjectId(doctorId) } ] } },
+      { $match: { $or: [{ recipientId: ObjectId(doctorId) }, { doctorId: ObjectId(doctorId) }] } },
       {
         $group: {
           _id: null,
@@ -309,7 +309,7 @@ const getFeedbackAnalytics = async (req, res) => {
 
     // Get overall stats
     const totalFeedback = await Feedback.countDocuments();
-    
+
     // Calculate average rating and distribution
     const ratingStats = await Feedback.aggregate([
       {
@@ -384,7 +384,7 @@ const getFeedbackAnalytics = async (req, res) => {
       recipientId: item._id,
       count: item.count,
       avgRating: Math.round(item.avgRating * 10) / 10,
-      name: item.recipientInfo.length > 0 
+      name: item.recipientInfo.length > 0
         ? `${item.recipientInfo[0].firstName} ${item.recipientInfo[0].lastName}`
         : 'Unknown'
     }));
@@ -406,11 +406,47 @@ const getFeedbackAnalytics = async (req, res) => {
   }
 };
 
+/**
+ * Get all feedback (for admin)
+ * GET /api/feedback/all
+ */
+const getAllFeedback = async (req, res) => {
+  try {
+    const { page = 1, limit = 50 } = req.query;
+    const skip = (page - 1) * limit;
+
+    const feedback = await Feedback.find()
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(parseInt(limit))
+      .populate('patientId', 'firstName lastName')
+      .populate('appointmentId', 'appointmentDate purpose')
+      .populate('recipientId', 'firstName lastName role');
+
+    const total = await Feedback.countDocuments();
+
+    res.status(200).json({
+      message: 'All feedback retrieved successfully',
+      feedback,
+      pagination: {
+        total,
+        page: parseInt(page),
+        limit: parseInt(limit),
+        pages: Math.ceil(total / limit)
+      }
+    });
+  } catch (err) {
+    console.error('Get all feedback error:', err.message);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
 module.exports = {
   submitFeedback,
   getDoctorFeedback,
   getDoctorRating,
   getAppointmentFeedback,
   updateFeedback,
-  getFeedbackAnalytics
+  getFeedbackAnalytics,
+  getAllFeedback
 };

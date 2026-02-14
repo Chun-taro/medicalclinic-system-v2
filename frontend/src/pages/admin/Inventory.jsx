@@ -1,328 +1,288 @@
-import { useEffect, useState } from 'react';
-import axios from 'axios';
-import AdminLayout from './AdminLayout';
-import { showSuccess, showError, showWarning, showConfirm } from '../../utils/toastNotifier';
-import './Style/Inventory.css';
+import React, { useState, useEffect } from 'react';
+import api from '../../services/api';
+import { toast } from 'react-toastify';
+import {
+    Package, Plus, Trash2, Search, Filter, History, Printer,
+    AlertTriangle, Check, X, FileText
+} from 'lucide-react';
+import './Inventory.css';
 
+const Inventory = () => {
+    const [medicines, setMedicines] = useState([]);
+    const [filteredMedicines, setFilteredMedicines] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [showAddModal, setShowAddModal] = useState(false);
+    const [showDispenseModal, setShowDispenseModal] = useState(false);
+    const [showHistoryModal, setShowHistoryModal] = useState(false);
 
-export default function Inventory() {
-  const [medicines, setMedicines] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [form, setForm] = useState({
-    name: '',
-    quantityInStock: '',
-    unit: '',
-    expiryDate: ''
-  });
-  const [dispenseForm, setDispenseForm] = useState({ medId: '', quantity: '' });
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState('');
+    // Forms
+    const [addForm, setAddForm] = useState({ name: '', quantityInStock: '', unit: '', expiryDate: '' });
+    const [dispenseForm, setDispenseForm] = useState({ medId: '', quantity: '' });
+    const [history, setHistory] = useState([]);
+    const [printFilters, setPrintFilters] = useState({ startDate: '', endDate: '' });
 
-  //  Modal state
-  const [showHistoryModal, setShowHistoryModal] = useState(false);
-  const [dispenseHistory, setDispenseHistory] = useState([]);
-  // History filters
-  const [historyNameFilter, setHistoryNameFilter] = useState('');
-  const [historyStartDateFilter, setHistoryStartDateFilter] = useState('');
-  const [historyEndDateFilter, setHistoryEndDateFilter] = useState('');
+    useEffect(() => {
+        fetchInventory();
+    }, []);
 
-  const fetchInventory = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      const res = await axios.get('http://localhost:5000/api/medicines', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setMedicines(res.data);
-    } catch (err) {
-      console.error('Error fetching inventory:', err.message);
-      setError('Failed to load inventory.');
-    } finally {
-      setLoading(false);
-    }
-  };
+    useEffect(() => {
+        filterMedicines();
+    }, [medicines, searchQuery]);
 
-  const fetchDispenseHistory = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      const res = await axios.get('http://localhost:5000/api/medicines/history', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setDispenseHistory(res.data);
-      setShowHistoryModal(true);
-    } catch (err) {
-      console.error('Error fetching dispense history:', err.message);
-      setError('Failed to load dispense history.');
-    }
-  };
-
-  useEffect(() => {
-    fetchInventory();
-  }, []);
-
-  const handleChange = e => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
-
-  const handleSubmit = async e => {
-    e.preventDefault();
-    setSubmitting(true);
-    setError('');
-
-    try {
-      const token = localStorage.getItem('token');
-      const payload = {
-        ...form,
-        quantityInStock: parseInt(form.quantityInStock)
-      };
-
-      await axios.post('http://localhost:5000/api/medicines', payload, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-
-      setForm({ name: '', quantityInStock: '', unit: '', expiryDate: '' });
-      fetchInventory();
-    } catch (err) {
-      console.error('Error adding medicine:', err.message);
-      setError('Failed to add medicine.');
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const handleDelete = async id => {
-    showConfirm('Are you sure you want to delete this medicine?', {
-      onConfirm: async () => {
-        setError('');
-        const token = localStorage.getItem('token');
-        if (!token) {
-          setError('Not authenticated. Please log in.');
-          return;
-        }
-
+    const fetchInventory = async () => {
         try {
-          await axios.delete(`http://localhost:5000/api/medicines/${id}`, {
-            headers: { Authorization: `Bearer ${token}` }
-          });
-          showSuccess('Medicine deleted successfully');
-          fetchInventory();
+            setLoading(true);
+            const res = await api.get('/medicines');
+            setMedicines(res.data);
         } catch (err) {
-          console.error('Error deleting medicine:', err);
-          showError('Delete failed.');
+            toast.error('Failed to load inventory');
+        } finally {
+            setLoading(false);
         }
-      }
-    });
-  };
+    };
 
-  const handleDispense = async e => {
-    e.preventDefault();
-    if (!dispenseForm.medId || !dispenseForm.quantity) {
-      showWarning('Please select a medicine and enter quantity');
-      return;
-    }
+    const filterMedicines = () => {
+        if (!searchQuery) {
+            setFilteredMedicines(medicines);
+            return;
+        }
+        const q = searchQuery.toLowerCase();
+        setFilteredMedicines(medicines.filter(m => m.name.toLowerCase().includes(q)));
+    };
 
-    try {
-      const token = localStorage.getItem('token');
-      await axios.post(
-        `http://localhost:5000/api/medicines/${dispenseForm.medId}/dispense`,
-        { quantity: parseInt(dispenseForm.quantity) },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+    const handleAddSubmit = async (e) => {
+        e.preventDefault();
+        try {
+            await api.post('/medicines', addForm);
+            toast.success('Medicine added');
+            setShowAddModal(false);
+            setAddForm({ name: '', quantityInStock: '', unit: '', expiryDate: '' });
+            fetchInventory();
+        } catch (err) {
+            toast.error('Failed to add medicine');
+        }
+    };
 
-      showSuccess('Medicine dispensed successfully');
-      setDispenseForm({ medId: '', quantity: '' });
-      fetchInventory();
-    } catch (err) {
-      console.error('Error dispensing medicine:', err.message);
-      showError(err.response?.data?.error || 'Failed to dispense medicine');
-    }
-  };
+    const handleDelete = async (id) => {
+        if (!window.confirm('Delete this medicine?')) return;
+        try {
+            await api.delete(`/medicines/${id}`);
+            toast.success('Medicine deleted');
+            fetchInventory();
+        } catch (err) {
+            toast.error('Failed to delete medicine');
+        }
+    };
 
-  const handlePrintReport = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      const params = new URLSearchParams();
-      if (historyStartDateFilter) params.append('startDate', historyStartDateFilter);
-      if (historyEndDateFilter) params.append('endDate', historyEndDateFilter);
-      if (historyNameFilter) params.append('medicineName', historyNameFilter);
+    const handleDispenseSubmit = async (e) => {
+        e.preventDefault();
+        try {
+            await api.post(`/medicines/${dispenseForm.medId}/dispense`, { quantity: parseInt(dispenseForm.quantity) });
+            toast.success('Medicine dispensed');
+            setShowDispenseModal(false);
+            setDispenseForm({ medId: '', quantity: '' });
+            fetchInventory();
+        } catch (err) {
+            toast.error(err.response?.data?.error || 'Failed to dispense');
+        }
+    };
 
-      const response = await axios.get(`http://localhost:5000/api/medicines/history/pdf?${params.toString()}`, {
-        headers: { Authorization: `Bearer ${token}` },
-        responseType: 'blob'
-      });
+    const fetchHistory = async () => {
+        try {
+            const res = await api.get('/medicines/history');
+            setHistory(res.data);
+            setShowHistoryModal(true);
+        } catch (err) {
+            toast.error('Failed to load history');
+        }
+    };
 
-      const url = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', 'dispense-history-report.pdf');
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-    } catch (err) {
-      console.error('Error generating PDF:', err.message);
-      alert('Failed to generate PDF report');
-    }
-  };
+    const handlePrintHistory = async () => {
+        try {
+            const params = new URLSearchParams();
+            if (printFilters.startDate) params.append('startDate', printFilters.startDate);
+            if (printFilters.endDate) params.append('endDate', printFilters.endDate);
 
-  const getStatus = medicine => {
-    if (medicine.quantityInStock <= 0) return 'Out of Stock';
-    if (medicine.expiryDate && new Date(medicine.expiryDate) < new Date()) return 'Expired';
-    return 'Available';
-  };
+            const res = await api.get(`/medicines/history/pdf?${params.toString()}`, { responseType: 'blob' });
+            const url = window.URL.createObjectURL(new Blob([res.data]));
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', `Inventory_Report_${new Date().toISOString().split('T')[0]}.pdf`);
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+        } catch (err) {
+            toast.error('Failed to generate report');
+        }
+    };
 
-  // Filter dispense history
-  const filteredDispenseHistory = dispenseHistory.filter(record => {
-    // Name filter
-    if (historyNameFilter) {
-      const q = historyNameFilter.toLowerCase();
-      if (!record.medicineName.toLowerCase().includes(q)) return false;
-    }
+    const getStatusParams = (med) => {
+        if (med.quantityInStock <= 0) return { label: 'Out of Stock', class: 'status-danger' };
+        if (med.quantityInStock < 10) return { label: 'Low Stock', class: 'status-warning' };
+        if (med.expiryDate && new Date(med.expiryDate) < new Date()) return { label: 'Expired', class: 'status-danger' };
+        return { label: 'In Stock', class: 'status-success' };
+    };
 
-    // Date filters
-    if (historyStartDateFilter) {
-      const start = new Date(historyStartDateFilter);
-      const recordDate = new Date(record.dispensedAt);
-      if (recordDate < new Date(start.getFullYear(), start.getMonth(), start.getDate())) return false;
-    }
-    if (historyEndDateFilter) {
-      const end = new Date(historyEndDateFilter);
-      const recordDate = new Date(record.dispensedAt);
-      if (recordDate > new Date(end.getFullYear(), end.getMonth(), end.getDate(), 23, 59, 59)) return false;
-    }
+    if (loading) return <div className="loading-spinner-container"><div className="loading-spinner"></div></div>;
 
-    return true;
-  });
-
-  return (
-    <AdminLayout>
-      <div className="inventory-container">
-        <h2>Medicine Inventory</h2>
-        <p>Track capsules and expiry dates. Dispense to walk-in patients.</p>
-
-        {/* Add Medicine - MOVED TO TOP */}
-        <form className="medicine-form" onSubmit={handleSubmit}>
-          <h3>Add New Medicine</h3>
-          <input type="text" name="name" placeholder="Medicine Name" value={form.name} onChange={handleChange} required />
-          <input type="number" name="quantityInStock" placeholder="Capsules in Stock" value={form.quantityInStock} onChange={handleChange} required min="0" />
-          <input type="text" name="unit" placeholder="Unit (e.g. pcs, bottles)" value={form.unit} onChange={handleChange} required />
-          <input type="date" name="expiryDate" value={form.expiryDate} onChange={handleChange} />
-          <button type="submit" disabled={submitting}>{submitting ? 'Adding...' : 'Add Medicine'}</button>
-        </form>
-
-        {/*  View History Button */}
-        <button className="history-btn" onClick={fetchDispenseHistory}>
-          View Dispense History
-        </button>
-
-        {/* Dispense Medicine */}
-        <form className="dispense-form" onSubmit={handleDispense}>
-          <h3>Dispense Medicine</h3>
-          <select value={dispenseForm.medId} onChange={e => setDispenseForm({ ...dispenseForm, medId: e.target.value })} required>
-            <option value="">Select Medicine</option>
-            {medicines.map(med => (
-              <option key={med._id} value={med._id}>
-                {med.name} ({med.quantityInStock} left)
-              </option>
-            ))}
-          </select>
-          <input type="number" placeholder="Quantity to dispense" value={dispenseForm.quantity} onChange={e => setDispenseForm({ ...dispenseForm, quantity: e.target.value })} required min="1" />
-          <button type="submit">Dispense</button>
-        </form>
-
-        {error && <p style={{ color: 'red' }}>{error}</p>}
-
-        {loading ? (
-          <p>Loading inventory...</p>
-        ) : medicines.length === 0 ? (
-          <p>No medicines found.</p>
-        ) : (
-          <table className="inventory-table">
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th>Capsules</th>
-                <th>Unit</th>
-                <th>Expiry</th>
-                <th>Status</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {medicines.map(med => (
-                <tr key={med._id}>
-                  <td>{med.name}</td>
-                  <td>{med.quantityInStock}</td>
-                  <td>{med.unit}</td>
-                  <td>{med.expiryDate ? new Date(med.expiryDate).toLocaleDateString() : '—'}</td>
-                  <td className={getStatus(med).toLowerCase()}>{getStatus(med)}</td>
-                  <td>
-                    <button onClick={() => handleDelete(med._id)} className="delete-btn">Delete</button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-
-        {/* Modal for Dispense History */}
-        {showHistoryModal && (
-          <div className="modal-overlay">
-            <div className="modal-content">
-              <h3>Dispense History</h3>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <button className="close-btn" onClick={() => setShowHistoryModal(false)}>Close</button>
-                <button onClick={handlePrintReport} style={{ padding: '8px 12px', backgroundColor: '#007bff', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>Print PDF</button>
-              </div>
-
-              {/* History Filters */}
-              <div className="history-filters">
-                <input
-                  type="text"
-                  placeholder="Search by medicine name..."
-                  value={historyNameFilter}
-                  onChange={e => setHistoryNameFilter(e.target.value)}
-                />
-                <label>
-                  From <input type="date" value={historyStartDateFilter} onChange={e => setHistoryStartDateFilter(e.target.value)} />
-                </label>
-                <label>
-                  To <input type="date" value={historyEndDateFilter} onChange={e => setHistoryEndDateFilter(e.target.value)} />
-                </label>
-                <button onClick={() => { setHistoryNameFilter(''); setHistoryStartDateFilter(''); setHistoryEndDateFilter(''); }}>Clear</button>
-              </div>
-
-              {filteredDispenseHistory.length === 0 ? (
-                <p>No dispense records found.</p>
-              ) : (
-                <div className="table-wrapper">
-                  <table className="history-table">
-                   <thead>
-  <tr>
-    <th>Medicine</th>
-    <th>Quantity</th>
-    <th>Dispensed At</th>
-    <th>Source</th>
-  </tr>
-</thead>
-<tbody>
-  {filteredDispenseHistory
-    .slice()
-    .sort((a, b) => new Date(b.dispensedAt) - new Date(a.dispensedAt))
-    .map((record, index) => (
-      <tr key={index}>
-        <td>{record.medicineName}</td>
-        <td>{record.quantity}</td>
-        <td>{new Date(record.dispensedAt).toLocaleString()}</td>
-        <td>{record.source}</td>
-      </tr>
-    ))}
-</tbody>
-                  </table>
-                </div>
-              )}
+    return (
+        <div className="inventory-page">
+            <div className="page-header">
+                <h1>Inventory Management</h1>
+                <p>Track medicine stock and dispensing.</p>
             </div>
-          </div>
-        )}
-      </div>
-    </AdminLayout>
-  );
-}
+
+            <div className="controls-panel">
+                <div className="search-group">
+                    <Search className="icon" size={20} />
+                    <input
+                        type="text"
+                        placeholder="Search medicines..."
+                        value={searchQuery}
+                        onChange={e => setSearchQuery(e.target.value)}
+                    />
+                </div>
+                <div className="actions-group">
+                    <button className="btn-secondary" onClick={fetchHistory}>
+                        <History size={18} /> History
+                    </button>
+                    <button className="btn-secondary" onClick={() => setShowDispenseModal(true)}>
+                        <Package size={18} /> Dispense
+                    </button>
+                    <button className="btn-primary" onClick={() => setShowAddModal(true)}>
+                        <Plus size={18} /> Add Medicine
+                    </button>
+                </div>
+            </div>
+
+            <div className="inventory-grid">
+                {filteredMedicines.map(med => {
+                    const status = getStatusParams(med);
+                    return (
+                        <div key={med._id} className="medicine-card">
+                            <div className="card-header">
+                                <h3>{med.name}</h3>
+                                <span className={`status-badge ${status.class}`}>{status.label}</span>
+                            </div>
+                            <div className="card-body">
+                                <div className="info-row">
+                                    <span className="label">Stock:</span>
+                                    <span className="value">{med.quantityInStock} {med.unit}</span>
+                                </div>
+                                <div className="info-row">
+                                    <span className="label">Expiry:</span>
+                                    <span className="value">{med.expiryDate ? new Date(med.expiryDate).toLocaleDateString() : '—'}</span>
+                                </div>
+                            </div>
+                            <div className="card-footer">
+                                <button className="btn-icon danger" onClick={() => handleDelete(med._id)} title="Delete">
+                                    <Trash2 size={18} />
+                                </button>
+                            </div>
+                        </div>
+                    );
+                })}
+            </div>
+
+            {/* Add Modal */}
+            {showAddModal && (
+                <div className="modal-overlay">
+                    <div className="modal-card">
+                        <div className="modal-header">
+                            <h3>Add Medicine</h3>
+                            <button className="close-btn" onClick={() => setShowAddModal(false)}><X size={24} /></button>
+                        </div>
+                        <form onSubmit={handleAddSubmit}>
+                            <div className="modal-body">
+                                <input placeholder="Medicine Name" required value={addForm.name} onChange={e => setAddForm({ ...addForm, name: e.target.value })} />
+                                <input type="number" placeholder="Quantity" required value={addForm.quantityInStock} onChange={e => setAddForm({ ...addForm, quantityInStock: e.target.value })} />
+                                <input placeholder="Unit (e.g. tablet, bottle)" required value={addForm.unit} onChange={e => setAddForm({ ...addForm, unit: e.target.value })} />
+                                <label>Expiry Date</label>
+                                <input type="date" value={addForm.expiryDate} onChange={e => setAddForm({ ...addForm, expiryDate: e.target.value })} />
+                            </div>
+                            <div className="modal-footer">
+                                <button type="submit" className="btn-primary">Add Medicine</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Dispense Modal */}
+            {showDispenseModal && (
+                <div className="modal-overlay">
+                    <div className="modal-card">
+                        <div className="modal-header">
+                            <h3>Dispense Medicine</h3>
+                            <button className="close-btn" onClick={() => setShowDispenseModal(false)}><X size={24} /></button>
+                        </div>
+                        <form onSubmit={handleDispenseSubmit}>
+                            <div className="modal-body">
+                                <select required value={dispenseForm.medId} onChange={e => setDispenseForm({ ...dispenseForm, medId: e.target.value })}>
+                                    <option value="">Select Medicine</option>
+                                    {medicines.map(m => (
+                                        <option key={m._id} value={m._id}>{m.name} ({m.quantityInStock} left)</option>
+                                    ))}
+                                </select>
+                                <input type="number" placeholder="Quantity" required min="1" value={dispenseForm.quantity} onChange={e => setDispenseForm({ ...dispenseForm, quantity: e.target.value })} />
+                            </div>
+                            <div className="modal-footer">
+                                <button type="submit" className="btn-primary">Dispense</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* History Modal */}
+            {showHistoryModal && (
+                <div className="modal-overlay">
+                    <div className="modal-card wide">
+                        <div className="modal-header">
+                            <h3>Dispense History</h3>
+                            <button className="close-btn" onClick={() => setShowHistoryModal(false)}><X size={24} /></button>
+                        </div>
+                        <div className="history-filters" style={{ padding: '0 1.5rem', display: 'flex', gap: '1rem', alignItems: 'center', marginTop: '1rem' }}>
+                            <input
+                                type="date"
+                                value={printFilters.startDate}
+                                onChange={e => setPrintFilters({ ...printFilters, startDate: e.target.value })}
+                                style={{ padding: '0.5rem', border: '1px solid #e2e8f0', borderRadius: '0.375rem' }}
+                            />
+                            <span>to</span>
+                            <input
+                                type="date"
+                                value={printFilters.endDate}
+                                onChange={e => setPrintFilters({ ...printFilters, endDate: e.target.value })}
+                                style={{ padding: '0.5rem', border: '1px solid #e2e8f0', borderRadius: '0.375rem' }}
+                            />
+                            <button className="btn-secondary" onClick={handlePrintHistory} title="Print Report">
+                                <Printer size={18} /> Print
+                            </button>
+                        </div>
+                        <div className="modal-body history-list">
+                            {history.length === 0 ? <p>No history found.</p> : (
+                                <table className="history-table">
+                                    <thead><tr><th>Medicine</th><th>Qty</th><th>Date</th><th>Source</th></tr></thead>
+                                    <tbody>
+                                        {history.map((h, i) => (
+                                            <tr key={i}>
+                                                <td>{h.medicineName}</td>
+                                                <td>{h.quantity}</td>
+                                                <td>{new Date(h.dispensedAt).toLocaleString()}</td>
+                                                <td>{h.source}</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+};
+
+export default Inventory;

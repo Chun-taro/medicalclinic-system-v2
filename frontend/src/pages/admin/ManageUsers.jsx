@@ -1,211 +1,178 @@
-import { useEffect, useState } from 'react';
-import axios from 'axios';
-import AdminLayout from './AdminLayout';
-import './Style/ManageUsers.css';
+import React, { useState, useEffect } from 'react';
+import api from '../../services/api';
+import { useAuth } from '../../context/AuthContext';
+import { toast } from 'react-toastify';
+import { Search, UserCheck, UserX, Shield, Briefcase, Stethoscope, User } from 'lucide-react';
+import './ManageUsers.css';
 
-export default function ManageUsers() {
-  const [users, setUsers] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [activeTab, setActiveTab] = useState('admin');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [currentUserRole, setCurrentUserRole] = useState('');
-  const [showPopup, setShowPopup] = useState(false);
-  const [popupData, setPopupData] = useState({ title: '', icon: '', messages: [] });
+const ManageUsers = () => {
+    const [users, setUsers] = useState([]);
+    const [filteredUsers, setFilteredUsers] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [activeTab, setActiveTab] = useState('all');
+    const [searchQuery, setSearchQuery] = useState('');
+    const { user: currentUser } = useAuth(); // To check if superadmin
 
-  useEffect(() => {
+    useEffect(() => {
+        fetchUsers();
+    }, []);
+
+    useEffect(() => {
+        filterUsers();
+    }, [users, activeTab, searchQuery]);
+
     const fetchUsers = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        const res = await axios.get('http://localhost:5000/api/users', {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        setUsers(res.data);
-
-        // Also fetch current user info to get their role
-        const userRes = await axios.get('http://localhost:5000/api/auth/me', {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        setCurrentUserRole(userRes.data.role);
-      } catch (err) {
-        console.error('Error fetching users:', err.response?.data || err.message);
-        setError(err.response?.data?.error || 'Failed to load users');
-      } finally {
-        setLoading(false);
-      }
+        try {
+            const res = await api.get('/users');
+            setUsers(res.data);
+        } catch (err) {
+            toast.error('Failed to load users');
+        } finally {
+            setLoading(false);
+        }
     };
 
-    fetchUsers();
-  }, []);
+    const filterUsers = () => {
+        let result = users;
 
-  const handleRoleChange = async (id, newRole) => {
-    // Check if trying to change to superadmin and current user is not superadmin
-    if (newRole === 'superadmin' && currentUserRole !== 'superadmin') {
-      setPopupData({
-        title: 'Super Admin Access Required',
-        icon: '🔒',
-        messages: [
-          'You need Super Admin privileges to modify user roles.',
-          'Please contact your Super Administrator for assistance.'
-        ]
-      });
-      setShowPopup(true);
-      return;
-    }
+        // Filter by tab
+        if (activeTab !== 'all') {
+            result = result.filter(u => u.role === activeTab);
+        }
 
-    try {
-      const token = localStorage.getItem('token');
-      await axios.put(
-        `http://localhost:5000/api/users/${id}/role`,
-        { role: newRole },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+        // Filter by search
+        if (searchQuery) {
+            const q = searchQuery.toLowerCase();
+            result = result.filter(u =>
+                (u.firstName && u.firstName.toLowerCase().includes(q)) ||
+                (u.lastName && u.lastName.toLowerCase().includes(q)) ||
+                (u.email && u.email.toLowerCase().includes(q)) ||
+                (u.idNumber && u.idNumber.toLowerCase().includes(q))
+            );
+        }
 
-      setUsers(prev =>
-        prev.map(user => (user._id === id ? { ...user, role: newRole } : user))
-      );
-    } catch (err) {
-      console.error('Error updating role:', err.message);
-      // Provide user-friendly error message without technical details
-      // Check if server error message contains technical details and filter them out
-      const serverError = err.response?.data?.error;
-      let errorMessage = 'Unable to update user role. Please check your connection and try again.';
-      if (serverError && !serverError.includes('localhost') && !serverError.includes('5000') && !serverError.includes('http')) {
-        errorMessage = serverError;
-      }
-      setPopupData({
-        title: 'Access Denied',
-        icon: '🚫',
-        messages: [errorMessage]
-      });
-      setShowPopup(true);
-    }
-  };
+        setFilteredUsers(result);
+    };
 
-  const renderTable = role => {
-    const filtered = users.filter(user => {
-      const matchesRole = user.role === role;
-      if (searchQuery) {
-        const q = searchQuery.toLowerCase().trim();
-        const fullName = (user.name || `${user.firstName} ${user.lastName}`).toLowerCase();
-        const email = user.email.toLowerCase();
-        const idNumber = (user.idNumber && user.idNumber.toString().toLowerCase()) || '';
-        const userRole = user.role.toLowerCase();
-        if (!fullName.includes(q) && !email.includes(q) && !idNumber.includes(q) && !userRole.includes(q)) return false;
-      }
-      return matchesRole;
-    });
-    return filtered.length === 0 ? (
-      <p>No {role}s found.</p>
-    ) : (
-      <table className="user-table">
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Email</th>
-            <th>ID Number</th>
-            <th>Role</th>
-            <th>Change Role</th>
-          </tr>
-        </thead>
-        <tbody>
-          {filtered.map(user => (
-            <tr key={user._id}>
-              <td>{user.name || `${user.firstName} ${user.lastName}`}</td>
-              <td>{user.email}</td>
-              <td>{user.idNumber}</td>
-              <td>
-                <span
-                  className={`role-badge role-${user.role}`}
-                  // Dynamically apply a class based on the user's role
-                  // e.g., 'role-patient', 'role-admin', 'role-doctor', 'role-nurse', 'role-superadmin'
-                  // The CSS for these classes will define their respective colors.
+    const handleRoleChange = async (userId, newRole) => {
+        if (newRole === 'superadmin' && currentUser.role !== 'superadmin') {
+            toast.error('Only Super Admins can promote users to Super Admin.');
+            return;
+        }
 
-                >
-                  {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
-                </span>
-              </td>
-              <td>
-                <select
-                  value={user.role}
-                  onChange={e => handleRoleChange(user._id, e.target.value)}
-                >
-                  <option value="patient">patient</option>
-                  <option value="admin">admin</option>
-                  <option value="doctor">doctor</option>
-                  <option value="nurse">nurse</option>
-                  <option value="superadmin">superadmin</option>
-                </select>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    );
-  };
+        try {
+            await api.put(`/users/${userId}/role`, { role: newRole });
+            setUsers(prev => prev.map(u => u._id === userId ? { ...u, role: newRole } : u));
+            toast.success('User role updated successfully');
+        } catch (err) {
+            console.error(err);
+            toast.error(err.response?.data?.error || 'Failed to update user role');
+        }
+    };
 
-  return (
-    <AdminLayout>
-      <h2>Manage Users</h2>
-      <p>View, edit, or change user roles.</p>
+    const getRoleIcon = (role) => {
+        switch (role) {
+            case 'superadmin': return <Shield size={16} className="text-purple-600" />;
+            case 'admin': return <Briefcase size={16} className="text-blue-600" />;
+            case 'doctor': return <Stethoscope size={16} className="text-green-600" />;
+            case 'nurse': return <UserCheck size={16} className="text-teal-600" />;
+            default: return <User size={16} className="text-gray-600" />;
+        }
+    };
 
-      {/* Search Filters */}
-      <div className="search-filters">
-        <input
-          type="text"
-          placeholder="Search by name, email, ID number, or role..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-        />
-      </div>
+    if (loading) return <div className="loading-spinner-container"><div className="loading-spinner"></div></div>;
 
-      {loading ? (
-        <p>Loading users...</p>
-      ) : error ? (
-        <p style={{ color: 'red' }}>{error}</p>
-      ) : (
-        <>
-          {/* Tab Buttons */}
-          <div className="tabs">
-            {['admin', 'doctor', 'nurse', 'patient'].map(tab => (
-              <button
-                key={tab}
-                className={activeTab === tab ? 'active' : ''}
-                onClick={() => setActiveTab(tab)}
-              >
-                {/* Capitalize first letter and add 's' for plural */}
-                {tab.charAt(0).toUpperCase() + tab.slice(1)}s
-              </button>
-            ))}
-          </div>
-
-          {/*  Tab Content */}
-          <div className="tab-content">
-            {activeTab === 'admin' && renderTable('admin')}
-            {activeTab === 'patient' && renderTable('patient')}
-            {activeTab === 'doctor' && renderTable('doctor')}
-            {activeTab === 'nurse' && renderTable('nurse')}
-          </div>
-        </>
-      )}
-
-      {/* Custom Popup */}
-      {showPopup && (
-        <div className="popup-overlay">
-          <div className="popup-content">
-            <div className="popup-header">
-              <div className="popup-icon">{popupData.icon}</div>
-              <h3>{popupData.title}</h3>
+    return (
+        <div className="manage-users-page">
+            <div className="page-header">
+                <h1>Manage Users</h1>
+                <p>View and manage permissions for all system users.</p>
             </div>
-            <div className="popup-body">
-              {popupData.messages.map((msg, index) => <p key={index}>{msg}</p>)}
+
+            <div className="controls-container">
+                <div className="search-bar">
+                    <Search size={20} className="search-icon" />
+                    <input
+                        type="text"
+                        placeholder="Search users..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                    />
+                </div>
+
+                <div className="tabs">
+                    {['all', 'patient', 'doctor', 'nurse', 'admin', 'superadmin'].map(role => (
+                        <button
+                            key={role}
+                            className={`tab-btn ${activeTab === role ? 'active' : ''}`}
+                            onClick={() => setActiveTab(role)}
+                        >
+                            {role.charAt(0).toUpperCase() + role.slice(1)}s
+                        </button>
+                    ))}
+                </div>
             </div>
-            <div className="popup-footer">
-              <button className="popup-btn-primary" onClick={() => setShowPopup(false)}>Understood</button>
+
+            <div className="users-table-container">
+                <table className="users-table">
+                    <thead>
+                        <tr>
+                            <th>User</th>
+                            <th>Role</th>
+                            <th>Email</th>
+                            <th>ID Number</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {filteredUsers.length === 0 ? (
+                            <tr>
+                                <td colSpan="5" className="no-data">No users found.</td>
+                            </tr>
+                        ) : (
+                            filteredUsers.map(user => (
+                                <tr key={user._id}>
+                                    <td>
+                                        <div className="user-cell">
+                                            <div className="user-avatar-sm">
+                                                {user.firstName ? user.firstName[0] : 'U'}
+                                            </div>
+                                            <div>
+                                                <div className="user-name">{user.firstName} {user.lastName}</div>
+                                                <div className="user-sub">{user.role}</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div className="role-badge-container">
+                                            {getRoleIcon(user.role)}
+                                            <span className={`role-text role-${user.role}`}>{user.role}</span>
+                                        </div>
+                                    </td>
+                                    <td>{user.email}</td>
+                                    <td>{user.idNumber || '—'}</td>
+                                    <td>
+                                        <select
+                                            className="role-select"
+                                            value={user.role}
+                                            onChange={(e) => handleRoleChange(user._id, e.target.value)}
+                                            disabled={user._id === currentUser.userId} // Prevent changing own role easily
+                                        >
+                                            <option value="patient">Patient</option>
+                                            <option value="doctor">Doctor</option>
+                                            <option value="nurse">Nurse</option>
+                                            <option value="admin">Admin</option>
+                                            <option value="superadmin">Super Admin</option>
+                                        </select>
+                                    </td>
+                                </tr>
+                            ))
+                        )}
+                    </tbody>
+                </table>
             </div>
-          </div>
         </div>
-      )}
-    </AdminLayout>
-  );
-}
+    );
+};
+
+export default ManageUsers;

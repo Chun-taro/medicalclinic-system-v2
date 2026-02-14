@@ -1,99 +1,96 @@
 import React, { useEffect, useState } from 'react';
-import PatientLayout from './PatientLayout';
-import './Style/Notifications.css';
+import api from '../../services/api';
+import './Notifications.css';
+import { Bell, Check, Calendar, Clock } from 'lucide-react';
+import { toast } from 'react-toastify';
 
+const Notifications = () => {
+    const [notifications, setNotifications] = useState([]);
+    const [loading, setLoading] = useState(true);
 
-export default function Notifications() {
-  const [notifications, setNotifications] = useState([]);
+    const fetchNotifications = async () => {
+        try {
+            setLoading(true);
+            const res = await api.get('/notifications');
+            setNotifications(res.data);
+        } catch (err) {
+            console.error('Error fetching notifications:', err);
+            toast.error('Failed to load notifications');
+        } finally {
+            setLoading(false);
+        }
+    };
 
-  const fetchNotifications = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      const res = await fetch('http://localhost:5000/api/notifications', {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const data = await res.json();
-      if (res.ok) setNotifications(data);
-    } catch (err) {
-      console.error('Error fetching notifications:', err);
-    }
-  };
+    useEffect(() => {
+        fetchNotifications();
+    }, []);
 
-  const markAsRead = async (id) => {
-    try {
-      const token = localStorage.getItem('token');
-      await fetch(`http://localhost:5000/api/notifications/${id}/read`, {
-        method: 'PUT',
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      fetchNotifications();
-    } catch (err) {
-      console.error('Error marking as read:', err);
-    }
-  };
+    const markAsRead = async (id) => {
+        try {
+            await api.put(`/notifications/${id}/read`);
+            setNotifications(notifications.map(n =>
+                n._id === id ? { ...n, read: true } : n
+            ));
+            toast.success('Marked as read');
+        } catch (err) {
+            console.error('Error marking as read:', err);
+            toast.error('Failed to mark as read');
+        }
+    };
 
-  const syncToCalendar = async (id) => {
-    try {
-      const token = localStorage.getItem('token');
-      const res = await fetch(`http://localhost:5000/api/calendar/sync-notification/${id}`, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      const data = await res.json();
-      if (res.ok) {
-        alert('Notification synced to Google Calendar!');
-        fetchNotifications(); // Refresh to show updated read status
-      } else {
-        alert(`Error: ${data.error}`);
-      }
-    } catch (err) {
-      console.error('Error syncing to calendar:', err);
-      alert('Failed to sync to calendar');
-    }
-  };
+    const syncToCalendar = async (id) => {
+        try {
+            const res = await api.post(`/calendar/sync-notification/${id}`);
+            toast.success('Synced to Google Calendar!');
+        } catch (err) {
+            console.error('Error syncing to calendar:', err);
+            toast.error(err.response?.data?.error || 'Failed to sync to calendar');
+        }
+    };
 
-  useEffect(() => {
-    fetchNotifications();
-  }, []);
+    if (loading) return <div className="loading-spinner-container"><div className="loading-spinner"></div></div>;
 
-  return (
-    <PatientLayout>
-      <div className="notifications-page">
-        <h2 className="notifications-title">Notifications</h2>
-        {notifications.length === 0 ? (
-          <p className="notifications-empty">You have no notifications.</p>
-        ) : (
-          <ul className="notifications-list">
-            {notifications.map((n) => (
-              <li
-                key={n._id}
-                className={`notification-item ${n.read ? 'read' : 'unread'}`}
-              >
-                <div className="notification-message">
-                  <strong>{n.status.toUpperCase()}</strong>: {n.message}
+    return (
+        <div className="notifications-page">
+            <div className="notifications-header">
+                <h1><Bell size={28} className="inline-icon" /> Notifications</h1>
+                <p>Stay updated with your appointments and clinic alerts.</p>
+            </div>
+
+            {notifications.length === 0 ? (
+                <div className="empty-notifications">
+                    <Bell size={48} style={{ opacity: 0.2, marginBottom: '1rem' }} />
+                    <p>You have no notifications at the moment.</p>
                 </div>
-                <div className="notification-timestamp">
-                  {new Date(n.timestamp).toLocaleString()}
+            ) : (
+                <div className="notifications-list">
+                    {notifications.map((n) => (
+                        <div key={n._id} className={`notification-card ${n.read ? 'read' : 'unread'}`}>
+                            <div className="notif-content">
+                                <div className="notif-message">
+                                    <span className="notif-status-badge">{n.status}</span> {n.message}
+                                </div>
+                                <div className="notif-meta">
+                                    <Clock size={14} />
+                                    <span>{new Date(n.timestamp).toLocaleString()}</span>
+                                </div>
+                            </div>
+                            <div className="notif-actions">
+                                {!n.read && (
+                                    <button className="btn-secondary btn-mark-read" onClick={() => markAsRead(n._id)}>
+                                        <Check size={16} /> Mark Read
+                                    </button>
+                                )}
+                                <button className="btn-primary btn-sync-calendar" onClick={() => syncToCalendar(n._id)}>
+                                    <Calendar size={16} /> Sync to Google
+                                </button>
+                            </div>
+                        </div>
+                    ))}
                 </div>
-                {!n.read && (
-                  <button
-                    className="mark-read-btn"
-                    onClick={() => markAsRead(n._id)}
-                  >
-                    Mark as Read
-                  </button>
-                )}
-                <button
-                  className="sync-calendar-btn"
-                  onClick={() => syncToCalendar(n._id)}
-                >
-                  Sync to Calendar
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
-    </PatientLayout>
-  );
-}
+            )}
+        </div>
+    );
+};
+
+export default Notifications;

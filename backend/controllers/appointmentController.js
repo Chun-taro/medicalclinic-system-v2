@@ -24,12 +24,13 @@ const bookAppointment = async (req, res) => {
     }
 
     const appointment = new Appointment({
-  patientId: req.user.userId,
-  appointmentDate,
-  purpose,
-  reasonForVisit: req.body.reasonForVisit || purpose,
-  typeOfVisit: req.body.typeOfVisit || 'scheduled'
-});
+      patientId: req.user.userId,
+      appointmentDate,
+      purpose,
+      additionalNotes: req.body.additionalNotes,
+      reasonForVisit: req.body.reasonForVisit || purpose,
+      typeOfVisit: req.body.typeOfVisit || 'scheduled'
+    });
 
     await appointment.save();
 
@@ -120,7 +121,7 @@ const getAllAppointments = async (req, res) => {
 
     const appointments = await Appointment.find()
       .populate('patientId', 'firstName lastName email contactNumber')
-      .select('appointmentDate status purpose typeOfVisit patientId version')
+      .select('appointmentDate status purpose typeOfVisit patientId version additionalNotes')
       .sort({ appointmentDate: -1 })
       .skip(page * limit)
       .limit(limit)
@@ -375,7 +376,7 @@ const approveAppointment = async (req, res) => {
       return res.json({ message: 'Appointment approved and notification sent', appointment: updated });
     } catch (err) {
       // Abort and decide whether to retry
-      try { await session.abortTransaction(); } catch (e) {}
+      try { await session.abortTransaction(); } catch (e) { }
       session.endSession();
 
       const isTransient =

@@ -36,6 +36,7 @@ const appointmentSchema = new mongoose.Schema({
   address: String,
   purpose: String,
   appointmentDate: Date,
+  additionalNotes: String,
 
   //  Clinical and administrative fields
   date: Date,

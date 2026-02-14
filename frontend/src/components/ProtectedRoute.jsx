@@ -1,27 +1,38 @@
-import { Navigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 const ProtectedRoute = ({ children, requiredRole }) => {
-  const token = localStorage.getItem('token');
-  const role = localStorage.getItem('role');
+    const { role, loading } = useAuth();
+    const location = useLocation();
 
-  // Check if token exists and is not empty
-  if (!token || token.trim() === '') {
-    console.log('No token found, redirecting to login');
-    return <Navigate to="/" replace />;
-  }
-
-  // Check if role exists and matches required role
-  // Allow superadmin, doctor, nurse to access admin routes
-  if (requiredRole && (!role || (role !== requiredRole && !(role === 'superadmin' && requiredRole === 'admin') && !(role === 'doctor' && requiredRole === 'admin') && !(role === 'nurse' && requiredRole === 'admin')))) {
-    console.log(`Role mismatch: expected ${requiredRole}, got ${role}`);
-    // Redirect doctors and nurses to admin dashboard if they try to access patient routes
-    if ((role === 'doctor' || role === 'nurse') && requiredRole === 'patient') {
-      return <Navigate to="/admin-dashboard" replace />;
+    if (loading) {
+        return <div className="loading-spinner"></div>; // Or a proper loading component
     }
-    return <Navigate to="/unauthorized" replace />;
-  }
 
-  return children;
+    if (!role) {
+        return <Navigate to="/" state={{ from: location }} replace />;
+    }
+
+    // Role hierarchy or specific checks
+    if (requiredRole && role !== requiredRole) {
+        // Basic hierarchy logic from old code
+        const isSuperAdmin = role === 'superadmin';
+        const isAdmin = role === 'admin';
+
+        // Example: Superadmin can access admin routes
+        if (requiredRole === 'admin' && isSuperAdmin) {
+            return children;
+        }
+
+        // Redirect logic from old ProtectedRoute.js
+        if ((role === 'doctor' || role === 'nurse') && requiredRole === 'patient') {
+            return <Navigate to="/admin-dashboard" replace />;
+        }
+
+        return <Navigate to="/unauthorized" replace />;
+    }
+
+    return children;
 };
 
 export default ProtectedRoute;

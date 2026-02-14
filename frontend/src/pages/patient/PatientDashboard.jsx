@@ -1,129 +1,139 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
-import PatientLayout from './PatientLayout';
-import PatientCalendar from './PatientCalendar';
-import './Style/AppointmentTable.css';
-import './Style/PatientCalendar.css';
+import api from '../../services/api';
+import { useAuth } from '../../context/AuthContext';
+import PatientCalendar from '../../components/feature/PatientCalendar';
+import { Calendar, Clock, MapPin, AlertCircle } from 'lucide-react';
+import './PatientDashboard.css';
 
-export default function PatientDashboard() {
-  const [appointments, setAppointments] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const navigate = useNavigate();
+const PatientDashboard = () => {
+    const [appointments, setAppointments] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState('');
+    const { user, loading: authLoading } = useAuth();
+    const navigate = useNavigate();
 
-  useEffect(() => {
-    const fetchData = async () => {
-      const userId = localStorage.getItem('userId');
-      const token = localStorage.getItem('token');
-      const role = localStorage.getItem('role');
+    useEffect(() => {
+        const fetchAppointments = async () => {
+            if (authLoading) return; // Wait for auth check
 
-      if (!userId || !token) {
-        setError('Missing user credentials. Please log in again.');
-        setLoading(false);
-        return;
-      }
+            const userId = user?._id || localStorage.getItem('userId');
 
-      if (role !== 'patient' && role !== 'doctor' && role !== 'nurse') {
-        console.log('Role check failed:', { role, expected: 'patient' });
-        navigate('/unauthorized');
-        return;
-      }
+            if (!userId) {
+                // If still no user ID, we might need to wait or it's an error
+                // But let's not error out immediately, maybe just wait
+                return;
+            }
 
-      try {
-        const res = await axios.get(`http://localhost:5000/api/appointments/patient/${userId}`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        setAppointments(res.data);
-      } catch (err) {
-        console.error('Error fetching appointments:', err.response?.data || err.message);
-        setError(err.response?.data?.error || 'Failed to load appointments.');
-      } finally {
-        setLoading(false);
-      }
-    };
+            try {
+                const res = await api.get(`/appointments/patient/${userId}`);
+                setAppointments(res.data);
+            } catch (err) {
+                console.error('Error fetching appointments:', err);
+                // Don't show error if it's just a momentary auth loading issue
+                if (userId) setError('Failed to load appointments.');
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchAppointments();
+    }, [user, authLoading]);
 
-    fetchData();
-  }, [navigate]);
+    const upcomingAppointments = appointments
+        .filter(a => new Date(a.appointmentDate) > new Date() && a.status !== 'cancelled' && a.status !== 'completed')
+        .sort((a, b) => new Date(a.appointmentDate) - new Date(b.appointmentDate))
+        .slice(0, 3); // Show top 3
 
+    return (
+        <div className="dashboard-container">
+            <div className="dashboard-header">
+                <h1>Welcome back, {user?.firstName}!</h1>
+                <p>Manage your health journey with ease.</p>
+            </div>
 
+            <div className="dashboard-grid">
+                {/* Left Col: Calendar & Quick Stats */}
+                <div className="dashboard-main">
+                    <section className="dashboard-section">
+                        <div className="section-header">
+                            <h2>My Calendar</h2>
+                        </div>
+                        <PatientCalendar appointments={appointments} />
+                    </section>
+                </div>
 
-  return (
-    <PatientLayout>
-      <style>
-        {`
-          .dashboard-layout {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 24px;
-          }
-          .dashboard-layout > .dashboard-section {
-            flex: 1 1 450px;
-          }
-        `}
-      </style>
-      <div className="dashboard-content">
-        <h2>Dashboard</h2>
-        <p>Welcome to your patient dashboard. Below are your appointments and upcoming calendar events:</p>
+                {/* Right Col: Upcoming Appointments */}
+                <div className="dashboard-sidebar">
+                    <section className="dashboard-section">
+                        <div className="section-header">
+                            <h2>Upcoming Appointments</h2>
+                            <button
+                                className="btn-link"
+                                onClick={() => navigate('/patient-appointments')}
+                            >
+                                View All
+                            </button>
+                        </div>
 
-        <div className="dashboard-layout">
-          {/* Calendar Section */}
-          <div className="dashboard-section">
-            <h3>My Calendar</h3>
-            {loading ? (
-              <p>Loading appointments...</p>
-            ) : error ? (
-              <p style={{ color: 'red' }}>{error}</p>
-            ) : (
-              <PatientCalendar appointments={appointments} />
-            )}
-          </div>
+                        {loading ? (
+                            <div className="loading-spinner"></div>
+                        ) : error ? (
+                            <p className="error-text">{error}</p>
+                        ) : upcomingAppointments.length === 0 ? (
+                            <div className="empty-state">
+                                <Calendar size={48} className="text-muted" />
+                                <p>No upcoming appointments.</p>
+                                <button
+                                    className="btn-primary"
+                                    style={{ marginTop: '1rem' }}
+                                    onClick={() => navigate('/patient-book')}
+                                >
+                                    Book Now
+                                </button>
+                            </div>
+                        ) : (
+                            <div className="appointment-list">
+                                {upcomingAppointments.map(apt => (
+                                    <div key={apt._id} className="appointment-card-mini">
+                                        <div className="apt-date-box">
+                                            <span className="apt-month">
+                                                {new Date(apt.appointmentDate).toLocaleString('default', { month: 'short' })}
+                                            </span>
+                                            <span className="apt-day">
+                                                {new Date(apt.appointmentDate).getDate()}
+                                            </span>
+                                        </div>
+                                        <div className="apt-details">
+                                            <h4>{apt.purpose || 'General Checkup'}</h4>
+                                            <div className="apt-meta">
+                                                <Clock size={14} />
+                                                <span>
+                                                    {new Date(apt.appointmentDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                </span>
+                                            </div>
+                                            <div className="apt-status badge-pending">
+                                                {apt.status}
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </section>
 
-          {/* Appointments Section */}
-          <div className="dashboard-section">
-            <h3>My Appointments</h3>
-            {loading ? (
-              <p>Loading appointments...</p>
-            ) : error ? (
-              <p style={{ color: 'red' }}>{error}</p>
-            ) : appointments.length === 0 ? (
-              <p>No appointments found.</p>
-            ) : (
-              <div className="table-container">
-                <table className="appointment-table">
-                  <thead>
-                    <tr>
-                      <th>Status</th>
-                      <th>Date</th>
-                      <th>Reason</th>
-                      <th>Reschedule Reason</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {appointments.slice(0, 5).map((apt) => (
-                      <tr key={apt._id}>
-                        <td data-label="Status">{apt.status}</td>
-                        <td data-label="Date">{new Date(apt.appointmentDate).toLocaleDateString()}</td>
-                        <td data-label="Reason">{apt.reasonForVisit || apt.purpose || '—'}</td>
-                        <td data-label="Reschedule Reason">{apt.rescheduleReason || '—'}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-                {appointments.length > 5 && (
-                  <button
-                    className="view-more-btn"
-                    onClick={() => navigate('/patient-appointments')}
-                  >
-                    View All Appointments
-                  </button>
-                )}
-              </div>
-            )}
-          </div>
-
+                    <section className="dashboard-section info-card">
+                        <div className="info-icon">
+                            <AlertCircle size={24} />
+                        </div>
+                        <div className="info-content">
+                            <h3>Need Help?</h3>
+                            <p>Contact the medical clinic support for urgent inquiries.</p>
+                        </div>
+                    </section>
+                </div>
+            </div>
         </div>
-      </div>
-    </PatientLayout>
-  );
-}
+    );
+};
+
+export default PatientDashboard;

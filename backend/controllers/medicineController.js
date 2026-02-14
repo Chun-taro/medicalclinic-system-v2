@@ -84,7 +84,12 @@ const createMedicine = async (req, res) => {
 const dispenseCapsules = async (req, res) => {
   try {
     const { id } = req.params;
-    const { quantity, appointmentId } = req.body;
+    let { quantity, appointmentId } = req.body;
+    quantity = parseInt(quantity);
+
+    if (isNaN(quantity) || quantity <= 0) {
+      return res.status(400).json({ error: 'Invalid quantity' });
+    }
 
     // Fetch medicine to check stock
     const med = await Medicine.findById(id);
@@ -266,7 +271,7 @@ const getDispenseHistory = async (req, res) => {
   try {
     const med = await Medicine.findById(req.params.id)
       .populate('dispenseHistory.appointmentId', 'firstName lastName appointmentDate')
-      .populate('dispenseHistory.dispensedBy', 'name');
+      .populate('dispenseHistory.dispensedBy', 'firstName lastName');
 
     if (!med) return res.status(404).json({ error: 'Medicine not found' });
 
@@ -282,7 +287,7 @@ const getAllDispenseHistory = async (req, res) => {
   try {
     const medicines = await Medicine.find({}, 'name dispenseHistory')
       .populate('dispenseHistory.appointmentId', 'firstName lastName appointmentDate')
-      .populate('dispenseHistory.dispensedBy', 'name');
+      .populate('dispenseHistory.dispensedBy', 'firstName lastName');
 
     const allHistory = [];
 
@@ -292,14 +297,18 @@ const getAllDispenseHistory = async (req, res) => {
           record.source === 'consultation'
             ? 'consultation dispence'
             : record.source === 'manual'
-            ? 'manual dispence'
-            : 'Unknown';
+              ? 'manual dispence'
+              : 'Unknown';
+
+        const dispensedByName = record.dispensedBy
+          ? `${record.dispensedBy.firstName} ${record.dispensedBy.lastName}`
+          : 'Unknown';
 
         allHistory.push({
           medicineName: med.name,
           quantity: record.quantity,
           dispensedAt: record.dispensedAt,
-          dispensedBy: record.dispensedBy,
+          dispensedBy: dispensedByName,
           appointmentId: record.appointmentId,
           source: sourceLabel
         });
@@ -318,15 +327,13 @@ const generateDispenseHistoryPDF = async (req, res) => {
   try {
     const { startDate, endDate, medicineName } = req.query;
 
-    if (!startDate && !endDate && !medicineName) {
-      return res.status(400).json({
-        error: 'Please apply at least one filter (start date, end date, or medicine name) to generate the dispense history report.'
-      });
-    }
+
+
+    // Optional: Defaults or validation if needed. Removed mandatory filter check to allow "Print All".
 
     const medicines = await Medicine.find({}, 'name dispenseHistory')
       .populate('dispenseHistory.appointmentId', 'firstName lastName appointmentDate')
-      .populate('dispenseHistory.dispensedBy', 'name');
+      .populate('dispenseHistory.dispensedBy', 'firstName lastName');
 
     const allHistory = [];
     medicines.forEach(med => {
@@ -347,14 +354,18 @@ const generateDispenseHistoryPDF = async (req, res) => {
           record.source === 'consultation'
             ? 'consultation dispence'
             : record.source === 'manual'
-            ? 'manual dispence'
-            : 'Unknown';
+              ? 'manual dispence'
+              : 'Unknown';
+
+        const dispensedByName = record.dispensedBy
+          ? `${record.dispensedBy.firstName} ${record.dispensedBy.lastName}`
+          : 'Unknown';
 
         allHistory.push({
           medicineName: med.name,
           quantity: record.quantity,
           dispensedAt: record.dispensedAt,
-          dispensedBy: record.dispensedBy ? record.dispensedBy.name : 'Unknown',
+          dispensedBy: dispensedByName,
           appointmentId: record.appointmentId,
           source: sourceLabel
         });

@@ -1,0 +1,195 @@
+.appointments-page {
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.page-header {
+    margin-bottom: 2rem;
+}
+
+.page-header h1 {
+    font-size: 1.75rem;
+    color: var(--text-main);
+}
+
+.page-header p {
+    color: var(--text-secondary);
+}
+
+.appointments-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.appointment-item {
+    background: white;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+    border: 1px solid var(--border);
+    transition: all 0.2s;
+}
+
+.appointment-item:hover {
+    box-shadow: var(--shadow-md);
+}
+
+.apt-summary {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.25rem;
+    cursor: pointer;
+    background-color: white;
+}
+
+.apt-main-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+@media (min-width: 640px) {
+    .apt-main-info {
+        flex-direction: row;
+        align-items: center;
+        gap: 2rem;
+    }
+}
+
+.apt-date {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.apt-purpose {
+    font-weight: 600;
+    color: var(--text-main);
+    font-size: 1.1rem;
+}
+
+.apt-status-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.status-badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-transform: capitalize;
+}
+
+.status-pending {
+    background-color: #fff7ed;
+    color: #c2410c;
+}
+
+.status-approved {
+    background-color: #f0fdf4;
+    color: #15803d;
+}
+
+.status-completed {
+    background-color: #eff6ff;
+    color: #1d4ed8;
+}
+
+.status-cancelled {
+    background-color: #fef2f2;
+    color: #b91c1c;
+}
+
+.apt-details-panel {
+    padding: 1.5rem;
+    border-top: 1px solid var(--border);
+    background-color: var(--bg-body);
+    animation: slideDown 0.2s ease;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.detail-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+@media (min-width: 640px) {
+    .detail-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+.detail-item label {
+    display: block;
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    margin-bottom: 0.25rem;
+}
+
+.detail-item p {
+    color: var(--text-main);
+    font-weight: 500;
+}
+
+.detail-item.full-width {
+    grid-column: 1 / -1;
+}
+
+.apt-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+    border-top: 1px solid rgba(0, 0, 0, 0.05);
+    padding-top: 1rem;
+}
+
+.btn-secondary {
+    background: white;
+    border: 1px solid var(--border);
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius-md);
+    font-weight: 600;
+    color: var(--text-main);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-secondary:hover {
+    background: var(--bg-body);
+    border-color: var(--primary);
+    color: var(--primary);
+}
+
+.btn-danger-outline {
+    background: transparent;
+    border: 1px solid var(--error);
+    color: var(--error);
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius-md);
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-danger-outline:hover {
+    background: #fef2f2;
+}
