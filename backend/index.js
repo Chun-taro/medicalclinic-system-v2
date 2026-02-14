@@ -148,6 +148,7 @@ io.on('connection', (socket) => {
 const frontendPath = path.join(__dirname, '../frontend/dist');
 app.use(express.static(frontendPath));
 
+// Final deployment heartbeat: using regex literal for Express 5 compatibility
 // Handle React routing, return all requests to React app
 app.get(/.*/, (req, res) => {
   if (!req.path.startsWith('/api')) {
