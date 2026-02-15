@@ -8,10 +8,13 @@ const OAuthSuccess = () => {
     const { login } = useAuth();
 
     useEffect(() => {
+        console.log('Current URL:', window.location.href);
         const params = new URLSearchParams(window.location.search);
         const token = params.get('token');
         const role = params.get('role');
         const userId = params.get('userId');
+
+        console.log('Extracted Params:', { token: !!token, role, userId });
 
         if (token && role) {
             // We can fetch user details here or let AuthContext handle it

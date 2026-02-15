@@ -25,7 +25,8 @@ const AllAppointments = () => {
     const [showNotesModal, setShowNotesModal] = useState(false);
     const [selectedNotes, setSelectedNotes] = useState('');
 
-    // Lock State
+    // Loading States
+    const [rowLoading, setRowLoading] = useState(null);
     const [lockConflict, setLockConflict] = useState(null);
 
     useEffect(() => {
@@ -43,15 +44,15 @@ const AllAppointments = () => {
         };
     }, [editingApt]);
 
-    const fetchAppointments = async () => {
+    const fetchAppointments = async (silent = false) => {
         try {
-            setLoading(true);
+            if (!silent) setLoading(true);
             const res = await api.get('/appointments');
             setAppointments(res.data);
         } catch (err) {
             toast.error('Failed to load appointments');
         } finally {
-            setLoading(false);
+            if (!silent) setLoading(false);
         }
     };
 
@@ -94,11 +95,14 @@ const AllAppointments = () => {
 
     const handleApprove = async (id, version) => {
         try {
+            setRowLoading(id);
             await api.patch(`/appointments/${id}/approve`, { version });
-            toast.success('Appointment approved');
-            fetchAppointments();
+            toast.success('Appointment approved successfully');
+            await fetchAppointments(true); // Silent refresh
         } catch (err) {
-            toast.error('Failed to approve appointment');
+            toast.error(err.response?.data?.error || 'Failed to approve appointment');
+        } finally {
+            setRowLoading(null);
         }
     };
 
@@ -150,21 +154,22 @@ const AllAppointments = () => {
     const handleEditSubmit = async (e) => {
         e.preventDefault();
         try {
-            const newDateTime = new Date(`${editForm.date}T${editForm.time || '00:00'}`); // Combine date time if logic supports
-
+            setRowLoading(editingApt._id);
             await api.patch(`/appointments/${editingApt._id}`, {
-                appointmentDate: editForm.date, // Backend expects simple date string or ISO? Assuming date string from old code
+                appointmentDate: editForm.date,
                 purpose: editForm.purpose,
                 rescheduleReason: editForm.rescheduleReason
             });
 
             await unlockAppointment(editingApt._id);
-            toast.success('Appointment updated');
+            toast.success('Appointment updated successfully');
             setShowEditModal(false);
             setEditingApt(null);
-            fetchAppointments();
+            await fetchAppointments(true); // Silent refresh
         } catch (err) {
             toast.error('Failed to update appointment');
+        } finally {
+            setRowLoading(null);
         }
     };
 
@@ -266,17 +271,23 @@ const AllAppointments = () => {
                                     </td>
                                     <td>
                                         <div className="action-buttons">
-                                            {apt.status === 'pending' && (
-                                                <button className="btn-icon success" onClick={() => handleApprove(apt._id, apt.version)} title="Approve">
-                                                    <CheckCircle size={18} />
-                                                </button>
+                                            {rowLoading === apt._id ? (
+                                                <div className="button-spinner small"></div>
+                                            ) : (
+                                                <>
+                                                    {apt.status === 'pending' && (
+                                                        <button className="btn-icon success" onClick={() => handleApprove(apt._id, apt.version)} title="Approve">
+                                                            <CheckCircle size={18} />
+                                                        </button>
+                                                    )}
+                                                    <button className="btn-icon primary" onClick={() => openEditModal(apt)} title="Edit">
+                                                        <Edit size={18} />
+                                                    </button>
+                                                    <button className="btn-icon danger" onClick={() => handleDelete(apt._id)} title="Delete">
+                                                        <Trash2 size={18} />
+                                                    </button>
+                                                </>
                                             )}
-                                            <button className="btn-icon primary" onClick={() => openEditModal(apt)} title="Edit">
-                                                <Edit size={18} />
-                                            </button>
-                                            <button className="btn-icon danger" onClick={() => handleDelete(apt._id)} title="Delete">
-                                                <Trash2 size={18} />
-                                            </button>
                                         </div>
                                     </td>
                                 </tr>

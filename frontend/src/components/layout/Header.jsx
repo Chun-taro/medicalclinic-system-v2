@@ -153,7 +153,7 @@ const Header = ({ toggleSidebar }) => {
 
                     {showProfileMenu && (
                         <div className="dropdown-menu profile-dropdown">
-                            <button onClick={() => navigate(`/${role}-profile`)}>Profile</button>
+                            <button onClick={() => navigate(`/${role?.toLowerCase()}-profile`)}>Profile</button>
                             <button onClick={logout} className="text-danger">Logout</button>
                         </div>
                     )}

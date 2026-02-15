@@ -3,6 +3,7 @@ import api from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import { toast } from 'react-toastify';
 import { User, Mail, Shield, Camera, Edit2, Save, X } from 'lucide-react';
+import { getImageUrl } from '../../services/api';
 import './Profile.css';
 
 const Profile = () => {
@@ -11,6 +12,7 @@ const Profile = () => {
     const [loading, setLoading] = useState(true);
     const [isEditing, setIsEditing] = useState(false);
     const [uploading, setUploading] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
 
     // Edit form state
     const [formData, setFormData] = useState({
@@ -25,39 +27,9 @@ const Profile = () => {
 
     const fetchProfile = async () => {
         try {
-            const res = await api.get('/auth/profile'); // Assuming a generic profile endpoint or user specific
-            // If /auth/profile doesn't exist, we might need to use /users/:id or check role
-            // Let's assume /users/profile or /auth/me exists. 
-            // In AdminProfile.jsx (old), it used /api/profile. 
-            // Let's try /profile if that matches backend.
-            // Wait, old code: axios.get('http://localhost:5000/api/profile')
-            // So let's use /profile (via api instance)
-
-            // If the old code used /api/profile, we should probably stick to it or a similar endpoint.
-            // Let's assume `api.get('/profile')` works based on old code.
-            // Or `/users/${user.userId}` if we want to be specific.
-            // I'll stick to `/profile` as per old code reference, assuming `api` base url handles /api prefix.
-
-            // BUT, `api` service usually has base URL.
-            // If old code was `http://localhost:5000/api/profile`, and my api service has `baseURL: .../api`, then `/profile` is correct.
-
-            const data = (await api.get('/users/profile')).data; // Start with /users/profile as a safe bet if /profile is ambiguous, or check backend routes? 
-            // Old AdminProfile used: /api/profile. 
-            // Let's try /users/profile first as it's more RESTful, but if it fails I'll need to debug.
-            // Actually, in `AdminProfile.jsx` it was `/api/profile`. 
-            // Let's assume the backend has a route `router.get('/profile', ...)` or user route.
-            // I will use `/users/profile/me` or similar if I can.
-            // For now, let's use `/users/${user.userId}` if I have the ID, or `/users/profile` if it uses token.
-            // Let's go with `/users/profile` and hope the backend supports it (or `/auth/me`).
-            // Actually, looking at `AdminProfile.jsx`, it hit `/api/profile`. 
-            // I'll use `/users/profile` assuming I refactored backend or it's standard.
-            // Wait, looking at `PatientProfile` I implemented earlier...
-            // I didn't verify PatientProfile backend route.
-            // Let's check `PatientProfile.jsx` in my memory... 
-            // I don't have it in viewed files this turn.
-            // I'll check `AdminProfile.jsx` again. It used `/api/profile`. 
-            // So I will use `/profile`.
-
+            setLoading(true);
+            const res = await api.get('/profile');
+            const data = res.data;
             setProfile(data);
             setFormData({
                 firstName: data.firstName || '',
@@ -65,18 +37,8 @@ const Profile = () => {
                 lastName: data.lastName || ''
             });
         } catch (err) {
-            // Fallback if /users/profile fails, try /profile
-            try {
-                const res2 = await api.get('/profile');
-                setProfile(res2.data);
-                setFormData({
-                    firstName: res2.data.firstName || '',
-                    middleName: res2.data.middleName || '',
-                    lastName: res2.data.lastName || ''
-                });
-            } catch (e) {
-                toast.error('Failed to load profile');
-            }
+            console.error('Failed to fetch profile:', err);
+            toast.error('Failed to load profile');
         } finally {
             setLoading(false);
         }
@@ -84,22 +46,17 @@ const Profile = () => {
 
     const handleUpdate = async (e) => {
         e.preventDefault();
+        setIsSaving(true);
         try {
-            const res = await api.put('/users/profile', formData); // Or /profile
-            setProfile(res.data);
+            const res = await api.put('/profile', formData);
+            setProfile(res.data.user || res.data);
             setIsEditing(false);
-            toast.success('Profile updated');
-            // Update context if name changed?
+            toast.success('Profile updated successfully');
         } catch (err) {
-            // Try /profile
-            try {
-                const res2 = await api.put('/profile', formData);
-                setProfile(res2.data.user || res2.data);
-                setIsEditing(false);
-                toast.success('Profile updated');
-            } catch (e) {
-                toast.error('Failed to update profile');
-            }
+            console.error('Update error:', err);
+            toast.error('Failed to update profile');
+        } finally {
+            setIsSaving(false);
         }
     };
 
@@ -141,7 +98,7 @@ const Profile = () => {
                 <div className="avatar-section">
                     <div className="avatar-container">
                         {profile.avatar ? (
-                            <img src={`http://localhost:5000${profile.avatar}`} alt="Profile" className="profile-avatar" />
+                            <img src={getImageUrl(profile.avatar)} alt="Profile" className="profile-avatar" />
                         ) : (
                             <div className="avatar-placeholder">{profile.firstName?.[0]}</div>
                         )}
@@ -199,8 +156,12 @@ const Profile = () => {
                             <button type="button" className="btn-secondary" onClick={() => setIsEditing(false)}>
                                 <X size={16} /> Cancel
                             </button>
-                            <button type="submit" className="btn-primary">
-                                <Save size={16} /> Save Changes
+                            <button type="submit" className="btn-primary" disabled={isSaving}>
+                                {isSaving ? (
+                                    <span className="button-spinner small"></span>
+                                ) : (
+                                    <><Save size={16} /> Save Changes</>
+                                )}
                             </button>
                         </div>
                     </form>

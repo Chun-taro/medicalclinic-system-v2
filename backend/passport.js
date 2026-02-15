@@ -5,13 +5,15 @@ const User = require('./models/User');
 passport.use(
   new GoogleStrategy(
     {
-      clientID: process.env.GOOGLE_CLIENT_ID,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-      callbackURL: process.env.GOOGLE_REDIRECT_URI || '/api/auth/google/callback',
+      clientID: (process.env.GOOGLE_CLIENT_ID || '').trim(),
+      clientSecret: (process.env.GOOGLE_CLIENT_SECRET || '').trim(),
+      callbackURL: (process.env.GOOGLE_REDIRECT_URI || '/api/auth/google/callback').trim(),
       scope: ['profile', 'email', 'https://www.googleapis.com/auth/calendar'],
       proxy: true
     },
     async (accessToken, refreshToken, profile, done) => {
+      console.log('Google OAuth callback triggered for:', profile.emails?.[0]?.value);
+      console.log('Using redirect URI:', process.env.GOOGLE_REDIRECT_URI || '/api/auth/google/callback');
       try {
         const googleId = profile.id;
         const email = profile.emails?.[0]?.value?.toLowerCase();

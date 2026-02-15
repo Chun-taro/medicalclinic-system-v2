@@ -235,145 +235,94 @@ const approveAppointment = async (req, res) => {
         return res.status(404).json({ error: 'Appointment or patient not found' });
       }
 
-      const patient = updated.patientId;
-
-      // Log the activity
-      await logActivity(
-        req.user.userId,
-        req.user.name || `${req.user.firstName} ${req.user.lastName}`,
-        req.user.role,
-        'approve_appointment',
-        'appointment',
-        updated._id,
-        {
-          patientName: `${patient.firstName} ${patient.lastName}`,
-          appointmentDate: updated.appointmentDate
-        }
-      );
-
-      // In-app notification
-      await sendNotification({
-        userId: patient._id,
-        status: 'approved',
-        message: `Your appointment on ${updated.appointmentDate.toDateString()} has been approved.`,
-        recipientType: 'patient',
-        appointmentId: updated._id
-      });
-
-      // Email notification
-      if (patient.email) {
-        try {
-          await sendEmail({
-            to: patient.email,
-            subject: 'Your appointment has been approved',
-            html: `
-              <div style="font-family: Arial, sans-serif; padding: 20px;">
-                <h2 style="color: #2E86C1;">Appointment Approved</h2>
-                <p>Hi ${patient.firstName},</p>
-                <p>Your appointment scheduled for <strong>${updated.appointmentDate.toDateString()}</strong> has been <strong>approved</strong>.</p>
-                <p>Please arrive 10 minutes early and bring any necessary documents.</p>
-                <p style="margin-top: 20px;">Thank you,<br/>Clinic Team</p>
-              </div>
-            `
-          });
-        } catch (emailErr) {
-          console.error('Email send error:', emailErr.message);
-        }
-      }
-
-      // Create Google Calendar event in patient's calendar if they have connected Google
-      try {
-        const startDate = new Date(updated.appointmentDate);
-        const endDate = new Date(startDate.getTime() + (30 * 60 * 1000));
-
-        const event = {
-          summary: 'Clinic Appointment',
-          description: `Appointment for ${patient.firstName || ''} ${patient.lastName || ''} - ${updated.purpose || ''}`,
-          start: { dateTime: startDate.toISOString(), timeZone: 'Asia/Manila' },
-          end: { dateTime: endDate.toISOString(), timeZone: 'Asia/Manila' },
-          attendees: patient.email ? [{ email: patient.email }] : [],
-          reminders: { useDefault: true }
-        };
-
-        // Try to create the event as the patient (best UX)
-        if (patient.googleRefreshToken || patient.googleAccessToken) {
-          const oauth2Client = new google.auth.OAuth2(
-            process.env.GOOGLE_CLIENT_ID,
-            process.env.GOOGLE_CLIENT_SECRET,
-            process.env.GOOGLE_REDIRECT_URI
-          );
-
-          if (patient.googleRefreshToken) {
-            oauth2Client.setCredentials({ refresh_token: patient.googleRefreshToken });
-            try {
-              const access = await oauth2Client.getAccessToken();
-              if (access && access.token) {
-                oauth2Client.setCredentials({ access_token: access.token, refresh_token: patient.googleRefreshToken });
-              }
-            } catch (refreshErr) {
-              throw refreshErr;
-            }
-          } else {
-            oauth2Client.setCredentials({ access_token: patient.googleAccessToken });
-          }
-
-          const calendar = google.calendar({ version: 'v3', auth: oauth2Client });
-          const resp = await calendar.events.insert({ calendarId: 'primary', resource: event });
-          console.log('Google Calendar event created (patient):', resp.data.id);
-
-          // Store the Google Calendar event ID in the appointment (within transaction)
-          updated.googleCalendarEventId = resp.data.id;
-          await updated.save({ session });
-        } else {
-          throw new Error('No patient Google tokens');
-        }
-      } catch (patientErr) {
-        // Fallback: create event on clinic account and invite patient by email
-        try {
-          if (!patient.email) throw new Error('No patient email to invite');
-
-          const clinicOauth = new google.auth.OAuth2(
-            process.env.GOOGLE_CALENDAR_CLIENT_ID,
-            process.env.GOOGLE_CALENDAR_CLIENT_SECRET,
-            process.env.GOOGLE_CALENDAR_REDIRECT_URI
-          );
-
-          if (process.env.GOOGLE_CALENDAR_REFRESH_TOKEN) {
-            clinicOauth.setCredentials({ refresh_token: process.env.GOOGLE_CALENDAR_REFRESH_TOKEN });
-            const access = await clinicOauth.getAccessToken();
-            if (access && access.token) clinicOauth.setCredentials({ access_token: access.token, refresh_token: process.env.GOOGLE_CALENDAR_REFRESH_TOKEN });
-          } else if (process.env.GOOGLE_CALENDAR_ACCESS_TOKEN) {
-            clinicOauth.setCredentials({ access_token: process.env.GOOGLE_CALENDAR_ACCESS_TOKEN });
-          } else {
-            throw new Error('Clinic calendar credentials not configured');
-          }
-
-          const calendar = google.calendar({ version: 'v3', auth: clinicOauth });
-
-          const startDate = new Date(updated.appointmentDate);
-          const endDate = new Date(startDate.getTime() + (30 * 60 * 1000));
-
-          const inviteEvent = {
-            summary: 'Clinic Appointment',
-            description: `Appointment for ${patient.firstName || ''} ${patient.lastName || ''} - ${updated.purpose || ''}`,
-            start: { dateTime: startDate.toISOString(), timeZone: 'Asia/Manila' },
-            end: { dateTime: endDate.toISOString(), timeZone: 'Asia/Manila' },
-            attendees: [{ email: patient.email }],
-            reminders: { useDefault: true }
-          };
-
-          const resp = await calendar.events.insert({ calendarId: 'primary', resource: inviteEvent, sendUpdates: 'all' });
-          console.log('Google Calendar invite created (clinic):', resp.data.id);
-        } catch (clinicErr) {
-          console.error('Clinic calendar invite error:', clinicErr && clinicErr.message ? clinicErr.message : clinicErr);
-          console.error('Patient calendar error:', patientErr && patientErr.message ? patientErr.message : patientErr);
-        }
-      }
-
       await session.commitTransaction();
       session.endSession();
 
-      return res.json({ message: 'Appointment approved and notification sent', appointment: updated });
+      // Return fast to the user
+      res.json({ message: 'Appointment approved and processing notifications.', appointment: updated });
+
+      // Run side effects in parallel (non-blocking)
+      (async () => {
+        try {
+          // Log activity
+          await logActivity(
+            req.user.userId,
+            req.user.name || `${req.user.firstName} ${req.user.lastName}`,
+            req.user.role,
+            'approve_appointment',
+            'appointment',
+            updated._id,
+            {
+              patientName: `${patient.firstName} ${patient.lastName}`,
+              appointmentDate: updated.appointmentDate
+            }
+          );
+
+          // In-app notification
+          await sendNotification({
+            userId: patient._id,
+            status: 'approved',
+            message: `Your appointment on ${updated.appointmentDate.toDateString()} has been approved.`,
+            recipientType: 'patient',
+            appointmentId: updated._id
+          });
+
+          // Email notification
+          if (patient.email) {
+            sendEmail({
+              to: patient.email,
+              subject: 'Your appointment has been approved',
+              html: `<div style="font-family: Arial, sans-serif; padding: 20px;">
+                <h2 style="color: #2E86C1;">Appointment Approved</h2>
+                <p>Hi ${patient.firstName},</p>
+                <p>Your appointment scheduled for <strong>${updated.appointmentDate.toDateString()}</strong> has been <strong>approved</strong>.</p>
+                <p>Thank you,<br/>Clinic Team</p>
+              </div>`
+            }).catch(e => console.error('Email error:', e.message));
+          }
+
+          // Google Calendar
+          if (patient.googleRefreshToken || patient.googleAccessToken) {
+            const startDate = new Date(updated.appointmentDate);
+            const endDate = new Date(startDate.getTime() + (30 * 60 * 1000));
+            const event = {
+              summary: 'Clinic Appointment',
+              description: `Appointment for ${patient.firstName || ''} ${patient.lastName || ''} - ${updated.purpose || ''}`,
+              start: { dateTime: startDate.toISOString(), timeZone: 'Asia/Manila' },
+              end: { dateTime: endDate.toISOString(), timeZone: 'Asia/Manila' },
+              attendees: patient.email ? [{ email: patient.email }] : [],
+              reminders: { useDefault: true }
+            };
+
+            const oauth2Client = new google.auth.OAuth2(
+              process.env.GOOGLE_CLIENT_ID,
+              process.env.GOOGLE_CLIENT_SECRET,
+              process.env.GOOGLE_REDIRECT_URI
+            );
+
+            if (patient.googleRefreshToken) {
+              oauth2Client.setCredentials({ refresh_token: patient.googleRefreshToken });
+              try {
+                const access = await oauth2Client.getAccessToken();
+                if (access && access.token) oauth2Client.setCredentials({ access_token: access.token, refresh_token: patient.googleRefreshToken });
+              } catch (e) { }
+            } else {
+              oauth2Client.setCredentials({ access_token: patient.googleAccessToken });
+            }
+
+            const calendar = google.calendar({ version: 'v3', auth: oauth2Client });
+            const calResp = await calendar.events.insert({ calendarId: 'primary', resource: event });
+            console.log('Google Calendar event created:', calResp.data.id);
+
+            // Second, smaller update for event ID (non-blocking)
+            await Appointment.findByIdAndUpdate(updated._id, { googleCalendarEventId: calResp.data.id });
+          }
+        } catch (sideErr) {
+          console.error('Non-blocking side effect error:', sideErr.message);
+        }
+      })();
+
+      return;
     } catch (err) {
       // Abort and decide whether to retry
       try { await session.abortTransaction(); } catch (e) { }
@@ -705,82 +654,75 @@ const updateAppointment = async (req, res) => {
 
     await appointment.save();
 
-    // Log reschedule activity if appointment date changed
-    if (changes.includes('appointmentDate')) {
-      await logActivity(
-        req.user.userId,
-        req.user.name || `${req.user.firstName} ${req.user.lastName}`,
-        req.user.role,
-        'reschedule_appointment',
-        'appointment',
-        appointment._id,
-        {
-          patientName: `${appointment.patientId?.firstName || ''} ${appointment.patientId?.lastName || ''}`.trim(),
-          oldDate: appointment.appointmentDate,
-          newDate: req.body.appointmentDate
+    // Return fast to the user
+    res.json({ message: 'Appointment updated successfully', appointment });
+
+    // Run side effects in parallel (non-blocking)
+    (async () => {
+      try {
+        const isAdmin = req.user.role === 'admin';
+
+        // Log reschedule activity if appointment date changed
+        if (changes.includes('appointmentDate')) {
+          await logActivity(
+            req.user.userId,
+            req.user.name || `${req.user.firstName} ${req.user.lastName}`,
+            req.user.role,
+            'reschedule_appointment',
+            'appointment',
+            appointment._id,
+            {
+              patientName: `${appointment.patientId?.firstName || ''} ${appointment.patientId?.lastName || ''}`.trim(),
+              oldDate: appointment.appointmentDate, // This might be updated already, but logActivity will capture the current state
+              newDate: req.body.appointmentDate
+            }
+          );
         }
-      );
-    }
 
-    // Build notification message if something changed
-    if (changes.length > 0) {
-      let message = `Your appointment has been updated.`;
-      let emailDetails = '';
+        // Build notification message if something changed
+        if (changes.length > 0) {
+          let message = `Your appointment has been updated.`;
+          let emailDetails = '';
 
-      if (changes.includes('appointmentDate')) {
-        const dateStr = new Date(appointment.appointmentDate).toLocaleDateString();
-        message += ` New date: ${dateStr}.`;
-        emailDetails += `<p><strong>New Date:</strong> ${dateStr}</p>`;
-      }
-      if (changes.includes('purpose')) {
-        message += ` Purpose: ${appointment.purpose}.`;
-        emailDetails += `<p><strong>Purpose:</strong> ${appointment.purpose}</p>`;
-      }
-      if (changes.includes('typeOfVisit')) {
-        message += ` Type of visit: ${appointment.typeOfVisit}.`;
-        emailDetails += `<p><strong>Type of Visit:</strong> ${appointment.typeOfVisit}</p>`;
-      }
-      if (changes.includes('diagnosis')) {
-        message += ` Diagnosis: ${appointment.diagnosis}.`;
-        emailDetails += `<p><strong>Diagnosis:</strong> ${appointment.diagnosis}</p>`;
-      }
-      if (changes.includes('rescheduleReason')) {
-        message += ` Reason: ${appointment.rescheduleReason}.`;
-        emailDetails += `<p><strong>Reschedule Reason:</strong> ${appointment.rescheduleReason}</p>`;
-      }
+          if (changes.includes('appointmentDate')) {
+            const dateStr = new Date(appointment.appointmentDate).toLocaleDateString();
+            message += ` New date: ${dateStr}.`;
+            emailDetails += `<p><strong>New Date:</strong> ${dateStr}</p>`;
+          }
+          if (changes.includes('purpose')) {
+            message += ` Purpose: ${appointment.purpose}.`;
+            emailDetails += `<p><strong>Purpose:</strong> ${appointment.purpose}</p>`;
+          }
 
-      // In-app notification
-      await sendNotification({
-        userId: appointment.patientId._id,
-        status: 'updated',
-        message,
-        recipientType: 'patient'
-      });
+          // In-app notification
+          await sendNotification({
+            userId: appointment.patientId._id,
+            status: 'updated',
+            message,
+            recipientType: 'patient'
+          });
 
-      // Email notification (only if appointmentDate changed or admin triggered)
-      if (appointment.patientId.email && (changes.includes('appointmentDate') || isAdmin)) {
-        try {
-          await sendEmail({
-            to: appointment.patientId.email,
-            subject: 'Your appointment has been updated',
-            html: `
-              <div style="font-family: Arial, sans-serif; padding: 20px;">
+          // Email notification
+          if (appointment.patientId.email && (changes.includes('appointmentDate') || isAdmin)) {
+            sendEmail({
+              to: appointment.patientId.email,
+              subject: 'Your appointment has been updated',
+              html: `<div style="font-family: Arial, sans-serif; padding: 20px;">
                 <h2 style="color: #E67E22;">Appointment Updated</h2>
                 <p>Hi ${appointment.patientId.firstName},</p>
                 <p>Your appointment has been updated with the following changes:</p>
                 ${emailDetails}
-                <p>If you have any questions, feel free to contact us.</p>
-                <p style="margin-top: 20px;">Thank you,<br/>Clinic Team</p>
-              </div>
-            `
-          });
-        } catch (emailErr) {
-          console.error('Email send error:', emailErr.message);
+                <p>Thank you,<br/>Clinic Team</p>
+              </div>`
+            }).catch(e => console.error('Email update error:', e.message));
+          }
         }
+      } catch (err) {
+        console.error('Non-blocking update side effects error:', err.message);
       }
-    }
+    })();
 
-    res.json({ message: 'Appointment updated', appointment });
+    return;
   } catch (err) {
     console.error('Update error:', err.message);
     res.status(500).json({ error: 'Internal server error' });

@@ -58,7 +58,7 @@ router.get('/google/callback', (req, res, next) => {
 
     if (user?.isNewUser) {
       const { googleId, email, firstName, lastName } = user;
-      const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+      const frontendUrl = (process.env.FRONTEND_URL || 'http://localhost:5173').replace(/\/$/, '');
       return res.redirect(
         `${frontendUrl}/oauth/google-signup?googleId=${googleId}&email=${email}&firstName=${firstName}&lastName=${lastName}`
       );
@@ -74,7 +74,7 @@ router.get('/google/callback', (req, res, next) => {
           { expiresIn: '1d' }
         );
 
-        const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+        const frontendUrl = (process.env.FRONTEND_URL || 'http://localhost:5173').replace(/\/$/, '');
         const redirectUrl = new URL(`${frontendUrl}/oauth/success`);
         redirectUrl.searchParams.set('token', token);
         redirectUrl.searchParams.set('role', user.role);
@@ -84,7 +84,7 @@ router.get('/google/callback', (req, res, next) => {
         return res.redirect(redirectUrl.toString());
       } catch (tokenErr) {
         console.error('Token generation error:', tokenErr.message);
-        const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+        const frontendUrl = (process.env.FRONTEND_URL || 'http://localhost:5173').replace(/\/$/, '');
         return res.redirect(`${frontendUrl}/oauth/failure`);
       }
     });

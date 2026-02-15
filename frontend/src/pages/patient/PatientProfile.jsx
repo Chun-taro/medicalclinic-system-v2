@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import api from '../../services/api';
+import api, { getImageUrl } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import { toast } from 'react-toastify';
 import { User, Phone, MapPin, Calendar, Heart, Activity, FileText, Edit2, Camera, Save, X } from 'lucide-react';
@@ -11,6 +11,7 @@ const PatientProfile = () => {
     const [profile, setProfile] = useState({});
     const [loading, setLoading] = useState(true);
     const [isEditing, setIsEditing] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
     const [formData, setFormData] = useState({});
 
     // Fetch profile
@@ -84,16 +85,18 @@ const PatientProfile = () => {
     };
 
     const saveProfile = async () => {
+        setIsSaving(true);
         try {
             const res = await api.put('/profile', formData);
-            setProfile(res.data.user);
-            // setAuthUser(res.data.user); // Removed because setAuthUser is not available in AuthContext
-            setFormData(res.data.user); // Update formData with new version/data from backend
+            setProfile(res.data.user || res.data);
+            setFormData(res.data.user || res.data);
             setIsEditing(false);
             toast.success('Profile updated successfully');
         } catch (err) {
-            console.error(err);
+            console.error('Update error:', err);
             toast.error('Failed to update profile');
+        } finally {
+            setIsSaving(false);
         }
     };
 
@@ -106,7 +109,7 @@ const PatientProfile = () => {
                 <div className="profile-user-info">
                     <div className="avatar-wrapper">
                         <img
-                            src={profile.avatar ? `${import.meta.env.VITE_API_URL.replace('/api', '')}${profile.avatar}` : 'https://via.placeholder.com/150'}
+                            src={getImageUrl(profile.avatar) || 'https://via.placeholder.com/150'}
                             alt="Profile"
                             className="profile-avatar"
                         />
@@ -125,8 +128,12 @@ const PatientProfile = () => {
                                 <button className="btn-secondary" onClick={() => setIsEditing(false)}>
                                     <X size={16} /> Cancel
                                 </button>
-                                <button className="btn-primary" onClick={saveProfile}>
-                                    <Save size={16} /> Save Changes
+                                <button className="btn-primary" onClick={saveProfile} disabled={isSaving}>
+                                    {isSaving ? (
+                                        <span className="button-spinner small"></span>
+                                    ) : (
+                                        <><Save size={16} /> Save Changes</>
+                                    )}
                                 </button>
                             </>
                         ) : (
