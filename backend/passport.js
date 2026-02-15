@@ -9,6 +9,7 @@ passport.use(
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
       callbackURL: process.env.GOOGLE_REDIRECT_URI || '/api/auth/google/callback',
       scope: ['profile', 'email', 'https://www.googleapis.com/auth/calendar'],
+      proxy: true
     },
     async (accessToken, refreshToken, profile, done) => {
       try {

@@ -31,6 +31,7 @@ const feedbackRoutes = require('./routes/feedback');
 require('./passport');
 
 const app = express();
+app.set('trust proxy', 1);
 const server = http.createServer(app);
 const io = socketIo(server, { cors: { origin: '*' } });
 
