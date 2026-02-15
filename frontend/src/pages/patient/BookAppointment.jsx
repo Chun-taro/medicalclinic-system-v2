@@ -148,7 +148,7 @@ const BookAppointment = () => {
                                     value={form.appointmentDate}
                                     onChange={handleChange}
                                     required
-                                    min={new Date().toISOString().split('T')[0]}
+                                    min={new Date().toLocaleDateString('en-CA')}
                                 />
                             </div>
                             <div className="form-group">

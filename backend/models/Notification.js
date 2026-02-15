@@ -13,7 +13,7 @@ const notificationSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['pending', 'approved', 'declined', 'rescheduled', 'completed', 'updated'],
+    enum: ['pending', 'approved', 'declined', 'rescheduled', 'completed', 'updated', 'cancelled', 'in-consultation', 'rejected'],
     required: true
   },
   message: {

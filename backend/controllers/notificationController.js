@@ -62,7 +62,7 @@ const markAllAsRead = async (req, res) => {
   try {
     let query = { read: false };
 
-    if (req.user.role === 'admin') {
+    if (req.user.role === 'admin' || req.user.role === 'superadmin') {
       query.recipientType = 'admin';
     } else {
       query.userId = req.user.userId;

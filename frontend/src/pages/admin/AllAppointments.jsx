@@ -309,7 +309,7 @@ const AllAppointments = () => {
                             <div className="modal-body">
                                 <div className="form-group">
                                     <label>Date</label>
-                                    <input type="date" required value={editForm.date} onChange={e => setEditForm({ ...editForm, date: e.target.value })} />
+                                    <input type="date" required value={editForm.date} min={new Date().toLocaleDateString('en-CA')} onChange={e => setEditForm({ ...editForm, date: e.target.value })} />
                                 </div>
                                 <div className="form-group">
                                     <label>Purpose</label>

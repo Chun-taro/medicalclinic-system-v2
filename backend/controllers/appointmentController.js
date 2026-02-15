@@ -23,6 +23,14 @@ const bookAppointment = async (req, res) => {
       return res.status(400).json({ error: 'Missing required fields' });
     }
 
+    // Date validation: prevent past dates
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const bookingDate = new Date(appointmentDate);
+    if (bookingDate < today) {
+      return res.status(400).json({ error: 'Cannot book appointments in the past' });
+    }
+
     const appointment = new Appointment({
       patientId: req.user.userId,
       appointmentDate,
@@ -235,6 +243,8 @@ const approveAppointment = async (req, res) => {
         return res.status(404).json({ error: 'Appointment or patient not found' });
       }
 
+      const patient = updated.patientId;
+
       await session.commitTransaction();
       session.endSession();
 
@@ -245,18 +255,18 @@ const approveAppointment = async (req, res) => {
       (async () => {
         try {
           // Log activity
-          await logActivity(
-            req.user.userId,
-            req.user.name || `${req.user.firstName} ${req.user.lastName}`,
-            req.user.role,
-            'approve_appointment',
-            'appointment',
-            updated._id,
-            {
+          await logActivity({
+            userId: req.user.userId,
+            userName: req.user.name || `${req.user.firstName || ''} ${req.user.lastName || ''}`.trim(),
+            userRole: req.user.role,
+            action: 'approve_appointment',
+            entityType: 'appointment',
+            entityId: updated._id,
+            details: {
               patientName: `${patient.firstName} ${patient.lastName}`,
               appointmentDate: updated.appointmentDate
             }
-          );
+          });
 
           // In-app notification
           await sendNotification({
@@ -365,12 +375,20 @@ const startConsultation = async (req, res) => {
     appointment.status = 'in-consultation';
     await appointment.save();
 
-    sendNotification({
-      userId: appointment.patientId,
-      status: 'in-consultation',
-      message: 'Your consultation has started',
-      recipientType: 'patient'
-    });
+    // Run side effects
+    (async () => {
+      try {
+        await sendNotification({
+          userId: appointment.patientId,
+          status: 'in-consultation',
+          message: 'Your consultation has started',
+          recipientType: 'patient',
+          appointmentId: appointment._id
+        });
+      } catch (err) {
+        console.error('Start consultation notification error:', err.message);
+      }
+    })();
 
     res.json({ message: 'Consultation started', appointment });
   } catch (err) {
@@ -392,28 +410,56 @@ const completeConsultation = async (req, res) => {
       req.params.id,
       { $set: updateFields },
       { new: true }
-    );
+    ).populate('patientId');
 
     if (!appointment) return res.status(404).json({ error: 'Appointment not found' });
 
-    // Patient notification
-    sendNotification({
-      userId: appointment.patientId,
-      status: 'completed',
-      message: 'Your consultation has been completed',
-      recipientType: 'patient'
-    });
+    const patient = appointment.patientId;
 
-    // Admin notification
-    const admin = await User.findOne({ role: 'admin' });
-    if (admin) {
-      sendNotification({
-        userId: admin._id,
-        status: 'completed',
-        message: `Consultation completed for patient ${appointment.firstName || ''} ${appointment.lastName || ''}`.trim(),
-        recipientType: 'admin'
-      });
-    }
+    // Run side effects in parallel (non-blocking)
+    (async () => {
+      try {
+        // Patient in-app notification
+        await sendNotification({
+          userId: patient._id || patient,
+          status: 'completed',
+          message: 'Your consultation has been completed',
+          recipientType: 'patient',
+          appointmentId: appointment._id
+        });
+
+        // Admin notification
+        const admin = await User.findOne({ role: 'admin' });
+        if (admin) {
+          await sendNotification({
+            userId: admin._id,
+            status: 'completed',
+            message: `Consultation completed for patient ${appointment.firstName || patient.firstName || ''} ${appointment.lastName || patient.lastName || ''}`.trim(),
+            recipientType: 'admin',
+            appointmentId: appointment._id
+          });
+        }
+
+        // Email notification
+        if (patient.email) {
+          sendEmail({
+            to: patient.email,
+            subject: 'Consultation Completed',
+            html: `
+              <div style="font-family: Arial, sans-serif; padding: 20px;">
+                <h2 style="color: #27AE60;">Consultation Completed</h2>
+                <p>Hi ${patient.firstName || appointment.firstName},</p>
+                <p>Your consultation on <strong>${new Date(appointment.appointmentDate).toDateString()}</strong> has been completed.</p>
+                <p>You can view your records and prescriptions in your portal.</p>
+                <p>Thank you,<br/>Clinic Team</p>
+              </div>
+            `
+          }).catch(e => console.error('Email consultation error:', e.message));
+        }
+      } catch (sideErr) {
+        console.error('Non-blocking completion side effect error:', sideErr.message);
+      }
+    })();
 
     res.json(appointment);
     // Debug: log updated appointment to verify stored fields
@@ -444,7 +490,7 @@ const saveConsultation = async (req, res) => {
       consultationCompletedAt
     } = req.body;
 
-    const appointment = await Appointment.findById(id);
+    const appointment = await Appointment.findById(id).populate('patientId');
     if (!appointment) return res.status(404).json({ error: 'Appointment not found' });
 
     // Update all consultation fields
@@ -466,20 +512,56 @@ const saveConsultation = async (req, res) => {
 
     await appointment.save();
 
-    // Log the activity
-    await logActivity(
-      req.user.userId,
-      req.user.name || `${req.user.firstName} ${req.user.lastName}`,
-      req.user.role,
-      'complete_consultation',
-      'appointment',
-      appointment._id,
-      {
-        patientName: `${appointment.patientId?.firstName || ''} ${appointment.patientId?.lastName || ''}`.trim(),
-        diagnosis: diagnosis,
-        medicinesCount: medicinesPrescribed?.length || 0
+    const patient = appointment.patientId;
+
+    // Run side effects in parallel (non-blocking)
+    (async () => {
+      try {
+        // Log the activity
+        await logActivity({
+          userId: req.user.userId,
+          userName: req.user.name || `${req.user.firstName || ''} ${req.user.lastName || ''}`.trim(),
+          userRole: req.user.role,
+          action: 'complete_consultation',
+          entityType: 'appointment',
+          entityId: appointment._id,
+          details: {
+            patientName: `${patient?.firstName || appointment.firstName || ''} ${patient?.lastName || appointment.lastName || ''}`.trim(),
+            diagnosis: diagnosis,
+            medicinesCount: medicinesPrescribed?.length || 0
+          }
+        });
+
+        // In-app notification
+        await sendNotification({
+          userId: patient?._id || appointment.patientId,
+          status: 'completed',
+          message: 'Your medical records have been updated.',
+          recipientType: 'patient',
+          appointmentId: appointment._id
+        });
+
+        // Email notification
+        const emailTo = patient?.email || appointment.email;
+        if (emailTo) {
+          sendEmail({
+            to: emailTo,
+            subject: 'Consultation Records Updated',
+            html: `
+              <div style="font-family: Arial, sans-serif; padding: 20px;">
+                <h2 style="color: #2E86C1;">Medical Records Updated</h2>
+                <p>Hi ${patient?.firstName || appointment.firstName},</p>
+                <p>Your records for the consultation on <strong>${new Date(appointment.appointmentDate).toDateString()}</strong> have been updated and finalized.</p>
+                <p>Diagnosis: ${diagnosis || 'N/A'}</p>
+                <p>Thank you,<br/>Clinic Team</p>
+              </div>
+            `
+          }).catch(e => console.error('Email save consultation error:', e.message));
+        }
+      } catch (sideErr) {
+        console.error('Non-blocking save side effect error:', sideErr.message);
       }
-    );
+    })();
 
     // Debug: log saved consultation to verify fields
     console.log('Consultation saved with vitals:', appointment);
@@ -502,19 +584,41 @@ const deleteAppointment = async (req, res) => {
     const deleted = await Appointment.findByIdAndDelete(req.params.id);
     if (!deleted) return res.status(404).json({ error: 'Appointment not found' });
 
-    // Log the activity
-    await logActivity(
-      req.user.userId,
-      req.user.name || `${req.user.firstName} ${req.user.lastName}`,
-      req.user.role,
-      'delete_appointment',
-      'appointment',
-      deleted._id,
-      {
-        patientName: `${deleted.patientId?.firstName || ''} ${deleted.patientId?.lastName || ''}`.trim(),
-        appointmentDate: deleted.appointmentDate
-      }
-    );
+    if (deleted) {
+      // Run side effects
+      (async () => {
+        try {
+          // Log the activity
+          await logActivity({
+            userId: req.user.userId,
+            userName: req.user.name || `${req.user.firstName || ''} ${req.user.lastName || ''}`.trim(),
+            userRole: req.user.role,
+            action: 'delete_appointment',
+            entityType: 'appointment',
+            entityId: deleted._id,
+            details: {
+              patientName: `${deleted.patientId?.firstName || ''} ${deleted.patientId?.lastName || ''}`.trim(),
+              appointmentDate: deleted.appointmentDate
+            }
+          });
+
+          // Notify patient (if they exist)
+          if (deleted.patientId) {
+            await sendNotification({
+              userId: deleted.patientId._id || deleted.patientId,
+              status: 'cancelled',
+              message: `Your appointment on ${new Date(deleted.appointmentDate).toDateString()} has been cancelled by the administrator.`,
+              recipientType: 'patient'
+            });
+
+            // Optional: Send email
+            // if (deleted.patientId.email) { ... }
+          }
+        } catch (err) {
+          console.error('Delete side effects error:', err.message);
+        }
+      })();
+    }
 
     res.json({ message: 'Appointment deleted successfully' });
   } catch (err) {
@@ -645,6 +749,17 @@ const updateAppointment = async (req, res) => {
     // Track changes
     const changes = [];
     const allowedFields = ['appointmentDate', 'purpose', 'typeOfVisit', 'diagnosis', 'status', 'rescheduleReason'];
+
+    // Date validation if rescheduling
+    if (req.body.appointmentDate) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const newDate = new Date(req.body.appointmentDate);
+      if (newDate < today) {
+        return res.status(400).json({ error: 'Cannot reschedule to a past date' });
+      }
+    }
+
     allowedFields.forEach(field => {
       if (req.body[field] !== undefined && req.body[field] !== appointment[field]) {
         appointment[field] = req.body[field];
