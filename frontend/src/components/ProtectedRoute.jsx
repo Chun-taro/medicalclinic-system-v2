@@ -5,11 +5,14 @@ const ProtectedRoute = ({ children, requiredRole }) => {
     const { role, loading } = useAuth();
     const location = useLocation();
 
+    console.log('ProtectedRoute: Check', { path: location.pathname, role, loading, requiredRole });
+
     if (loading) {
         return <div className="loading-spinner"></div>; // Or a proper loading component
     }
 
     if (!role) {
+        console.warn('ProtectedRoute: No role, redirecting to login');
         return <Navigate to="/" state={{ from: location }} replace />;
     }
 

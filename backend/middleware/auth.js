@@ -21,18 +21,21 @@ const auth = (req, res, next) => {
     }
 
     // Verify token
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decoded;
-
-    next();
-  } catch (err) {
-    console.error('JWT verification failed:', err.message);
-
-    if (err.name === 'TokenExpiredError') {
-      return res.status(401).json({ error: 'Session expired. Please log in again.' });
+    try {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      req.user = decoded;
+      console.log('JWT verified for user:', decoded.userId, 'role:', decoded.role);
+      next();
+    } catch (err) {
+      console.error('JWT verification failed:', err.message);
+      if (err.name === 'TokenExpiredError') {
+        return res.status(401).json({ error: 'Session expired' });
+      }
+      return res.status(401).json({ error: 'Invalid token: ' + err.message });
     }
-
-    return res.status(401).json({ error: 'Token is not valid' });
+  } catch (outerErr) {
+    console.error('Auth middleware outer error:', outerErr.message);
+    res.status(500).json({ error: 'Authentication internal error' });
   }
 };
 

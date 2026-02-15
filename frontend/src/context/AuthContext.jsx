@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import api from '../services/api';
 import { toast } from 'react-toastify';
 
@@ -11,16 +11,22 @@ export const AuthProvider = ({ children }) => {
     const [role, setRole] = useState(localStorage.getItem('role') || null);
     const [loading, setLoading] = useState(true);
 
+    const logout = useCallback(() => {
+        localStorage.removeItem('token');
+        localStorage.removeItem('role');
+        localStorage.removeItem('userId');
+        setRole(null);
+        setUser(null);
+    }, []);
+
     useEffect(() => {
         const checkAuth = async () => {
             const token = localStorage.getItem('token');
             if (token) {
                 try {
-                    // Adjust this endpoint based on your backend
-                    // The old code used /api/profile
                     const res = await api.get('/profile');
                     setUser(res.data);
-                    setRole(localStorage.getItem('role')); // Ensure role is consistent
+                    setRole(localStorage.getItem('role'));
                 } catch (error) {
                     console.error('Auth check failed:', error);
                     logout();
@@ -30,9 +36,10 @@ export const AuthProvider = ({ children }) => {
         };
 
         checkAuth();
-    }, []);
+    }, [logout]);
 
-    const login = async (token, userRole, userData) => {
+    const login = useCallback(async (token, userRole, userData) => {
+        console.log('AuthContext (V5): login() called', { userRole, hasData: !!userData });
         localStorage.setItem('token', token);
         localStorage.setItem('role', userRole);
         if (userData && userData._id) {
@@ -40,38 +47,32 @@ export const AuthProvider = ({ children }) => {
         }
         setRole(userRole);
         setUser(userData || null);
+        setLoading(false); // CRITICAL: Ensure we stop loading state
 
-        // Optional: Fetch profile if not provided
+        // Fetch profile in the background if not provided
         if (!userData) {
-            try {
-                const res = await api.get('/profile');
+            console.log('AuthContext (V5): Starting background profile fetch...');
+            api.get('/profile').then(res => {
+                console.log('AuthContext (V5): Background profile fetch SUCCESS');
                 setUser(res.data);
                 if (res.data && res.data._id) {
                     localStorage.setItem('userId', res.data._id);
                 }
-            } catch (err) {
-                console.error("Failed to fetch user profile on login", err);
-            }
+            }).catch(err => {
+                console.error("AuthContext (V5): Background profile fetch FAILED", err);
+                // We keep the role/token so the user stays logged in
+            });
         }
-    };
+    }, []);
 
-    const logout = () => {
-        localStorage.removeItem('token');
-        localStorage.removeItem('role');
-        localStorage.removeItem('userId');
-        setRole(null);
-        setUser(null);
-        // Optional: redirect logic is usually handled by components or router
-    };
-
-    const value = {
+    const value = useMemo(() => ({
         user,
         role,
         loading,
         login,
         logout,
         isAuthenticated: !!role,
-    };
+    }), [user, role, loading, login, logout]);
 
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

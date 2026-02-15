@@ -65,7 +65,10 @@ router.get('/google/callback', (req, res, next) => {
     }
 
     req.logIn(user, async (err) => {
-      if (err) return next(err);
+      if (err) {
+        console.error('Login error after passport auth:', err);
+        return next(err);
+      }
 
       try {
         const token = jwt.sign(
@@ -74,18 +77,26 @@ router.get('/google/callback', (req, res, next) => {
           { expiresIn: '1d' }
         );
 
-        const frontendUrl = (process.env.FRONTEND_URL || 'http://localhost:5173').replace(/\/$/, '');
+        // Determine frontend URL more robustly
+        let frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+        frontendUrl = frontendUrl.replace(/\/$/, '');
+
+        console.log(`Redirecting user ${user.email} with role ${user.role} to ${frontendUrl}`);
+
         const redirectUrl = new URL(`${frontendUrl}/oauth/success`);
         redirectUrl.searchParams.set('token', token);
-        redirectUrl.searchParams.set('role', user.role);
+        redirectUrl.searchParams.set('role', user.role || 'patient');
         redirectUrl.searchParams.set('userId', user._id.toString());
-        redirectUrl.searchParams.set('googleId', user.googleId);
+
+        if (user.googleId) {
+          redirectUrl.searchParams.set('googleId', user.googleId);
+        }
 
         return res.redirect(redirectUrl.toString());
       } catch (tokenErr) {
-        console.error('Token generation error:', tokenErr.message);
+        console.error('Token generation or redirect error:', tokenErr.message);
         const frontendUrl = (process.env.FRONTEND_URL || 'http://localhost:5173').replace(/\/$/, '');
-        return res.redirect(`${frontendUrl}/oauth/failure`);
+        return res.redirect(`${frontendUrl}/oauth/failure?error=token_generation_failed`);
       }
     });
   })(req, res, next);
