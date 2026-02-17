@@ -7,7 +7,7 @@ const transporter = nodemailer.createTransport({
   secure: true, // use SSL
   auth: {
     user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS
+    pass: process.env.EMAIL_PASS ? process.env.EMAIL_PASS.replace(/\s+/g, '') : ''
   },
   tls: {
     rejectUnauthorized: false
