@@ -115,6 +115,13 @@ const superadminLogin = async (req, res) => {
       { email: user.email, role: 'superadmin' }
     );
 
+    res.cookie('token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+      maxAge: 24 * 60 * 60 * 1000
+    });
+
     res.json({ message: 'Superadmin login successful', token, userId: user._id, role: user.role });
   } catch (err) {
     console.error('Superadmin login error:', err.message);
@@ -164,6 +171,13 @@ const login = async (req, res) => {
       user._id,
       { email: user.email }
     );
+
+    res.cookie('token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+      maxAge: 24 * 60 * 60 * 1000
+    });
 
     res.json({ message: 'Login successful', token, userId: user._id, role: user.role });
   } catch (err) {
@@ -224,6 +238,14 @@ const googleSignup = async (req, res) => {
       process.env.JWT_SECRET,
       { expiresIn: '1d' }
     );
+
+    // Set cookie for browser access (e.g. diagnostic endpoints)
+    res.cookie('token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax', // 'none' for cross-site if needed, or 'lax' for standard nav
+      maxAge: 24 * 60 * 60 * 1000 // 1 day
+    });
 
     res.json({
       message: 'Signup successful',
