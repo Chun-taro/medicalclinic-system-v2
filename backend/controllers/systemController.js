@@ -35,8 +35,22 @@ const sendTestEmail = async (req, res) => {
 
     res.json({ message: `Test email sent successfully to ${email}` });
   } catch (err) {
-    console.error('Test email failed:', err.message);
-    res.status(500).json({ error: 'Failed to send test email: ' + err.message });
+    console.error('Test email failed:', err);
+
+    // Diagnostic info (safe to expose to admin/system endpoint)
+    const diagnostics = {
+      error: err.message,
+      code: err.code,
+      stack: err.stack,
+      env: {
+        hasUser: !!process.env.EMAIL_USER,
+        hasPass: !!process.env.EMAIL_PASS,
+        passLength: process.env.EMAIL_PASS ? process.env.EMAIL_PASS.length : 0,
+        cleanedPassLength: process.env.EMAIL_PASS ? process.env.EMAIL_PASS.replace(/["']|\s+/g, '').length : 0
+      }
+    };
+
+    res.status(500).json(diagnostics);
   }
 };
 
