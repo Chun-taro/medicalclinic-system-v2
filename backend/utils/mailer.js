@@ -42,7 +42,7 @@ const sendEmail = async ({ to, subject, html }) => {
     if (err.code === 'EAUTH') {
       console.error('Authentication failed. Please check EMAIL_PASS (App Password) and EMAIL_USER.');
     }
-    throw err;
+    // throw err; // Suppress throw so app doesn't crash on email failure
   }
 };
 

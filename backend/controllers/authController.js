@@ -32,34 +32,31 @@ const signup = async (req, res) => {
       idNumber,
       contactNumber,
       role: 'patient',
-      isVerified: false,
+      isVerified: true, // Auto-verify due to Render email limitations
       verificationToken
     });
 
     await newUser.save();
 
-    // Send Verification Email
+    // Send Verification Email (Best Effort)
     const verificationUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/verify-email/${verificationToken}`;
 
-    await sendEmail({
-      to: newUser.email,
-      subject: 'Verify Your Email - Buksu Medical Clinic',
-      html: `
-        <div style="font-family: sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
-          <h2 style="color: #3b82f6;">Welcome to Buksu Medical Clinic!</h2>
-          <p>Hi ${newUser.firstName},</p>
-          <p>Thank you for registering. Please verify your email address to activate your account.</p>
-          <div style="text-align: center; margin: 30px 0;">
-            <a href="${verificationUrl}" style="background-color: #3b82f6; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold;">Verify Email Address</a>
+    try {
+      await sendEmail({
+        to: newUser.email,
+        subject: 'Welcome to Buksu Medical Clinic',
+        html: `
+          <div style="font-family: sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
+            <h2 style="color: #3b82f6;">Welcome to Buksu Medical Clinic!</h2>
+            <p>Hi ${newUser.firstName},</p>
+            <p>Thank you for registering. Your account is active and you can now log in.</p>
+            <p style="font-size: 0.8rem; color: #999;">Note: Email verification is currently disabled.</p>
           </div>
-          <p>Alternatively, you can copy and paste this link into your browser:</p>
-          <p style="word-break: break-all; color: #666;">${verificationUrl}</p>
-          <p>This link will expire in 24 hours.</p>
-          <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;" />
-          <p style="font-size: 0.8rem; color: #999;">If you didn't create an account, you can safely ignore this email.</p>
-        </div>
-      `
-    });
+        `
+      });
+    } catch (emailError) {
+      console.warn('Email sending failed (likely due to Render restrictions), but signup proceeded:', emailError.message);
+    }
 
     // Log the user signup
     await logActivity(
@@ -72,7 +69,7 @@ const signup = async (req, res) => {
       { email: newUser.email }
     );
 
-    res.json({ message: 'Signup successful! Please check your email to verify your account.' });
+    res.json({ message: 'Signup successful! You can now log in.' });
   } catch (err) {
     console.error('Signup error:', err.message);
     res.status(500).json({ error: 'Signup failed' });
