@@ -1,5 +1,5 @@
 .admin-calendar {
-    background: white;
+    background: var(--bg-card);
     border-radius: var(--radius-lg);
     padding: 1rem;
 }

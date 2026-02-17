@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../services/api';
+import { useTheme } from '../../context/ThemeContext';
 import { Bar } from 'react-chartjs-2';
 import {
     Chart as ChartJS,
@@ -17,6 +18,7 @@ import './AdminDashboard.css';
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
 const AdminDashboard = () => {
+    const { isDarkMode } = useTheme();
     const [appointments, setAppointments] = useState([]);
     const [selectedDate, setSelectedDate] = useState(new Date());
     const [weather, setWeather] = useState(null);
@@ -83,11 +85,32 @@ const AdminDashboard = () => {
     const chartOptions = {
         responsive: true,
         plugins: {
-            legend: { position: 'bottom' },
+            legend: {
+                position: 'bottom',
+                labels: {
+                    color: isDarkMode ? '#e2e8f0' : '#475569'
+                }
+            },
             title: { display: false },
         },
         scales: {
-            y: { beginAtZero: true }
+            y: {
+                beginAtZero: true,
+                grid: {
+                    color: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'
+                },
+                ticks: {
+                    color: isDarkMode ? '#e2e8f0' : '#475569'
+                }
+            },
+            x: {
+                ticks: {
+                    color: isDarkMode ? '#e2e8f0' : '#475569'
+                },
+                grid: {
+                    display: false
+                }
+            }
         }
     };
 
@@ -106,7 +129,7 @@ const AdminDashboard = () => {
 
             {/* Stats Cards */}
             <div className="stats-row">
-                <div className="stat-card">
+                <div className="stat-card blue">
                     <div className="stat-icon blue"><Calendar size={24} /></div>
                     <div className="stat-info">
                         <h3>{stats.totalAppointments}</h3>

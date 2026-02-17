@@ -4,14 +4,36 @@
 }
 
 .controls-panel {
-    background: white;
+    background: var(--bg-card) !important;
     padding: 1rem;
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-sm);
     display: flex;
     flex-direction: column;
-    gap: 1rem;
+    gap: 1.25rem;
     margin-bottom: 2rem;
+    border: 1px solid var(--border);
+    border-top: 4px solid var(--primary);
+    /* Blue accent */
+    transition: all 0.3s ease;
+}
+
+/* Defensive text color for controls panel */
+.controls-panel .search-group input {
+    color: var(--text-main) !important;
+}
+
+.controls-panel .date-input input {
+    color: var(--text-main) !important;
+}
+
+.controls-panel .label {
+    color: var(--text-muted) !important;
+}
+
+.controls-panel:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
 }
 
 @media (min-width: 768px) {
@@ -30,6 +52,7 @@
     padding: 0.5rem 1rem;
     flex: 1;
     max-width: 400px;
+    border: 1px solid var(--border);
 }
 
 .search-group .icon {
@@ -42,6 +65,11 @@
     background: transparent;
     width: 100%;
     outline: none;
+    color: var(--text-main) !important;
+}
+
+.search-group input::placeholder {
+    color: var(--text-muted);
 }
 
 .filters-group {
@@ -58,6 +86,7 @@
     background: var(--bg-body);
     padding: 0.25rem 0.75rem;
     border-radius: var(--radius-md);
+    border: 1px solid var(--border);
 }
 
 .date-input .label {
@@ -106,10 +135,16 @@
 }
 
 .table-container {
-    background: white;
+    background: var(--bg-card);
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-sm);
     overflow-x: auto;
+    border: 1px solid var(--border);
+    transition: box-shadow 0.3s ease;
+}
+
+.table-container:hover {
+    box-shadow: var(--shadow-md);
 }
 
 .data-table {
@@ -170,7 +205,7 @@
 }
 
 .notes-content {
-    background: #f8fafc;
+    background: var(--bg-body);
     padding: 1.5rem;
     border-radius: var(--radius-md);
     border-left: 4px solid var(--primary);
@@ -200,8 +235,31 @@
 }
 
 .status-cancelled {
-    background: #fef2f2;
+    background: var(--error);
+    background-image: linear-gradient(rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.9));
     color: #ef4444;
+}
+
+/* Dark mode adjustments for badges in AllAppointments */
+.dark-mode .status-pending {
+    background-color: rgba(245, 158, 11, 0.2);
+    color: #fbbf24;
+}
+
+.dark-mode .status-approved,
+.dark-mode .status-confirmed {
+    background-color: rgba(16, 185, 129, 0.2);
+    color: #34d399;
+}
+
+.dark-mode .status-completed {
+    background-color: rgba(37, 99, 235, 0.2);
+    color: #60a5fa;
+}
+
+.dark-mode .status-cancelled {
+    background-color: rgba(239, 68, 68, 0.2);
+    color: #f87171;
 }
 
 .status-completed {

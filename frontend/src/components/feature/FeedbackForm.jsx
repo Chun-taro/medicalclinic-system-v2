@@ -19,7 +19,10 @@ const FeedbackForm = ({ doctorId, doctorName, appointmentId, onClose, onSuccess 
                 const res = await api.get('/users');
                 const staff = res.data.filter(u => ['doctor', 'admin', 'superadmin', 'nurse'].includes(u.role));
                 setStaffOptions(staff);
-                if (doctorId) setSelectedRecipient(doctorId);
+
+                // Set default recipient
+                const defaultId = typeof doctorId === 'object' ? doctorId?._id : doctorId;
+                if (defaultId) setSelectedRecipient(defaultId);
             } catch (err) {
                 console.error('Failed to load staff list for feedback:', err);
             }
@@ -52,8 +55,9 @@ const FeedbackForm = ({ doctorId, doctorName, appointmentId, onClose, onSuccess 
             if (onSuccess) onSuccess();
             onClose();
         } catch (err) {
-            console.error(err);
-            toast.error(err.message || 'Failed to submit feedback.');
+            console.error('Feedback submission error:', err);
+            const errorMsg = err.response?.data?.error || err.message || 'Failed to submit feedback.';
+            toast.error(errorMsg);
         } finally {
             setIsSubmitting(false);
         }

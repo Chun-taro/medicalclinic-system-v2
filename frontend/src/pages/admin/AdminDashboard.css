@@ -11,23 +11,55 @@
 }
 
 .stat-card {
-    background: white;
+    background: var(--bg-card);
     border-radius: var(--radius-lg);
     padding: 1.5rem;
     box-shadow: var(--shadow-sm);
     display: flex;
     align-items: center;
-    gap: 1rem;
+    gap: 1.25rem;
+    border: 1px solid var(--border);
+    transition: all 0.3s ease;
+    border-top: 4px solid transparent;
 }
 
+.stat-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-md);
+}
+
+.stat-card.blue {
+    border-top-color: #3b82f6;
+}
+
+.stat-card.green {
+    border-top-color: #10b981;
+}
+
+.stat-card.orange {
+    border-top-color: #f59e0b;
+}
+
+.stat-card.purple {
+    border-top-color: #a855f7;
+}
+
+/* In case the first one doesn't have a class in JSX, we can match it by icon or just add the class in JSX */
+
 .stat-icon {
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    /* Changed to squire-circle for more modern look */
     display: flex;
     align-items: center;
     justify-content: center;
     background-color: var(--bg-body);
+    transition: transform 0.3s ease;
+}
+
+.stat-card:hover .stat-icon {
+    transform: scale(1.1);
 }
 
 .stat-icon.blue {
@@ -50,16 +82,97 @@
     color: #a855f7;
 }
 
+/* Dark mode icon backgrounds */
+.dark-mode .stat-icon.blue {
+    background-color: rgba(59, 130, 246, 0.15);
+    color: #60a5fa;
+}
+
+.dark-mode .stat-icon.green {
+    background-color: rgba(16, 185, 129, 0.15);
+    color: #34d399;
+}
+
+.dark-mode .stat-icon.orange {
+    background-color: rgba(245, 158, 11, 0.15);
+    color: #fbbf24;
+}
+
+.dark-mode .stat-icon.purple {
+    background-color: rgba(168, 85, 247, 0.15);
+    color: #c084fc;
+}
+
 .stat-info h3 {
     font-size: 1.5rem;
     font-weight: 700;
     color: var(--text-main);
     line-height: 1;
+    margin: 0;
 }
 
 .stat-info p {
     font-size: 0.875rem;
     color: var(--text-secondary);
+    margin: 0;
+}
+
+/* Hard reset for stat card text to prevent ghost white overrides */
+.stat-card .stat-info h3 {
+    color: var(--text-main) !important;
+}
+
+.stat-card .stat-info p {
+    color: var(--text-secondary) !important;
+}
+
+/* Ensure card background is always following the theme */
+.stat-card {
+    background: var(--bg-card) !important;
+}
+
+/* Status Badges */
+.status-badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 99px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    text-transform: capitalize;
+}
+
+.status-pending {
+    background: #fff7ed;
+    color: #f59e0b;
+}
+
+.status-approved,
+.status-confirmed,
+.status-completed {
+    background: #ecfdf5;
+    color: #10b981;
+}
+
+.status-cancelled {
+    background: #fef2f2;
+    color: #ef4444;
+}
+
+/* Dark mode adjustments for badges */
+.dark-mode .status-pending {
+    background-color: rgba(245, 158, 11, 0.2);
+    color: #fbbf24;
+}
+
+.dark-mode .status-approved,
+.dark-mode .status-confirmed,
+.dark-mode .status-completed {
+    background-color: rgba(16, 185, 129, 0.2);
+    color: #34d399;
+}
+
+.dark-mode .status-cancelled {
+    background-color: rgba(239, 68, 68, 0.2);
+    color: #f87171;
 }
 
 .dashboard-grid {
@@ -75,10 +188,11 @@
 }
 
 .card {
-    background: white;
+    background: var(--bg-card);
     border-radius: var(--radius-lg);
     padding: 1.5rem;
     box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border);
 }
 
 .card h3 {
@@ -152,7 +266,7 @@
 }
 
 .modal-card {
-    background: white;
+    background: var(--bg-card);
     border-radius: var(--radius-lg);
     width: 90%;
     max-width: 500px;
@@ -185,7 +299,7 @@
 }
 
 .notes-content {
-    background: #f8fafc;
+    background: var(--bg-body);
     padding: 1.5rem;
     border-radius: var(--radius-md);
     border-left: 4px solid var(--primary);

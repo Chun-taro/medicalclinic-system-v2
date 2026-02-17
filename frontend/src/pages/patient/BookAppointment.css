@@ -4,10 +4,36 @@
 }
 
 .form-container {
-    background: white;
+    background: var(--bg-card) !important;
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-sm);
     padding: 2rem;
+    border: 1px solid var(--border);
+    border-top: 4px solid var(--primary);
+    /* Blue accent for booking */
+    transition: all 0.3s ease;
+}
+
+.form-container:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+}
+
+/* Defensive text color reset for form elements */
+.form-container h3 {
+    color: var(--primary) !important;
+}
+
+.form-container label {
+    color: var(--text-secondary) !important;
+}
+
+.form-container input,
+.form-container select,
+.form-container textarea {
+    color: var(--text-main) !important;
+    background: var(--bg-body) !important;
+    border: 1px solid var(--border) !important;
 }
 
 .form-section {
@@ -66,12 +92,15 @@
 }
 
 .warning-card {
-    background: white;
+    background: var(--bg-card) !important;
     padding: 3rem;
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-lg);
     text-align: center;
     max-width: 500px;
+    border: 1px solid var(--border);
+    border-top: 4px solid var(--warning);
+    /* Warning accent */
 }
 
 .text-warning {

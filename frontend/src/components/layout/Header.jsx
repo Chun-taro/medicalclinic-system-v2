@@ -1,11 +1,13 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Bell, Menu, User, ChevronDown } from 'lucide-react';
+import { Bell, Menu, User, ChevronDown, Moon, Sun } from 'lucide-react';
 import api from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { useTheme } from '../../context/ThemeContext';
 
 const Header = ({ toggleSidebar }) => {
     const { user, role, logout } = useAuth();
+    const { isDarkMode, toggleTheme } = useTheme();
     const navigate = useNavigate();
     const [showProfileMenu, setShowProfileMenu] = useState(false);
     const [showNotifications, setShowNotifications] = useState(false);
@@ -92,6 +94,15 @@ const Header = ({ toggleSidebar }) => {
             </div>
 
             <div className="header-right">
+                {/* Theme Toggle */}
+                <button
+                    className="icon-btn theme-toggle"
+                    onClick={toggleTheme}
+                    title={isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+                >
+                    {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
+                </button>
+
                 {/* Notifications */}
                 <div className="notification-wrapper" ref={notifRef}>
                     <button

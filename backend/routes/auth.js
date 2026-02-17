@@ -8,7 +8,8 @@ const {
   superadminLogin,
   login,
   googleSignup,
-  validateToken
+  validateToken,
+  oauthTokenExchange
 } = require('../controllers/authController');
 
 const { auth } = require('../middleware/auth');
@@ -28,7 +29,9 @@ router.post('/forgot-password', async (req, res) => {
 
 //  Token Validation
 
+
 router.get('/validate', auth, validateToken);
+router.post('/oauth-token-exchange', oauthTokenExchange);
 
 // Get current user info
 router.get('/me', auth, async (req, res) => {
@@ -83,8 +86,15 @@ router.get('/google/callback', (req, res, next) => {
 
         console.log(`Redirecting user ${user.email} with role ${user.role} to ${frontendUrl}`);
 
+        // Set short-lived secure cookie for token exchange
+        res.cookie('oauthToken', token, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'lax',
+          maxAge: 5 * 60 * 1000 // 5 minutes
+        });
+
         const redirectUrl = new URL(`${frontendUrl}/oauth/success`);
-        redirectUrl.searchParams.set('token', token);
         redirectUrl.searchParams.set('role', user.role || 'patient');
         redirectUrl.searchParams.set('userId', user._id.toString());
 

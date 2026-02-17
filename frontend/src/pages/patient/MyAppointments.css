@@ -23,16 +23,18 @@
 }
 
 .appointment-item {
-    background: white;
+    background: var(--bg-card);
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-sm);
     overflow: hidden;
     border: 1px solid var(--border);
-    transition: all 0.2s;
+    border-top: 4px solid var(--primary);
+    transition: all 0.3s ease;
 }
 
 .appointment-item:hover {
     box-shadow: var(--shadow-md);
+    transform: translateY(-4px);
 }
 
 .apt-summary {
@@ -41,7 +43,7 @@
     align-items: center;
     padding: 1.25rem;
     cursor: pointer;
-    background-color: white;
+    background-color: var(--bg-card);
 }
 
 .apt-main-info {
@@ -102,15 +104,38 @@
 }
 
 .status-cancelled {
-    background-color: #fef2f2;
+    background-color: var(--error);
+    background-image: linear-gradient(rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.9));
     color: #b91c1c;
+}
+
+/* Dark mode adjustments for badges */
+.dark-mode .status-pending {
+    background-color: rgba(245, 158, 11, 0.2);
+    color: #fbbf24;
+}
+
+.dark-mode .status-approved {
+    background-color: rgba(16, 185, 129, 0.2);
+    color: #34d399;
+}
+
+.dark-mode .status-completed {
+    background-color: rgba(37, 99, 235, 0.2);
+    color: #60a5fa;
+}
+
+.dark-mode .status-cancelled {
+    background-color: rgba(239, 68, 68, 0.2);
+    color: #f87171;
 }
 
 .apt-details-panel {
     padding: 1.5rem;
     border-top: 1px solid var(--border);
-    background-color: var(--bg-body);
-    animation: slideDown 0.2s ease;
+    background-color: var(--bg-card);
+    /* Keep it card-colored but slightly distinct via border */
+    animation: slideDown 0.3s ease;
 }
 
 @keyframes slideDown {
@@ -163,7 +188,7 @@
 }
 
 .btn-secondary {
-    background: white;
+    background: var(--bg-card);
     border: 1px solid var(--border);
     padding: 0.5rem 1rem;
     border-radius: var(--radius-md);

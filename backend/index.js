@@ -10,6 +10,7 @@ const socketIo = require('socket.io');
 const helmet = require('helmet');
 const cookieParser = require('cookie-parser');
 const path = require('path');
+const rateLimit = require('express-rate-limit');
 const requestLogger = require('./middleware/requestLogger');
 const calendarRoutes = require('./routes/calendar');
 
@@ -33,7 +34,14 @@ require('./passport');
 const app = express();
 app.set('trust proxy', 1);
 const server = http.createServer(app);
-const io = socketIo(server, { cors: { origin: '*' } });
+
+// CORS configuration for Socket.IO and Express
+const CORS_OPTIONS = {
+  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+  credentials: true
+};
+
+const io = socketIo(server, { cors: CORS_OPTIONS });
 
 // Make io globally available for notifications
 global.io = io;
@@ -58,10 +66,18 @@ app.use(helmet({
     },
   },
 })); // security headers
-app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
-  credentials: true
-}));
+
+// Rate limiting
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 1000, // Increased for testing (previous: 100)
+  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+  message: { error: 'Too many requests from this IP, please try again after 15 minutes' }
+});
+app.use('/api/', limiter);
+
+app.use(cors(CORS_OPTIONS));
 app.use(express.json());
 app.use(cookieParser());
 app.use(requestLogger);

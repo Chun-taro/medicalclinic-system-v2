@@ -58,7 +58,7 @@
     align-items: center;
     justify-content: center;
     padding: 2rem;
-    background-color: white;
+    background-color: var(--bg-body);
 }
 
 .auth-card {
@@ -136,10 +136,10 @@
     justify-content: center;
     gap: 0.75rem;
     padding: 0.875rem 1.5rem;
-    background-color: white;
-    border: 1px solid #e2e8f0;
+    background-color: var(--bg-card);
+    border: 1px solid var(--border);
     border-radius: var(--radius-md);
-    color: #475569;
+    color: var(--text-main);
     font-weight: 600;
     font-size: 0.95rem;
     text-decoration: none;

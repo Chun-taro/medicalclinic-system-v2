@@ -89,7 +89,11 @@ const MyAppointments = () => {
                                         </div>
                                         <div className="detail-item">
                                             <label>Doctor</label>
-                                            <p>{apt.doctorName || 'Assigned Doctor'}</p>
+                                            <p>{
+                                                apt.doctorId?.firstName
+                                                    ? `${apt.doctorId.firstName} ${apt.doctorId.lastName}`
+                                                    : (apt.doctorName || 'Assigned Doctor')
+                                            }</p>
                                         </div>
                                         <div className="detail-item full-width">
                                             <label>Notes/Management</label>

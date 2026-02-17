@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { toast } from 'react-toastify';
+import api from '../../services/api';
 
 const OAuthSuccess = () => {
     const navigate = useNavigate();
@@ -22,21 +23,25 @@ const OAuthSuccess = () => {
 
         console.log('OAuthSuccess (V5): Processing start...', window.location.href);
         const params = new URLSearchParams(window.location.search);
-        const token = params.get('token');
         const role = params.get('role');
         const userId = params.get('userId');
 
-        console.log('OAuthSuccess (V5): Params extracted:', { hasToken: !!token, role, userId });
+        console.log('OAuthSuccess (V5): Params extracted (role/userId):', { role, userId });
 
         const validRoles = ['patient', 'admin', 'superadmin', 'doctor', 'nurse'];
 
-        if (token && role && validRoles.includes(role)) {
+        if (role && validRoles.includes(role)) {
             hasRun.current = true; // Set this immediately
 
-            console.log('OAuthSuccess (V5): Calling login context...');
-            login(token, role, null).then(() => {
-                // IMPORTANT: We do NOT use isMounted guard for navigate 
-                // because the login call itself triggers a re-render that would set isMounted to false.
+            console.log('OAuthSuccess (V5): Exchanging cookie for token...');
+
+            // Perform secure token exchange
+            api.post('/auth/oauth-token-exchange').then(response => {
+                const { token } = response.data;
+                console.log('OAuthSuccess (V5): Exchange successful, calling login context...');
+
+                return login(token, role, null);
+            }).then(() => {
                 console.log('OAuthSuccess (V5): Login successful, initiating redirect to dashboard.');
 
                 const dashboardMap = {
@@ -55,13 +60,13 @@ const OAuthSuccess = () => {
                 navigate(target, { replace: true });
                 toast.success('Login successful!');
             }).catch(err => {
-                console.error('OAuthSuccess (V5): Login update failed:', err);
-                toast.error('Authentication error.');
+                console.error('OAuthSuccess (V5): Secure exchange or login failed:', err);
+                toast.error('Authentication error: ' + (err.response?.data?.error || 'Failed to retrieve session'));
                 navigate('/', { replace: true });
             });
         } else {
-            console.error('OAuthSuccess (V5): Missing or invalid parameters.', { hasToken: !!token, role });
-            if (!token || !role) {
+            console.error('OAuthSuccess (V5): Missing or invalid parameters.', { role });
+            if (!role) {
                 toast.error('Login failed: Authentication parameters missing.');
             } else if (!validRoles.includes(role)) {
                 toast.error(`Login failed: Invalid role "${role}".`);

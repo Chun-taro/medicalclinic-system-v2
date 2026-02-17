@@ -243,11 +243,25 @@ const googleCalendarCallback = async (req, res) => {
   }
 };
 
+// Exchange short-lived cookie for JWT (secure OAuth flow)
+const oauthTokenExchange = async (req, res) => {
+  const token = req.cookies.oauthToken;
+  if (!token) {
+    return res.status(401).json({ error: 'OAuth exchange failed: Token missing or expired' });
+  }
+
+  // Clear the exchange cookie
+  res.clearCookie('oauthToken');
+
+  res.json({ token });
+};
+
 module.exports = {
   signup,
   superadminLogin,
   login,
   validateToken,
   googleSignup,
-  googleCalendarCallback
+  googleCalendarCallback,
+  oauthTokenExchange
 };

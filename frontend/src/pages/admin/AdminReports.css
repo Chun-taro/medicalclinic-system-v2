@@ -41,11 +41,113 @@
 }
 
 .report-card {
-    background: white;
+    background: var(--bg-card);
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-sm);
     overflow: hidden;
-    transition: all 0.2s;
+    transition: all 0.3s ease;
+    border: 1px solid var(--border);
+}
+
+.report-card:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+}
+
+.controls-panel {
+    background: var(--bg-card) !important;
+    padding: 1rem;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    margin-bottom: 2rem;
+    border: 1px solid var(--border);
+    border-top: 4px solid var(--success);
+    /* Green accent for reports */
+    transition: all 0.3s ease;
+}
+
+/* Defensive resets */
+.controls-panel .search-group input {
+    color: var(--text-main) !important;
+}
+
+.controls-panel .date-input input {
+    color: var(--text-main) !important;
+}
+
+.controls-panel .label {
+    color: var(--text-muted) !important;
+}
+
+.controls-panel:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+}
+
+@media (min-width: 768px) {
+    .controls-panel {
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+    }
+}
+
+.search-group {
+    display: flex;
+    align-items: center;
+    background: var(--bg-body);
+    border-radius: var(--radius-md);
+    padding: 0.5rem 1rem;
+    flex: 1;
+    max-width: 400px;
+    border: 1px solid var(--border);
+}
+
+.search-group .icon {
+    color: var(--text-muted);
+    margin-right: 0.5rem;
+}
+
+.search-group input {
+    border: none;
+    background: transparent;
+    width: 100%;
+    outline: none;
+    color: var(--text-main);
+}
+
+.filters-group {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.date-input {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: var(--bg-body);
+    padding: 0.25rem 0.75rem;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border);
+}
+
+.date-input .label {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+.date-input input {
+    border: none;
+    background: transparent;
+    outline: none;
+    color: var(--text-main);
+    font-size: 0.9rem;
 }
 
 .report-summary {
@@ -86,8 +188,8 @@
 }
 
 .diagnosis-preview {
-    background: #ecfdf5;
-    color: #059669;
+    background: var(--primary-light);
+    color: var(--primary);
     padding: 0.25rem 0.75rem;
     border-radius: 99px;
     font-size: 0.85rem;
