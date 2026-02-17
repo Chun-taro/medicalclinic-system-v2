@@ -289,6 +289,8 @@ const approveAppointment = async (req, res) => {
                 <p>Thank you,<br/>Clinic Team</p>
               </div>`
             }).catch(e => console.error('Email error:', e.message));
+          } else {
+            console.warn(`Skipping approval email: Patient ${patient._id} has no email address.`);
           }
 
           // Google Calendar
