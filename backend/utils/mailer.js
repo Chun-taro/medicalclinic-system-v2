@@ -19,7 +19,7 @@ const sendEmail = async ({ to, subject, html }) => {
 
   if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
     console.error('Email credentials missing in .env');
-    return;
+    throw new Error('Email credentials are not configured on the server.');
   }
 
   const mailOptions = {
