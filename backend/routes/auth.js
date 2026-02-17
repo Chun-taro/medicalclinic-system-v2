@@ -9,7 +9,8 @@ const {
   login,
   googleSignup,
   validateToken,
-  oauthTokenExchange
+  oauthTokenExchange,
+  verifyEmail
 } = require('../controllers/authController');
 
 const { auth } = require('../middleware/auth');
@@ -21,6 +22,7 @@ router.post('/signup', signup);
 router.post('/superadmin-login', superadminLogin);
 router.post('/login', login);
 router.post('/google-signup', googleSignup);
+router.get('/verify-email/:token', verifyEmail);
 
 router.post('/forgot-password', async (req, res) => {
   const { email } = req.body;

@@ -11,6 +11,7 @@ import Login from './pages/auth/Login';
 import Signup from './pages/auth/Signup';
 import ForgotPassword from './pages/auth/ForgotPassword';
 import ResetPassword from './pages/auth/ResetPassword';
+import VerifyEmail from './pages/auth/VerifyEmail';
 import OAuthSuccess from './pages/auth/OAuthSuccess';
 import OAuthFailure from './pages/auth/OAuthFailure';
 import GoogleSignup from './pages/auth/GoogleSignup';
@@ -46,6 +47,7 @@ function App() {
               <Route path="/signup" element={<Signup />} />
               <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route path="/reset-password" element={<ResetPassword />} />
+              <Route path="/verify-email/:token" element={<VerifyEmail />} />
               <Route path="/oauth/success" element={<OAuthSuccess />} />
               <Route path="/oauth/failure" element={<OAuthFailure />} />
               <Route path="/oauth/google-signup" element={<GoogleSignup />} />

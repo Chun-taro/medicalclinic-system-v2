@@ -69,13 +69,10 @@ const Signup = () => {
                 recaptchaToken
             });
 
-            const { token, role, userId } = res.data;
-
-            // Auto login after signup
-            await login(token, role, null); // We might need to fetch user profile
-
-            toast.success('Account created successfully!');
-            navigate('/patient-dashboard');
+            toast.success('Account created successfully! Please check your email to verify your account before logging in.', {
+                autoClose: 10000
+            });
+            navigate('/login');
 
         } catch (err) {
             console.error(err);

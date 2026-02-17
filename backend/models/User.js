@@ -146,6 +146,10 @@ const userSchema = new mongoose.Schema({
   //  Profile Picture
   avatar: { type: String, default: '' },
 
+  // Email Verification
+  isVerified: { type: Boolean, default: false },
+  verificationToken: { type: String },
+
   // Version for optimistic concurrency control
   version: { type: Number, default: 0 }
 }, { timestamps: true });

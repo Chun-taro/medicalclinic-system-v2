@@ -4,13 +4,15 @@ const axios = require('axios');
 const jwt = require('jsonwebtoken');
 const { google } = require('googleapis');
 const logActivity = require('../utils/logActivity');
+const crypto = require('crypto');
+const sendEmail = require('../utils/mailer');
 
 // Local signup
 const signup = async (req, res) => {
   try {
-    const { firstName, lastName, email, password } = req.body;
+    const { firstName, lastName, email, password, idNumber, contactNumber } = req.body;
 
-    if (!firstName || !lastName || !email || !password) {
+    if (!firstName || !lastName || !email || !password || !idNumber || !contactNumber) {
       return res.status(400).json({ error: 'All fields are required' });
     }
 
@@ -20,38 +22,57 @@ const signup = async (req, res) => {
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
+    const verificationToken = crypto.randomBytes(32).toString('hex');
 
     const newUser = new User({
       firstName,
       lastName,
       email,
       password: hashedPassword,
-      role: 'patient'
+      idNumber,
+      contactNumber,
+      role: 'patient',
+      isVerified: false,
+      verificationToken
     });
 
     await newUser.save();
+
+    // Send Verification Email
+    const verificationUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/verify-email/${verificationToken}`;
+
+    await sendEmail({
+      to: newUser.email,
+      subject: 'Verify Your Email - Buksu Medical Clinic',
+      html: `
+        <div style="font-family: sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
+          <h2 style="color: #3b82f6;">Welcome to Buksu Medical Clinic!</h2>
+          <p>Hi ${newUser.firstName},</p>
+          <p>Thank you for registering. Please verify your email address to activate your account.</p>
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${verificationUrl}" style="background-color: #3b82f6; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold;">Verify Email Address</a>
+          </div>
+          <p>Alternatively, you can copy and paste this link into your browser:</p>
+          <p style="word-break: break-all; color: #666;">${verificationUrl}</p>
+          <p>This link will expire in 24 hours.</p>
+          <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;" />
+          <p style="font-size: 0.8rem; color: #999;">If you didn't create an account, you can safely ignore this email.</p>
+        </div>
+      `
+    });
 
     // Log the user signup
     await logActivity(
       newUser._id,
       `${newUser.firstName} ${newUser.lastName}`,
       'patient',
-      'user_signup',
+      'user_signup_pending',
       'auth',
       newUser._id,
-      {
-        email: newUser.email,
-        roll: 'patient'
-      }
+      { email: newUser.email }
     );
 
-    const token = jwt.sign(
-      { userId: newUser._id, role: newUser.role },
-      process.env.JWT_SECRET,
-      { expiresIn: '1d' }
-    );
-
-    res.json({ message: 'Signup successful', token, userId: newUser._id, role: newUser.role });
+    res.json({ message: 'Signup successful! Please check your email to verify your account.' });
   } catch (err) {
     console.error('Signup error:', err.message);
     res.status(500).json({ error: 'Signup failed' });
@@ -115,6 +136,14 @@ const login = async (req, res) => {
 
     const user = await User.findOne({ email });
     if (!user) return res.status(400).json({ error: 'Invalid credentials' });
+
+    // Check if email is verified
+    if (!user.isVerified && user.password) { // Google users don't have password and are verified
+      return res.status(401).json({
+        error: 'Your account is not verified. Please check your email for the verification link.',
+        unverified: true
+      });
+    }
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) return res.status(400).json({ error: 'Invalid credentials' });
@@ -184,7 +213,8 @@ const googleSignup = async (req, res) => {
     const newUser = new User({
       googleId, firstName, lastName, middleName, email, password: hashedPassword, role,
       idNumber, sex, civilStatus, birthday, age, homeAddress, contactNumber,
-      emergencyContact, bloodType, allergies, medicalHistory, currentMedications, familyHistory
+      emergencyContact, bloodType, allergies, medicalHistory, currentMedications, familyHistory,
+      isVerified: true // Google users are pre-verified
     });
 
     await newUser.save();
@@ -256,6 +286,43 @@ const oauthTokenExchange = async (req, res) => {
   res.json({ token });
 };
 
+// Verify Email
+const verifyEmail = async (req, res) => {
+  try {
+    const { token } = req.params;
+
+    if (!token) {
+      return res.status(400).json({ error: 'Verification token is missing' });
+    }
+
+    const user = await User.findOne({ verificationToken: token });
+
+    if (!user) {
+      return res.status(400).json({ error: 'Invalid or expired verification token' });
+    }
+
+    user.isVerified = true;
+    user.verificationToken = undefined;
+    await user.save();
+
+    // Log verification
+    await logActivity(
+      user._id,
+      `${user.firstName} ${user.lastName}`,
+      user.role,
+      'email_verified',
+      'auth',
+      user._id,
+      { email: user.email }
+    );
+
+    res.json({ message: 'Email verified successfully! You can now log in.' });
+  } catch (err) {
+    console.error('Email verification error:', err.message);
+    res.status(500).json({ error: 'Email verification failed' });
+  }
+};
+
 module.exports = {
   signup,
   superadminLogin,
@@ -263,5 +330,6 @@ module.exports = {
   validateToken,
   googleSignup,
   googleCalendarCallback,
-  oauthTokenExchange
+  oauthTokenExchange,
+  verifyEmail
 };
