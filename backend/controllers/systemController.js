@@ -10,7 +10,9 @@ const getVersions = (req, res) => {
 
 const sendTestEmail = async (req, res) => {
   try {
-    const email = req.user.email || req.query.email; // Use logged in user's email or query param (for flexibility)
+    // Safely access req.user
+    const userEmail = req.user ? req.user.email : null;
+    const email = userEmail || req.query.email;
 
     if (!email) {
       return res.status(400).json({ error: 'No email address found for user.' });
