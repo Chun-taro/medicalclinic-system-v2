@@ -95,7 +95,8 @@ const ConsultationPage = () => {
                 medicineId: med._id,
                 name: med.name,
                 quantity: 1,
-                max: med.quantityInStock
+                max: med.quantityInStock,
+                appointmentId: selectedApp._id
             }]);
         }
         setMedSearch('');
