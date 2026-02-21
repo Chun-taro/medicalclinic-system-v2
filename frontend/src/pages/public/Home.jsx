@@ -1,9 +1,17 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { useTheme } from '../../context/ThemeContext';
 import { Shield, Clock, Heart, ArrowRight, ArrowDown } from 'lucide-react';
 import './Home.css';
 
 const Home = () => {
+    const { setForceLightMode } = useTheme();
+
+    React.useEffect(() => {
+        setForceLightMode(true);
+        return () => setForceLightMode(false);
+    }, [setForceLightMode]);
+
     return (
         <div className="home-container">
             {/* Hero Section */}

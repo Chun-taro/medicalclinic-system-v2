@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { useTheme } from '../../context/ThemeContext';
 import Recaptcha from '../../components/ui/Recaptcha';
 import { toast } from 'react-toastify';
 import api from '../../services/api';
@@ -17,7 +18,14 @@ const Login = () => {
     const [logoClicks, setLogoClicks] = useState(0);
 
     const { login } = useAuth();
+    const { setForceLightMode } = useTheme();
     const navigate = useNavigate();
+
+    // Force Light Mode on Login page
+    useEffect(() => {
+        setForceLightMode(true);
+        return () => setForceLightMode(false);
+    }, [setForceLightMode]);
 
     // Logo secret click for Superadmin
     useEffect(() => {
