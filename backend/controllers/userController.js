@@ -34,6 +34,14 @@ const updateUserRole = async (req, res) => {
 
     const oldRole = existingUser.role;
 
+    // Prevent removing the last superadmin
+    if (oldRole === 'superadmin' && role !== 'superadmin') {
+      const superadminCount = await User.countDocuments({ role: 'superadmin' });
+      if (superadminCount <= 1) {
+        return res.status(400).json({ error: 'Cannot change role. The system must have at least one superadmin.' });
+      }
+    }
+
     const user = await User.findByIdAndUpdate(
       req.params.id,
       { role },
