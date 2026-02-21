@@ -7,6 +7,7 @@ import MainLayout from './layouts/MainLayout';
 import DashboardLayout from './components/layout/DashboardLayout';
 import ProtectedRoute from './components/ProtectedRoute';
 
+import Home from './pages/public/Home';
 import Login from './pages/auth/Login';
 import Signup from './pages/auth/Signup';
 import ForgotPassword from './pages/auth/ForgotPassword';
@@ -42,8 +43,8 @@ function App() {
           <Routes>
             {/* Public Routes */}
             <Route element={<MainLayout />}>
-              <Route path="/" element={<Login />} />
-              <Route path="/login" element={<Navigate to="/" replace />} />
+              <Route path="/" element={<Home />} />
+              <Route path="/login" element={<Login />} />
               <Route path="/signup" element={<Signup />} />
               <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route path="/reset-password" element={<ResetPassword />} />
