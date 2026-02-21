@@ -20,7 +20,8 @@ const medicineSchema = new mongoose.Schema({
       quantity: Number,
       dispensedAt: { type: Date, default: Date.now },
       dispensedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-      source: String
+      source: String,
+      recipientName: String
     }
   ],
 

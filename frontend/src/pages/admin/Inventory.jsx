@@ -18,7 +18,7 @@ const Inventory = () => {
 
     // Forms
     const [addForm, setAddForm] = useState({ name: '', quantityInStock: '', unit: '', expiryDate: '' });
-    const [dispenseForm, setDispenseForm] = useState({ medId: '', quantity: '' });
+    const [dispenseForm, setDispenseForm] = useState({ medId: '', quantity: '', recipientName: '' });
     const [history, setHistory] = useState([]);
     const [printFilters, setPrintFilters] = useState({ startDate: '', endDate: '' });
 
@@ -78,10 +78,13 @@ const Inventory = () => {
     const handleDispenseSubmit = async (e) => {
         e.preventDefault();
         try {
-            await api.post(`/medicines/${dispenseForm.medId}/dispense`, { quantity: parseInt(dispenseForm.quantity) });
+            await api.post(`/medicines/${dispenseForm.medId}/dispense`, {
+                quantity: Number(dispenseForm.quantity),
+                recipientName: dispenseForm.recipientName
+            });
             toast.success('Medicine dispensed');
             setShowDispenseModal(false);
-            setDispenseForm({ medId: '', quantity: '' });
+            setDispenseForm({ medId: '', quantity: '', recipientName: '' });
             fetchInventory();
         } catch (err) {
             toast.error(err.response?.data?.error || 'Failed to dispense');
@@ -226,6 +229,7 @@ const Inventory = () => {
                                     ))}
                                 </select>
                                 <input type="number" placeholder="Quantity" required min="1" value={dispenseForm.quantity} onChange={e => setDispenseForm({ ...dispenseForm, quantity: e.target.value })} />
+                                <input type="text" placeholder="Recipient Name (Patient)" required value={dispenseForm.recipientName} onChange={e => setDispenseForm({ ...dispenseForm, recipientName: e.target.value })} />
                             </div>
                             <div className="modal-footer">
                                 <button type="submit" className="btn-primary">Dispense</button>
@@ -264,7 +268,7 @@ const Inventory = () => {
                         <div className="modal-body history-list">
                             {history.length === 0 ? <p>No history found.</p> : (
                                 <table className="history-table">
-                                    <thead><tr><th>Medicine</th><th>Qty</th><th>Date</th><th>Source</th></tr></thead>
+                                    <thead><tr><th>Medicine</th><th>Qty</th><th>Date</th><th>Source</th><th>Recipient</th></tr></thead>
                                     <tbody>
                                         {history.map((h, i) => (
                                             <tr key={i}>
@@ -272,6 +276,7 @@ const Inventory = () => {
                                                 <td>{h.quantity}</td>
                                                 <td>{new Date(h.dispensedAt).toLocaleString()}</td>
                                                 <td>{h.source}</td>
+                                                <td>{h.recipientName || '—'}</td>
                                             </tr>
                                         ))}
                                     </tbody>

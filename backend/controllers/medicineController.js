@@ -84,7 +84,7 @@ const createMedicine = async (req, res) => {
 const dispenseCapsules = async (req, res) => {
   try {
     const { id } = req.params;
-    let { quantity, appointmentId } = req.body;
+    let { quantity, appointmentId, recipientName } = req.body;
     quantity = parseInt(quantity);
 
     if (isNaN(quantity) || quantity <= 0) {
@@ -125,17 +125,18 @@ const dispenseCapsules = async (req, res) => {
     updatedMed.dispenseHistory.push({
       appointmentId: appointmentId ? new mongoose.Types.ObjectId(appointmentId) : null,
       quantity,
-      dispensedBy: req.user.id,
+      dispensedBy: req.user?.userId || req.user?.id || null,
       dispensedAt: new Date(),
-      source: appointmentId ? 'consultation' : 'manual'
+      source: appointmentId ? 'consultation' : 'manual',
+      recipientName: recipientName || null
     });
 
     await updatedMed.save();
 
     // Log the activity
     await logActivity(
-      req.user.userId,
-      req.user?.name || `${req.user?.firstName} ${req.user?.lastName}` || 'Unknown',
+      req.user?.userId || req.user?.id,
+      req.user?.name || `${req.user?.firstName || ''} ${req.user?.lastName || ''}`.trim() || 'Admin',
       req.user?.role || 'admin',
       'dispense_medicine',
       'medicine',
@@ -143,7 +144,8 @@ const dispenseCapsules = async (req, res) => {
       {
         medicineName: updatedMed.name,
         quantity,
-        appointmentId
+        appointmentId,
+        recipientName
       }
     );
 
@@ -166,6 +168,8 @@ const deductMedicines = async (req, res) => {
       session.endSession();
       return res.status(400).json({ error: 'Invalid prescribed list' });
     }
+
+    const Appointment = mongoose.model('Appointment');
 
     const authHeader = req.headers.authorization || '';
     const token = authHeader.split(' ')[1];
@@ -198,13 +202,24 @@ const deductMedicines = async (req, res) => {
       med.quantityInStock -= qty;
       med.available = med.quantityInStock > 0;
 
+      let patientName = null;
+      if (item.appointmentId) {
+        const app = await Appointment.findById(item.appointmentId).populate('patientId').session(session);
+        if (app && app.patientId) {
+          patientName = `${app.patientId.firstName} ${app.patientId.lastName}`.trim();
+        } else if (app) {
+          patientName = `${app.firstName || ''} ${app.lastName || ''}`.trim();
+        }
+      }
+
       med.dispenseHistory = med.dispenseHistory || [];
       med.dispenseHistory.push({
         appointmentId: item.appointmentId ? new mongoose.Types.ObjectId(item.appointmentId) : null,
         quantity: qty,
         dispensedBy: userId ? new mongoose.Types.ObjectId(userId) : null,
         dispensedAt: new Date(),
-        source: 'consultation'
+        source: 'consultation',
+        recipientName: patientName
       });
 
       await med.save({ session });
@@ -287,7 +302,8 @@ const getAllDispenseHistory = async (req, res) => {
   try {
     const medicines = await Medicine.find({}, 'name dispenseHistory')
       .populate('dispenseHistory.appointmentId', 'firstName lastName appointmentDate')
-      .populate('dispenseHistory.dispensedBy', 'firstName lastName');
+      .populate('dispenseHistory.dispensedBy', 'firstName lastName')
+      .populate('dispenseHistory.appointmentId.patientId', 'firstName lastName');
 
     const allHistory = [];
 
@@ -304,16 +320,28 @@ const getAllDispenseHistory = async (req, res) => {
           ? `${record.dispensedBy.firstName} ${record.dispensedBy.lastName}`
           : 'Unknown';
 
+        let recipient = record.recipientName || 'Unknown';
+        if (!record.recipientName && record.appointmentId) {
+          if (record.appointmentId.patientId) {
+            recipient = `${record.appointmentId.patientId.firstName} ${record.appointmentId.patientId.lastName}`.trim();
+          } else {
+            recipient = `${record.appointmentId.firstName || ''} ${record.appointmentId.lastName || ''}`.trim() || 'Unknown';
+          }
+        }
+
         allHistory.push({
           medicineName: med.name,
           quantity: record.quantity,
           dispensedAt: record.dispensedAt,
           dispensedBy: dispensedByName,
           appointmentId: record.appointmentId,
-          source: sourceLabel
+          source: sourceLabel,
+          recipientName: recipient
         });
       });
     });
+
+    allHistory.sort((a, b) => new Date(b.dispensedAt) - new Date(a.dispensedAt));
 
     res.json(allHistory);
   } catch (err) {
@@ -361,13 +389,23 @@ const generateDispenseHistoryPDF = async (req, res) => {
           ? `${record.dispensedBy.firstName} ${record.dispensedBy.lastName}`
           : 'Unknown';
 
+        let recipient = record.recipientName || 'Unknown';
+        if (!record.recipientName && record.appointmentId) {
+          if (record.appointmentId.patientId) {
+            recipient = `${record.appointmentId.patientId.firstName} ${record.appointmentId.patientId.lastName}`.trim();
+          } else {
+            recipient = `${record.appointmentId.firstName || ''} ${record.appointmentId.lastName || ''}`.trim() || 'Unknown';
+          }
+        }
+
         allHistory.push({
           medicineName: med.name,
           quantity: record.quantity,
           dispensedAt: record.dispensedAt,
           dispensedBy: dispensedByName,
           appointmentId: record.appointmentId,
-          source: sourceLabel
+          source: sourceLabel,
+          recipientName: recipient
         });
       });
     });
@@ -377,7 +415,7 @@ const generateDispenseHistoryPDF = async (req, res) => {
 
     const PDFDocument = require('pdfkit');
     const crypto = require('crypto');
-    const doc = new PDFDocument({ margin: 50, size: 'A4' });
+    const doc = new PDFDocument({ margin: 40, size: 'A4' });
     const buffers = [];
 
     doc.on('data', chunk => buffers.push(chunk));
@@ -388,105 +426,132 @@ const generateDispenseHistoryPDF = async (req, res) => {
       res.send(pdfBuffer);
     });
 
+    const primaryColor = '#2563eb'; // Blue-600
+    const textColor = '#334155'; // Slate-700
+    const lightGray = '#f1f5f9'; // Slate-100
+    const borderColor = '#cbd5e1'; // Slate-300
+
     // Footer helper
     const drawFooter = (pageNumber, totalPages, isLastPage = false) => {
       const pageHeight = doc.page.height;
       const pageWidth = doc.page.width;
-      const footerY = pageHeight - 150;
-      const signatureBlockWidth = 300;
-      const signatureLeft = (pageWidth - signatureBlockWidth) / 2;
+      const footerY = pageHeight - 120;
 
-      doc.lineWidth(1).moveTo(50, footerY).lineTo(pageWidth - 50, footerY).stroke();
+      doc.lineWidth(1).strokeColor(borderColor).moveTo(40, footerY).lineTo(pageWidth - 40, footerY).stroke();
 
-      doc.fontSize(7);
-      doc.text('Medical System - Dispense History Report', 50, footerY + 10, { align: 'left' });
-      doc.text('This report is generated electronically.', pageWidth - 150, footerY + 10, {
-        width: 100,
-        align: 'right'
-      });
-      doc.text(`Page ${pageNumber} of ${totalPages}`, pageWidth / 2 - 50, footerY + 10, {
-        width: 100,
-        align: 'center'
-      });
+      doc.fillColor('#64748b').fontSize(8);
+      doc.text('BukSU Medical Clinic System - Dispense History Report', 40, footerY + 15, { align: 'left' });
+      doc.text('Auto-generated confidential report.', pageWidth - 200, footerY + 15, { width: 160, align: 'right' });
+      doc.text(`Page ${pageNumber} of ${totalPages}`, pageWidth / 2 - 50, footerY + 15, { width: 100, align: 'center' });
 
       if (isLastPage) {
-        const uniqueSignatureId = crypto.randomUUID();
-        doc.fontSize(6);
-        doc.text('Digital Signature:', signatureLeft, footerY + 25, {
-          width: signatureBlockWidth,
-          align: 'center'
-        });
-        doc.lineWidth(1)
-          .moveTo(signatureLeft, footerY + 30)
-          .lineTo(signatureLeft + signatureBlockWidth, footerY + 30)
-          .stroke();
-        doc.text(`ID: ${uniqueSignatureId}`, signatureLeft, footerY + 35, {
-          width: signatureBlockWidth,
-          align: 'center'
-        });
-        doc.text('Validated by Medical System on ' + new Date().toLocaleDateString(), signatureLeft, footerY + 43, {
-          width: signatureBlockWidth,
-          align: 'center'
-        });
+        const uniqueSignatureId = crypto.randomUUID().split('-')[0].toUpperCase();
+        const sigBlockLeft = pageWidth - 240;
+        const sigBlockY = footerY - 80;
+
+        doc.fillColor(textColor).fontSize(9);
+        doc.text('Verified By:', sigBlockLeft, sigBlockY);
+        doc.lineWidth(1).strokeColor(textColor).moveTo(sigBlockLeft, sigBlockY + 40).lineTo(sigBlockLeft + 180, sigBlockY + 40).stroke();
+        doc.fillColor('#64748b').fontSize(8);
+        doc.text('Digital Signature / Validator', sigBlockLeft, sigBlockY + 45);
+        doc.text(`UID: ${uniqueSignatureId}`, sigBlockLeft, sigBlockY + 55);
       }
     };
 
     // Header
-    doc.fontSize(20).text('Medical System - Dispense History Report', { align: 'center' });
-    doc.moveDown();
-    doc.fontSize(12).text(`Report ID: ${reportId}`, { align: 'center' });
-    doc.moveDown();
-    doc.fontSize(12).text(`Generated on: ${new Date().toLocaleString()}`, { align: 'center' });
-    doc.moveDown();
+    doc.rect(0, 0, doc.page.width, 100).fill(primaryColor);
+    doc.fillColor('#ffffff').fontSize(24).font('Helvetica-Bold').text('Dispense History Report', 40, 35);
+    doc.fontSize(10).font('Helvetica').text(`Generated on: ${new Date().toLocaleString()}`, 40, 65);
+    doc.text(`Report ID: ${reportId}`, doc.page.width - 200, 65, { align: 'right', width: 160 });
 
+    doc.moveDown(4);
+
+    // Filters Section
     if (startDate || endDate || medicineName) {
-      doc.fontSize(10).text('Filters Applied:', { underline: true });
-      if (startDate) doc.text(`From: ${new Date(startDate).toLocaleDateString()}`);
-      if (endDate) doc.text(`To: ${new Date(endDate).toLocaleDateString()}`);
-      if (medicineName) doc.text(`Medicine: ${medicineName}`);
-      doc.moveDown();
+      doc.fillColor(primaryColor).fontSize(12).font('Helvetica-Bold').text('Filter Properties:', 40, doc.y);
+      doc.moveDown(0.5);
+      doc.fillColor(textColor).fontSize(10).font('Helvetica');
+
+      const filterBoxY = doc.y;
+      doc.rect(40, filterBoxY, doc.page.width - 80, 50).fillAndStroke(lightGray, borderColor);
+
+      let filterTextX = 50;
+      if (startDate) { doc.fillColor(textColor).text(`From: ${new Date(startDate).toLocaleDateString()}`, filterTextX, filterBoxY + 10); filterTextX += 130; }
+      if (endDate) { doc.fillColor(textColor).text(`To: ${new Date(endDate).toLocaleDateString()}`, filterTextX, filterBoxY + 10); filterTextX += 130; }
+      if (medicineName) { doc.fillColor(textColor).text(`Medicine: ${medicineName}`, filterTextX, filterBoxY + 10); }
+
+      doc.y = filterBoxY + 70;
     }
 
     // Table
     let pageCount = 1;
+
+    // Define columns
+    const columns = [
+      { id: 'medicine', header: 'Medicine Name', x: 40, width: 130 },
+      { id: 'qty', header: 'Quantity', x: 170, width: 60 },
+      { id: 'date', header: 'Dispense Date', x: 230, width: 120 },
+      { id: 'source', header: 'Source', x: 350, width: 80 },
+      { id: 'recipient', header: 'Recipient', x: 430, width: 120 }
+    ];
+
     const renderTableHeader = () => {
-      doc.fontSize(10);
-      doc.text('Medicine', 50, doc.y);
-      doc.text('Quantity', 150, doc.y);
-      doc.text('Dispensed', 220, doc.y);
-      doc.text('Source', 350, doc.y);
-      doc.moveTo(50, doc.y + 15).lineTo(550, doc.y + 15).stroke();
+      doc.fillColor(primaryColor).rect(40, doc.y, doc.page.width - 80, 25).fill();
+      doc.fillColor('#ffffff').fontSize(10).font('Helvetica-Bold');
+      const startY = doc.y - 18;
+      columns.forEach(col => {
+        doc.text(col.header, col.x + 5, startY, { width: col.width - 10, align: 'left' });
+      });
+      doc.y = startY + 25;
     };
 
     if (allHistory.length === 0) {
-      doc.fontSize(14).text('No dispense history records found for the applied filters.', { align: 'center' });
+      doc.moveDown(2);
+      doc.fillColor(textColor).fontSize(12).font('Helvetica-Oblique').text('No dispense history records found for the applied filters.', { align: 'center' });
       drawFooter(pageCount, pageCount, true);
     } else {
       renderTableHeader();
-      let y = doc.y + 25;
-      const footerReserve = 100;
+      let y = doc.y;
+      const footerReserve = 150;
+      let rowIndex = 0;
 
       allHistory.forEach((record, index) => {
-        if (y + 20 > doc.page.height - footerReserve) {
+        if (y + 30 > doc.page.height - footerReserve) {
           drawFooter(pageCount, '...');
           doc.addPage();
           pageCount++;
-          doc.fontSize(16).text('Medical System - Dispense History Report', { align: 'center' });
-          doc.moveDown();
-          doc.fontSize(10).text(`Report ID: ${reportId}`, { align: 'center' });
-          doc.moveDown();
-          doc.fontSize(10).text(`Generated on: ${new Date().toLocaleString()}`, { align: 'center' });
-          doc.moveDown();
+
+          doc.rect(0, 0, doc.page.width, 60).fill(primaryColor);
+          doc.fillColor('#ffffff').fontSize(16).font('Helvetica-Bold').text('Dispense History Report (Cont.)', 40, 25);
+          doc.y = 80;
           renderTableHeader();
-          y = doc.y + 25;
+          y = doc.y;
+          rowIndex = 0;
         }
 
-        doc.text(record.medicineName, 50, y);
-        doc.text(record.quantity.toString(), 150, y);
-        doc.text(new Date(record.dispensedAt).toLocaleString(), 220, y);
-        doc.text(record.source, 350, y);
-        doc.moveTo(50, y + 15).lineTo(550, y + 15).stroke();
-        y += 20;
+        // Alternating row colors
+        if (rowIndex % 2 === 1) {
+          doc.rect(40, y, doc.page.width - 80, 25).fill(lightGray);
+        }
+
+        doc.fillColor(textColor).fontSize(9).font('Helvetica');
+        const textY = y + 8;
+
+        doc.text(record.medicineName, columns[0].x + 5, textY, { width: columns[0].width - 10, height: 15, ellipsis: true });
+        doc.text(record.quantity.toString(), columns[1].x + 5, textY, { width: columns[1].width - 10 });
+        doc.text(new Date(record.dispensedAt).toLocaleString(), columns[2].x + 5, textY, { width: columns[2].width - 10 });
+
+        // Stylish pills for source
+        const sourceLabel = record.source;
+        doc.fillColor('#64748b').text(sourceLabel, columns[3].x + 5, textY, { width: columns[3].width - 10 });
+
+        doc.fillColor(textColor).text(record.recipientName, columns[4].x + 5, textY, { width: columns[4].width - 10, height: 15, ellipsis: true });
+
+        // Row border
+        doc.lineWidth(0.5).strokeColor(borderColor).moveTo(40, y + 25).lineTo(doc.page.width - 40, y + 25).stroke();
+
+        y += 25;
+        rowIndex++;
 
         if (index === allHistory.length - 1) {
           drawFooter(pageCount, pageCount, true);

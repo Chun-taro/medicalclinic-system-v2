@@ -181,6 +181,13 @@
     border: 1px solid var(--border);
     border-radius: var(--radius-md);
     margin-bottom: 1rem;
+    background: transparent;
+    color: var(--text-main);
+}
+
+.modal-body select option {
+    background: var(--bg-card);
+    color: var(--text-main);
 }
 
 .modal-body label {
