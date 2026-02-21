@@ -17,15 +17,16 @@ const Login = () => {
     const [loading, setLoading] = useState(false);
     const [logoClicks, setLogoClicks] = useState(0);
 
-    const { login } = useAuth();
+    const { login, logout } = useAuth();
     const { setForceLightMode } = useTheme();
     const navigate = useNavigate();
 
-    // Force Light Mode on Login page
+    // Force Light Mode on Login page and explicitly log out the user
     useEffect(() => {
         setForceLightMode(true);
+        logout(); // Automatically sign out the user if they were previously authenticated
         return () => setForceLightMode(false);
-    }, [setForceLightMode]);
+    }, [setForceLightMode, logout]);
 
     // Logo secret click for Superadmin
     useEffect(() => {
