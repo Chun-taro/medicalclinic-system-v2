@@ -61,7 +61,12 @@ const SystemLogs = () => {
         }
 
         if (actionFilter) {
-            result = result.filter(log => log.action === actionFilter);
+            result = result.filter(log => {
+                if (actionFilter === 'user_signup') {
+                    return log.action === 'user_signup' || log.action === 'user_signup_pending';
+                }
+                return log.action === actionFilter;
+            });
         }
 
         if (dateRange.start) {
@@ -77,10 +82,52 @@ const SystemLogs = () => {
     };
 
     const getActionBadge = (action) => {
+        if (!action) return null;
         const type = action.includes('delete') ? 'danger' :
             action.includes('approve') || action.includes('complete') ? 'success' :
                 action.includes('update') ? 'warning' : 'info';
         return <span className={`log-badge badge-${type}`}>{action.replace(/_/g, ' ')}</span>;
+    };
+
+    const formatLogDetails = (log) => {
+        const { action, details, entityType } = log;
+
+        let targetString = '';
+        if (details?.email) targetString = details.email;
+        else if (details?.userName) targetString = details.userName;
+        else if (details?.patientName) targetString = details.patientName;
+
+        const friendlyTarget = targetString ? ` (${targetString})` : '';
+
+        switch (action) {
+            case 'user_login':
+                return `Successfully logged in via ${details?.provider || 'local email'}${friendlyTarget}.`;
+            case 'user_signup':
+            case 'user_signup_pending':
+                return `New account registered${friendlyTarget}.`;
+            case 'email_verified':
+                return `Email address verified${friendlyTarget}.`;
+            case 'approve_appointment':
+                return `Approved an appointment for ${details?.patientName || 'a patient'} with Dr. ${details?.doctorName || 'doctor'} on ${new Date(details?.appointmentDate || Date.now()).toLocaleDateString()}.`;
+            case 'delete_appointment':
+            case 'cancel_appointment':
+                return `Cancelled or deleted an appointment${friendlyTarget}.`;
+            case 'reschedule_appointment':
+                return `Rescheduled an appointment${friendlyTarget}.`;
+            case 'update_user_role':
+                return `Updated user role to "${details?.role || 'new role'}"${friendlyTarget}.`;
+            case 'complete_consultation':
+                return `Completed a medical consultation${friendlyTarget}.`;
+            default:
+                // Fallback for unknown actions, still try to be readable
+                if (details && Object.keys(details).length > 0) {
+                    const keys = Object.keys(details).filter(k => !['email', 'userName', 'patientName', 'provider', 'role'].includes(k));
+                    if (keys.length > 0) {
+                        return `Updated ${entityType} record. Modified fields: ${keys.join(', ')}.`;
+                    }
+                }
+                return `Performed a system action related to ${entityType || 'the system'}.`;
+        }
     };
 
     if (loading) return <div className="loading-spinner-container"><div className="loading-spinner"></div></div>;
@@ -148,20 +195,8 @@ const SystemLogs = () => {
                                 </div>
                                 {getActionBadge(log.action)}
                             </div>
-                            <div className="log-details">
-                                <div className="detail-row">
-                                    <span className="label">Entity Type:</span> {log.entityType}
-                                </div>
-                                {log.entityId && (
-                                    <div className="detail-row">
-                                        <span className="label">Entity ID:</span> <span className="mono">{log.entityId}</span>
-                                    </div>
-                                )}
-                                {log.details && (
-                                    <div className="json-details">
-                                        <pre>{JSON.stringify(log.details, null, 2)}</pre>
-                                    </div>
-                                )}
+                            <div className="log-details" style={{ color: 'var(--text-main)', fontSize: '0.95rem', lineHeight: '1.5' }}>
+                                {formatLogDetails(log)}
                             </div>
                         </div>
                     ))
