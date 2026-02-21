@@ -30,7 +30,7 @@ api.interceptors.response.use(
             // Auto logout if 401 occurs
             localStorage.removeItem('token');
             localStorage.removeItem('role');
-            window.location.href = '/';
+            window.location.href = '/login';
         }
         return Promise.reject(error);
     }

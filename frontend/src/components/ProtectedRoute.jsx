@@ -13,7 +13,7 @@ const ProtectedRoute = ({ children, requiredRole }) => {
 
     if (!role) {
         console.warn('ProtectedRoute: No role, redirecting to login');
-        return <Navigate to="/" state={{ from: location }} replace />;
+        return <Navigate to="/login" state={{ from: location }} replace />;
     }
 
     // Role hierarchy or specific checks
