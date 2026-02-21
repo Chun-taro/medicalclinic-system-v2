@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const User = require('../models/User');
+const logActivity = require('../utils/logActivity');
 
 const {
   signup,
@@ -80,6 +81,17 @@ router.get('/google/callback', (req, res, next) => {
           { userId: user._id, role: user.role },
           process.env.JWT_SECRET,
           { expiresIn: '1d' }
+        );
+
+        // Track the user login event
+        await logActivity(
+          user._id,
+          `${user.firstName} ${user.lastName}`,
+          user.role,
+          'user_login',
+          'auth',
+          user._id,
+          { email: user.email, provider: 'google' }
         );
 
         // Determine frontend URL more robustly

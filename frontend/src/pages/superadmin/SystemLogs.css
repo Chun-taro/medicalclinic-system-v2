@@ -56,6 +56,12 @@
     font-size: 0.9rem;
 }
 
+/* Ensure the dropdown options don't become invisible in dark mode */
+.filter-select select option {
+    background: var(--bg-card);
+    color: var(--text-main);
+}
+
 .logs-list {
     display: flex;
     flex-direction: column;
