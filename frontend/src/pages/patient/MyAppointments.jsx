@@ -85,7 +85,11 @@ const MyAppointments = () => {
                                     <div className="detail-grid">
                                         <div className="detail-item">
                                             <label>Time</label>
-                                            <p>{new Date(apt.appointmentDate).toLocaleTimeString()}</p>
+                                            <p>{
+                                                ['approved', 'completed'].includes(apt.status.toLowerCase())
+                                                    ? 'Go to the clinic'
+                                                    : 'Pending Time'
+                                            }</p>
                                         </div>
                                         <div className="detail-item">
                                             <label>Doctor</label>
