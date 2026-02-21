@@ -18,6 +18,12 @@
     align-items: center;
     max-width: 1400px;
     margin: 0 auto;
+    background: linear-gradient(rgba(15, 23, 42, 0.8), rgba(15, 23, 42, 0.9)), url('../../assets/building.png');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    border-radius: var(--radius-xl);
+    overflow: hidden;
 }
 
 @media (min-width: 992px) {
@@ -49,11 +55,13 @@
     font-size: 3.5rem;
     line-height: 1.1;
     margin-bottom: 1.5rem;
-    color: var(--text-main);
+    color: #ffffff;
+    /* Override for dark bg */
 }
 
 .text-gradient {
-    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+    background: linear-gradient(135deg, #60a5fa 0%, #34d399 100%);
+    /* Lighter gradient for dark bg */
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -61,7 +69,8 @@
 
 .hero-subtitle {
     font-size: 1.15rem;
-    color: var(--text-secondary);
+    color: #cbd5e1;
+    /* Lighter text for dark bg */
     margin-bottom: 2.5rem;
     max-width: 500px;
     line-height: 1.6;
@@ -99,15 +108,16 @@
 }
 
 .btn-secondary {
-    background: var(--bg-card);
-    color: var(--text-main);
-    border: 1px solid var(--border);
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(4px);
+    color: #ffffff;
+    border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .btn-secondary:hover {
-    border-color: var(--primary);
-    color: var(--primary);
-    background: var(--primary-light);
+    border-color: rgba(255, 255, 255, 0.4);
+    background: rgba(255, 255, 255, 0.2);
+    color: #ffffff;
 }
 
 .icon-right {
