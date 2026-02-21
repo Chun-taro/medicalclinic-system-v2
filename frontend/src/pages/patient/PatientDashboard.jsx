@@ -108,10 +108,12 @@ const PatientDashboard = () => {
                                             <div className="apt-meta">
                                                 <Clock size={14} />
                                                 <span>
-                                                    {new Date(apt.appointmentDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                    {['approved', 'completed'].includes(apt.status.toLowerCase())
+                                                        ? 'Go to the clinic'
+                                                        : 'Pending Time'}
                                                 </span>
                                             </div>
-                                            <div className="apt-status badge-pending">
+                                            <div className={`apt-status badge-${apt.status.toLowerCase()}`}>
                                                 {apt.status}
                                             </div>
                                         </div>
