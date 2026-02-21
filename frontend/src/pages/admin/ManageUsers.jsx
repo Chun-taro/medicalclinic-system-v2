@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import api from '../../services/api';
+import api, { getImageUrl } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import { toast } from 'react-toastify';
 import { Search, UserCheck, UserX, Shield, Briefcase, Stethoscope, User } from 'lucide-react';
@@ -135,7 +135,15 @@ const ManageUsers = () => {
                                     <td>
                                         <div className="user-cell">
                                             <div className="user-avatar-sm">
-                                                {user.firstName ? user.firstName[0] : 'U'}
+                                                {user.profilePicture ? (
+                                                    <img
+                                                        src={getImageUrl(user.profilePicture)}
+                                                        alt="Profile"
+                                                        style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }}
+                                                    />
+                                                ) : (
+                                                    user.firstName ? user.firstName[0].toUpperCase() : 'U'
+                                                )}
                                             </div>
                                             <div>
                                                 <div className="user-name">{user.firstName} {user.lastName}</div>

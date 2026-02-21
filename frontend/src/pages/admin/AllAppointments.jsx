@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import api from '../../services/api';
+import api, { getImageUrl } from '../../services/api';
 import { toast } from 'react-toastify';
 import {
     Search, Calendar, Filter, CheckCircle, XCircle, Edit, Trash2,
@@ -242,9 +242,22 @@ const AllAppointments = () => {
                             filteredAppointments.map(apt => (
                                 <tr key={apt._id}>
                                     <td>
-                                        <div className="patient-info">
-                                            <span className="name">{apt.patientId ? `${apt.patientId.firstName} ${apt.patientId.lastName}` : apt.firstName + ' ' + apt.lastName}</span>
-                                            <span className="email">{apt.patientId?.email || apt.email}</span>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                            <div style={{ width: '36px', height: '36px', borderRadius: '50%', backgroundColor: 'var(--primary-color, #2563eb)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', overflow: 'hidden', flexShrink: 0 }}>
+                                                {apt.patientId?.profilePicture ? (
+                                                    <img
+                                                        src={getImageUrl(apt.patientId.profilePicture)}
+                                                        alt="Profile"
+                                                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                                    />
+                                                ) : (
+                                                    (apt.patientId?.firstName?.[0] || apt.firstName?.[0] || 'U').toUpperCase()
+                                                )}
+                                            </div>
+                                            <div className="patient-info">
+                                                <span className="name">{apt.patientId ? `${apt.patientId.firstName} ${apt.patientId.lastName}` : apt.firstName + ' ' + apt.lastName}</span>
+                                                <span className="email">{apt.patientId?.email || apt.email}</span>
+                                            </div>
                                         </div>
                                     </td>
                                     <td>
