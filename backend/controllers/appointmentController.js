@@ -674,7 +674,7 @@ const getConsultations = async (req, res) => {
     })
       .populate('patientId', 'firstName lastName email contactNumber')
       .select(
-        'patientId firstName lastName appointmentDate consultationCompletedAt chiefComplaint diagnosis management bloodPressure temperature heartRate oxygenSaturation bmi bmiIntervention medicinesPrescribed referredToPhysician physicianName firstAidDone firstAidWithin30Mins purpose'
+        'patientId firstName lastName appointmentDate consultationCompletedAt chiefComplaint additionalNotes diagnosis management bloodPressure temperature heartRate oxygenSaturation bmi bmiIntervention medicinesPrescribed referredToPhysician physicianName firstAidDone firstAidWithin30Mins purpose'
       )
       .sort({ consultationCompletedAt: -1 })
       .lean();

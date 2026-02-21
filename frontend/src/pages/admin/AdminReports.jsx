@@ -154,8 +154,8 @@ const AdminReports = () => {
                                         {activeTab === 'consultations' ? (
                                             <>
                                                 <div className="detail-item full-width">
-                                                    <label>Chief Complaint</label>
-                                                    <p>{item.chiefComplaint || '—'}</p>
+                                                    <label>Chief Complaint / Notes</label>
+                                                    <p>{item.additionalNotes || item.chiefComplaint || '—'}</p>
                                                 </div>
                                                 <div className="detail-item full-width">
                                                     <label>Diagnosis</label>
