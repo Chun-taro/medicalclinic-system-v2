@@ -75,8 +75,7 @@ const Login = () => {
                 patient: '/patient-dashboard',
                 admin: '/admin-dashboard',
                 superadmin: '/superadmin-dashboard',
-                doctor: '/doctor-feedback', // As per old ProtectedRoute
-                nurse: '/admin-dashboard' // As per old ProtectedRoute
+                doctor: '/doctor-feedback' // As per old ProtectedRoute
             };
 
             navigate(dashboardMap[role] || '/');

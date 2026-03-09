@@ -132,12 +132,18 @@ const userSchema = new mongoose.Schema({
   googleAccessToken: { type: String },
   googleRefreshToken: { type: String },
 
-  //  Role
   role: {
     type: String,
-    enum: ['patient', 'admin', 'doctor', 'nurse', 'superadmin'],
+    enum: ['patient', 'admin', 'doctor', 'superadmin'],
     default: 'patient'
   },
+  patientType: {
+    type: String,
+    enum: ['faculty', 'personnel', 'student'],
+    default: 'student'
+  },
+  course: { type: String, trim: true },
+  department: { type: String, trim: true },
 
   //  Password Reset
   resetToken: String,

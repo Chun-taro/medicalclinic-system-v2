@@ -5,7 +5,7 @@ const { optimisticUpdate } = require('../utils/concurrencyControl');
 // Get all users (admin or superadmin only)
 const getAllUsers = async (req, res) => {
   try {
-    if (req.user.role !== 'admin' && req.user.role !== 'superadmin' && req.user.role !== 'doctor' && req.user.role !== 'nurse') {
+    if (req.user.role !== 'admin' && req.user.role !== 'superadmin' && req.user.role !== 'doctor') {
       return res.status(403).json({ error: 'Access denied. Admins only.' });
     }
     const users = await User.find().select('-password');
@@ -23,7 +23,7 @@ const updateUserRole = async (req, res) => {
     }
 
     const { role } = req.body;
-    const validRoles = ['patient', 'admin', 'doctor', 'nurse', 'superadmin'];
+    const validRoles = ['patient', 'admin', 'doctor', 'superadmin'];
     if (!validRoles.includes(role)) {
       return res.status(400).json({ error: 'Invalid role specified.' });
     }
@@ -109,7 +109,15 @@ const getProfile = async (req, res) => {
 //  Update profile of logged-in user
 const updateProfile = async (req, res) => {
   try {
-    const { version, ...updates } = req.body;
+    const { version, firstName, lastName, middleName, idNumber, contactNumber, patientType, course, department, homeAddress, civilStatus, birthday, sex, emergencyContact, bloodType, allergies, medicalHistory, currentMedications, familyHistory } = req.body;
+
+    const updates = {
+      firstName, lastName, middleName, idNumber, contactNumber,
+      patientType, course, department,
+      homeAddress, civilStatus, birthday, sex,
+      emergencyContact, bloodType, allergies,
+      medicalHistory, currentMedications, familyHistory
+    };
 
     const updatedUser = await optimisticUpdate(
       User,

@@ -120,7 +120,7 @@ const getPatientAppointments = async (req, res) => {
 //  Get all appointments (admin or superadmin only)
 const getAllAppointments = async (req, res) => {
   try {
-    if (req.user.role !== 'admin' && req.user.role !== 'superadmin' && req.user.role !== 'doctor' && req.user.role !== 'nurse') {
+    if (req.user.role !== 'admin' && req.user.role !== 'superadmin' && req.user.role !== 'doctor') {
       return res.status(403).json({ error: 'Access denied' });
     }
 
@@ -369,7 +369,7 @@ const startConsultation = async (req, res) => {
     }
 
     // Mark caller as the clinician for this appointment so feedback targets them
-    const clinicianRoles = ['doctor', 'admin', 'superadmin', 'nurse'];
+    const clinicianRoles = ['doctor', 'admin', 'superadmin'];
     if (clinicianRoles.includes(req.user.role)) {
       appointment.doctorId = req.user.userId;
     }
@@ -402,8 +402,9 @@ const startConsultation = async (req, res) => {
 //  Complete consultation
 const completeConsultation = async (req, res) => {
   try {
+    const { diagnosis, treatment, medications, notes, followUpDate } = req.body;
     const updateFields = {
-      ...req.body,
+      diagnosis, treatment, medications, notes, followUpDate,
       status: 'completed',
       consultationCompletedAt: new Date() // Always set to current time when completing
     };

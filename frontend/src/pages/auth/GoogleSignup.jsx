@@ -20,6 +20,9 @@ const GoogleSignup = () => {
         middleName: '',
         idNumber: '',
         contactNumber: '',
+        patientType: 'student',
+        course: '',
+        department: '',
         role: 'patient', // Default to patient for Google signup
         password: 'OAUTH_USER' // Dummy password for backend schema if required
     });
@@ -47,8 +50,18 @@ const GoogleSignup = () => {
             return;
         }
 
-        if (!form.email.endsWith('@student.buksu.edu.ph')) {
-            toast.error('Only BukSU student emails are allowed for patient registration.');
+        if (form.patientType === 'student' && !form.course) {
+            toast.error('Please specify your course');
+            return;
+        }
+
+        if (form.patientType === 'faculty' && !form.department) {
+            toast.error('Please specify your department');
+            return;
+        }
+
+        if (!form.email.endsWith('.edu.ph')) {
+            toast.error('Only BukSU emails are allowed for registration.');
             return;
         }
 
@@ -130,6 +143,19 @@ const GoogleSignup = () => {
                         />
 
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                            <div className="form-group">
+                                <select
+                                    name="patientType"
+                                    className="form-control"
+                                    value={form.patientType}
+                                    onChange={handleChange}
+                                    disabled={loading}
+                                >
+                                    <option value="student">Student</option>
+                                    <option value="faculty">Faculty</option>
+                                    <option value="personnel">Personnel</option>
+                                </select>
+                            </div>
                             <input
                                 type="text"
                                 name="idNumber"
@@ -140,6 +166,35 @@ const GoogleSignup = () => {
                                 disabled={loading}
                                 required
                             />
+                        </div>
+
+                        {form.patientType === 'student' && (
+                            <input
+                                type="text"
+                                name="course"
+                                className="form-control"
+                                placeholder="Course (e.g. BSIT) *"
+                                value={form.course}
+                                onChange={handleChange}
+                                disabled={loading}
+                                required
+                            />
+                        )}
+
+                        {form.patientType === 'faculty' && (
+                            <input
+                                type="text"
+                                name="department"
+                                className="form-control"
+                                placeholder="Department *"
+                                value={form.department}
+                                onChange={handleChange}
+                                disabled={loading}
+                                required
+                            />
+                        )}
+
+                        <div className="form-group">
                             <input
                                 type="tel"
                                 name="contactNumber"

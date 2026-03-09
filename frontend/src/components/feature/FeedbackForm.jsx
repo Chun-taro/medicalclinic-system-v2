@@ -5,30 +5,11 @@ import { toast } from 'react-toastify';
 import { X, Star } from 'lucide-react';
 import './FeedbackForm.css';
 
-const FeedbackForm = ({ doctorId, doctorName, appointmentId, onClose, onSuccess }) => {
+const FeedbackForm = ({ appointmentId, onClose, onSuccess }) => {
     const [rating, setRating] = useState(0);
     const [hoverRating, setHoverRating] = useState(0);
     const [comment, setComment] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [staffOptions, setStaffOptions] = useState([]);
-    const [selectedRecipient, setSelectedRecipient] = useState('');
-
-    useEffect(() => {
-        const fetchStaff = async () => {
-            try {
-                const res = await api.get('/users');
-                const staff = res.data.filter(u => ['doctor', 'admin', 'superadmin', 'nurse'].includes(u.role));
-                setStaffOptions(staff);
-
-                // Set default recipient
-                const defaultId = typeof doctorId === 'object' ? doctorId?._id : doctorId;
-                if (defaultId) setSelectedRecipient(defaultId);
-            } catch (err) {
-                console.error('Failed to load staff list for feedback:', err);
-            }
-        };
-        fetchStaff();
-    }, [doctorId]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -44,11 +25,6 @@ const FeedbackForm = ({ doctorId, doctorName, appointmentId, onClose, onSuccess 
                 rating,
                 comment: comment.trim()
             };
-            if (selectedRecipient) {
-                payload.recipientId = selectedRecipient;
-                const recipient = staffOptions.find(s => s._id === selectedRecipient);
-                if (recipient) payload.recipientRole = recipient.role;
-            }
 
             await feedbackService.submitFeedback(payload);
             toast.success('Thank you for your feedback!');
@@ -70,8 +46,6 @@ const FeedbackForm = ({ doctorId, doctorName, appointmentId, onClose, onSuccess 
                     <h3>Rate Your Experience</h3>
                     <button className="close-btn" onClick={onClose}><X size={24} /></button>
                 </div>
-
-                {doctorName && <p className="feedback-subtitle">with {doctorName}</p>}
 
                 <form onSubmit={handleSubmit} className="feedback-form">
                     <div className="rating-container">
@@ -96,24 +70,10 @@ const FeedbackForm = ({ doctorId, doctorName, appointmentId, onClose, onSuccess 
                             rows={4}
                             value={comment}
                             onChange={(e) => setComment(e.target.value)}
-                            placeholder="Tell us about your experience..."
+                            placeholder="Tell us about your experience with the system..."
                             maxLength={1000}
                         />
                         <span className="char-count">{comment.length}/1000</span>
-                    </div>
-
-                    <div className="form-group">
-                        <label>Send feedback to:</label>
-                        <select
-                            className="form-control"
-                            value={selectedRecipient}
-                            onChange={(e) => setSelectedRecipient(e.target.value)}
-                        >
-                            <option value="">-- Assigned Doctor (Default) --</option>
-                            {staffOptions.map(s => (
-                                <option key={s._id} value={s._id}>{`${s.firstName} ${s.lastName} (${s.role})`}</option>
-                            ))}
-                        </select>
                     </div>
 
                     <div className="form-actions">

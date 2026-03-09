@@ -11,9 +11,6 @@ const auth = (req, res, next) => {
       token = req.cookies.token;
     }
 
-    // Debug logging (remove in production)
-    console.log('Incoming token:', token);
-
     // Validate token format
     if (!token || token.split('.').length !== 3) {
       console.warn('Malformed or missing token');

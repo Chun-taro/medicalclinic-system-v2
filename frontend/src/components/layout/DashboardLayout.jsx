@@ -5,7 +5,7 @@ import Header from './Header';
 import './Layout.css'; // We'll create this CSS next
 
 const DashboardLayout = () => {
-    const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth > 1024);
 
     const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
 

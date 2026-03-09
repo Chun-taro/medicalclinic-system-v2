@@ -18,17 +18,17 @@
     flex-direction: column;
     transition: transform 0.3s ease;
     z-index: 50;
+    transform: translateX(-100%);
+    /* Start closed by default */
 }
 
-/* Mobile Sidebar behavior */
-@media (max-width: 768px) {
-    .sidebar {
-        transform: translateX(-100%);
-    }
+.sidebar.open {
+    transform: translateX(0);
+}
 
-    .sidebar.open {
-        transform: translateX(0);
-    }
+/* On desktops, we might want it open by default, but here we enable the drawer behavior */
+@media (min-width: 769px) {
+    /* If you want it open by default on desktop, you can add another class or logic */
 }
 
 .sidebar-header {
@@ -120,17 +120,22 @@
 /* Main Wrapper */
 .main-wrapper {
     flex: 1;
-    margin-left: 260px;
-    /* Default desktop sidebar width */
+    margin-left: 0;
+    /* No margin by default when sidebar is closed */
     display: flex;
     flex-direction: column;
     min-height: 100vh;
     transition: margin-left 0.3s ease;
 }
 
+.main-wrapper.sidebar-open {
+    margin-left: 260px;
+}
+
 @media (max-width: 768px) {
-    .main-wrapper {
+    .main-wrapper.sidebar-open {
         margin-left: 0;
+        /* Overlays on mobile, so no margin shift */
     }
 }
 
@@ -155,17 +160,13 @@
 }
 
 .menu-toggle {
-    display: none;
+    display: block;
+    /* Always show the toggle button */
     background: none;
     border: none;
     color: var(--text-secondary);
     padding: 0.5rem;
-}
-
-@media (max-width: 768px) {
-    .menu-toggle {
-        display: block;
-    }
+    cursor: pointer;
 }
 
 .page-title {

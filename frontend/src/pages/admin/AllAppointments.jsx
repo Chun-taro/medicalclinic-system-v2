@@ -256,7 +256,16 @@ const AllAppointments = () => {
                                             </div>
                                             <div className="patient-info">
                                                 <span className="name">{apt.patientId ? `${apt.patientId.firstName} ${apt.patientId.lastName}` : apt.firstName + ' ' + apt.lastName}</span>
-                                                <span className="email">{apt.patientId?.email || apt.email}</span>
+                                                <span className="email">
+                                                    {apt.patientId?.email || apt.email}
+                                                    {apt.patientId?.role === 'patient' && (
+                                                        <span className="patient-type-badge">
+                                                            {apt.patientId.patientType || 'Student'}
+                                                            {apt.patientId.patientType === 'student' && apt.patientId.course ? ` - ${apt.patientId.course}` : ''}
+                                                            {apt.patientId.patientType === 'faculty' && apt.patientId.department ? ` - ${apt.patientId.department}` : ''}
+                                                        </span>
+                                                    )}
+                                                </span>
                                             </div>
                                         </div>
                                     </td>

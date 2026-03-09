@@ -10,7 +10,7 @@ const { optimisticUpdate } = require('../utils/concurrencyControl');
 // Get all medicines (admin or superadmin only)
 const getAllMedicines = async (req, res) => {
   try {
-    if (req.user.role !== 'admin' && req.user.role !== 'superadmin' && req.user.role !== 'doctor' && req.user.role !== 'nurse') {
+    if (req.user.role !== 'admin' && req.user.role !== 'superadmin' && req.user.role !== 'doctor') {
       return res.status(403).json({ error: 'Access denied' });
     }
     const medicines = await Medicine.find().sort({ name: 1, expiryDate: 1 });

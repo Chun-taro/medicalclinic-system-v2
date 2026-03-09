@@ -28,7 +28,7 @@ const OAuthSuccess = () => {
 
         console.log('OAuthSuccess (V5): Params extracted (role/userId):', { role, userId });
 
-        const validRoles = ['patient', 'admin', 'superadmin', 'doctor', 'nurse'];
+        const validRoles = ['patient', 'admin', 'superadmin', 'doctor'];
 
         if (role && validRoles.includes(role)) {
             hasRun.current = true; // Set this immediately
@@ -48,8 +48,7 @@ const OAuthSuccess = () => {
                     patient: '/patient-dashboard',
                     admin: '/admin-dashboard',
                     superadmin: '/superadmin-dashboard',
-                    doctor: '/doctor-feedback',
-                    nurse: '/admin-dashboard'
+                    doctor: '/doctor-feedback'
                 };
 
                 const target = dashboardMap[role] || '/';

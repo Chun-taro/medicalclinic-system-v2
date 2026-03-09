@@ -35,68 +35,23 @@ const submitFeedback = async (req, res) => {
       return res.status(403).json({ error: 'You can only submit feedback for your own appointments' });
     }
 
-    // Check if feedback already exists for this appointment+recipient
-    let existingFeedback = null;
-    if (recipientId) {
-      existingFeedback = await Feedback.findOne({ appointmentId, recipientId });
-    } else {
-      // No explicit recipient => ensure no feedback exists for this appointment at all
-      existingFeedback = await Feedback.findOne({ appointmentId });
-    }
+    // Check if feedback already exists for this appointment
+    const existingFeedback = await Feedback.findOne({ appointmentId });
     if (existingFeedback) {
-      return res.status(400).json({ error: 'Feedback already submitted for this appointment/recipient' });
+      return res.status(400).json({ error: 'Feedback already submitted for this appointment' });
     }
 
     // Determine patientId for the feedback record
     const patientId = (req.user.role === 'patient') ? req.user.userId : appointment.patientId;
 
-    // Determine recipient (who the feedback is for): prefer explicit recipient from request
-    // Accept `recipientId` and `recipientRole` from the client (patient selects staff member).
-    let finalRecipientId = null;
-    let finalRecipientRole = null;
-
-    if (recipientId) {
-      // validate recipient exists
-      const recip = await User.findById(recipientId);
-      if (!recip) return res.status(404).json({ error: 'Selected recipient not found' });
-      if (recipientRole && recip.role !== recipientRole) {
-        // keep recipientRole in sync with stored role
-        finalRecipientRole = recip.role;
-      } else {
-        finalRecipientRole = recipientRole || recip.role;
-      }
-      finalRecipientId = recip._id;
-    } else {
-      // fallback to appointment.doctorId when available
-      if (appointment.doctorId) {
-        finalRecipientId = appointment.doctorId;
-        finalRecipientRole = 'doctor';
-      }
-    }
-
-    // If no recipient determined yet, try to find a superadmin
-    if (!finalRecipientId) {
-      const superadmin = await User.findOne({ role: 'superadmin' });
-      if (superadmin) {
-        finalRecipientId = superadmin._id;
-        finalRecipientRole = 'superadmin';
-      }
-    }
-
-    // If submitter is admin/doctor/superadmin and no explicit recipient provided, record them as recipient
-    if (!finalRecipientId && ['admin', 'superadmin', 'doctor', 'nurse'].includes(req.user.role)) {
-      finalRecipientId = req.user.userId;
-      finalRecipientRole = req.user.role;
-    }
+    // Feedback is now for the system as a whole.
+    // We'll leave recipientId/recipientRole null or assign to a default system admin if needed.
+    // For now, we simplify and remove the staff-specific logic.
 
     // Create feedback
     const feedback = new Feedback({
       appointmentId,
       patientId,
-      // preserve old doctorId for backward compatibility when recipientRole is doctor
-      doctorId: finalRecipientRole === 'doctor' ? finalRecipientId : undefined,
-      recipientId: finalRecipientId,
-      recipientRole: finalRecipientRole,
       rating,
       comment: comment || ''
     });

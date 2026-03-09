@@ -18,6 +18,9 @@ const Signup = () => {
         password: '',
         confirmPassword: '',
         role: 'patient',
+        patientType: 'student',
+        course: '',
+        department: '',
         idNumber: '',
         contactNumber: ''
     });
@@ -40,8 +43,18 @@ const Signup = () => {
             return;
         }
 
-        if (!form.email.endsWith('@student.buksu.edu.ph')) {
-            toast.error('Please use a valid BukSU student email (@student.buksu.edu.ph)');
+        if (form.patientType === 'student' && !form.course) {
+            toast.error('Please specify your course');
+            return;
+        }
+
+        if (form.patientType === 'faculty' && !form.department) {
+            toast.error('Please specify your department');
+            return;
+        }
+
+        if (!form.email.endsWith('.edu.ph')) {
+            toast.error('Please use a valid BukSU email address');
             return;
         }
 
@@ -141,6 +154,19 @@ const Signup = () => {
                         />
 
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                            <div className="form-group">
+                                <select
+                                    name="patientType"
+                                    className="form-control"
+                                    value={form.patientType}
+                                    onChange={handleChange}
+                                    disabled={loading}
+                                >
+                                    <option value="student">Student</option>
+                                    <option value="faculty">Faculty</option>
+                                    <option value="personnel">Personnel</option>
+                                </select>
+                            </div>
                             <input
                                 type="text"
                                 name="idNumber"
@@ -150,6 +176,33 @@ const Signup = () => {
                                 onChange={handleChange}
                                 disabled={loading}
                             />
+                        </div>
+
+                        {form.patientType === 'student' && (
+                            <input
+                                type="text"
+                                name="course"
+                                className="form-control"
+                                placeholder="Course (e.g. BSIT) *"
+                                value={form.course}
+                                onChange={handleChange}
+                                disabled={loading}
+                            />
+                        )}
+
+                        {form.patientType === 'faculty' && (
+                            <input
+                                type="text"
+                                name="department"
+                                className="form-control"
+                                placeholder="Department *"
+                                value={form.department}
+                                onChange={handleChange}
+                                disabled={loading}
+                            />
+                        )}
+
+                        <div className="form-group">
                             <input
                                 type="tel"
                                 name="contactNumber"
@@ -165,7 +218,7 @@ const Signup = () => {
                             type="email"
                             name="email"
                             className="form-control"
-                            placeholder="BukSU Email (@student.buksu.edu.ph) *"
+                            placeholder="BukSU Email (@student.buksu.edu.ph or @buksu.edu.ph) *"
                             value={form.email}
                             onChange={handleChange}
                             disabled={loading}

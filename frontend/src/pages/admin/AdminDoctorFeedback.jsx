@@ -5,10 +5,8 @@ import { MessageSquare, Star, User, Calendar, RefreshCw, TrendingUp, Users } fro
 import './AdminDoctorFeedback.css';
 
 const AdminDoctorFeedback = () => {
-    const [doctors, setDoctors] = useState([]);
     const [feedbacks, setFeedbacks] = useState([]);
-    const [selectedDoctorId, setSelectedDoctorId] = useState('');
-    const [loading, setLoading] = useState(true); // Initial loading for doctors & analytics
+    const [loading, setLoading] = useState(true);
     const [feedbackLoading, setFeedbackLoading] = useState(false);
 
     // Analytics
@@ -25,29 +23,20 @@ const AdminDoctorFeedback = () => {
     }, []);
 
     useEffect(() => {
-        if (selectedDoctorId) {
-            fetchDoctorFeedback(selectedDoctorId);
-        } else {
-            fetchAllFeedback();
-        }
-    }, [selectedDoctorId]);
+        fetchInitialData();
+        fetchAllFeedback();
+    }, []);
 
     const fetchInitialData = async () => {
         try {
             setLoading(true);
-            const [usersRes, analyticsRes] = await Promise.all([
-                api.get('/users'), // Get all users to filter doctors
-                api.get('/feedback/analytics/overall') // Ensure correct endpoint
-            ]);
-
-            const doctorList = usersRes.data.filter(u => ['doctor', 'admin', 'superadmin'].includes(u.role));
-            setDoctors(doctorList);
+            const analyticsRes = await api.get('/feedback/analytics/overall');
 
             if (analyticsRes.data && analyticsRes.data.analytics) {
                 setAnalytics(analyticsRes.data.analytics);
             }
         } catch (err) {
-            console.error(err);
+            console.error('Failed to fetch analytics:', err);
         } finally {
             setLoading(false);
         }
@@ -66,18 +55,6 @@ const AdminDoctorFeedback = () => {
         }
     };
 
-    const fetchDoctorFeedback = async (id) => {
-        try {
-            setFeedbackLoading(true);
-            const res = await api.get(`/feedback/doctor/${id}`);
-            setFeedbacks(res.data.feedbacks || res.data || []); // Handle different response structures
-        } catch (err) {
-            toast.error('Failed to load feedback');
-            setFeedbacks([]);
-        } finally {
-            setFeedbackLoading(false);
-        }
-    };
 
     const renderStars = (rating) => {
         return [...Array(5)].map((_, i) => (
@@ -138,19 +115,7 @@ const AdminDoctorFeedback = () => {
 
             <div className="staff-selector-section">
                 <div className="selector-header">
-                    <h3><Users size={20} /> Latest Feedback</h3>
-                    <div className="select-wrapper">
-                        <select
-                            value={selectedDoctorId}
-                            onChange={e => setSelectedDoctorId(e.target.value)}
-                            className="staff-select"
-                        >
-                            <option value="">All Staff</option>
-                            {doctors.map(d => (
-                                <option key={d._id} value={d._id}>{d.firstName} {d.lastName} ({d.role})</option>
-                            ))}
-                        </select>
-                    </div>
+                    <h3><Users size={20} /> Latest System Feedback</h3>
                 </div>
                 {feedbackLoading ? (
                     <div className="loading-skeleton">Loading feedback...</div>
@@ -168,12 +133,6 @@ const AdminDoctorFeedback = () => {
                                                 {fb.patientId ? `${fb.patientId.firstName} ${fb.patientId.lastName}` : 'Anonymous'}
                                             </span>
                                             <span className="date">{new Date(fb.createdAt).toLocaleDateString()}</span>
-                                            {/* Show recipient if viewing 'All' */}
-                                            {!selectedDoctorId && fb.recipientId && (
-                                                <span className="recipient-badge">
-                                                    For: {fb.recipientId.firstName} {fb.recipientId.lastName}
-                                                </span>
-                                            )}
                                         </div>
                                     </div>
                                     <div className="rating">

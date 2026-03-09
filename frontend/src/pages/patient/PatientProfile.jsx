@@ -120,7 +120,7 @@ const PatientProfile = () => {
                     </div>
                     <div className="user-text">
                         <h1>{profile.firstName} {profile.middleName} {profile.lastName}</h1>
-                        <p>{profile.email} • {profile.role}</p>
+                        <p>{profile.email} • {profile.patientType ? profile.patientType.charAt(0).toUpperCase() + profile.patientType.slice(1) : profile.role}</p>
                     </div>
                     <div className="profile-actions">
                         {isEditing ? (
@@ -189,6 +189,36 @@ const PatientProfile = () => {
                                 </select>
                             ) : <p className="read-only">{profile.civilStatus || '—'}</p>}
                         </div>
+                        <div className="divider full-width"></div>
+                        <div className="form-group full-width">
+                            <h4 className="sub-header">Classification</h4>
+                        </div>
+                        <div className="form-group">
+                            <label>Patient Type</label>
+                            {isEditing ? (
+                                <select className="form-control" name="patientType" value={formData.patientType || 'student'} onChange={handleChange}>
+                                    <option value="student">Student</option>
+                                    <option value="faculty">Faculty</option>
+                                    <option value="personnel">Personnel</option>
+                                </select>
+                            ) : <p className="read-only">{profile.patientType || 'student'}</p>}
+                        </div>
+                        <div className="form-group">
+                            <label>ID Number</label>
+                            {isEditing ? <input className="form-control" name="idNumber" value={formData.idNumber || ''} onChange={handleChange} /> : <p className="read-only">{profile.idNumber || '—'}</p>}
+                        </div>
+                        {(formData.patientType === 'student' || (!isEditing && profile.patientType === 'student')) && (
+                            <div className="form-group">
+                                <label>Course</label>
+                                {isEditing ? <input className="form-control" name="course" value={formData.course || ''} onChange={handleChange} /> : <p className="read-only">{profile.course || '—'}</p>}
+                            </div>
+                        )}
+                        {(formData.patientType === 'faculty' || (!isEditing && profile.patientType === 'faculty')) && (
+                            <div className="form-group">
+                                <label>Department</label>
+                                {isEditing ? <input className="form-control" name="department" value={formData.department || ''} onChange={handleChange} /> : <p className="read-only">{profile.department || '—'}</p>}
+                            </div>
+                        )}
                     </div>
                 </div>
 

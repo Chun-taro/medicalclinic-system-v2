@@ -10,7 +10,7 @@ const sendEmail = require('../utils/mailer');
 // Local signup
 const signup = async (req, res) => {
   try {
-    const { firstName, lastName, email, password, idNumber, contactNumber } = req.body;
+    const { firstName, lastName, email, password, idNumber, contactNumber, patientType, course, department } = req.body;
 
     if (!firstName || !lastName || !email || !password || !idNumber || !contactNumber) {
       return res.status(400).json({ error: 'All fields are required' });
@@ -30,8 +30,10 @@ const signup = async (req, res) => {
       email,
       password: hashedPassword,
       idNumber,
-      contactNumber,
       role: 'patient',
+      patientType,
+      course,
+      department,
       isVerified: true, // Auto-verify due to Render email limitations
       verificationToken
     });
@@ -195,7 +197,7 @@ const googleSignup = async (req, res) => {
       googleId, firstName, lastName, middleName, email, password, role,
       idNumber, sex, civilStatus, birthday, age, homeAddress, contactNumber,
       emergencyContact, bloodType, allergies, medicalHistory, currentMedications,
-      familyHistory, recaptchaToken
+      familyHistory, recaptchaToken, patientType, course, department
     } = req.body;
 
     // Verify reCAPTCHA
@@ -225,6 +227,7 @@ const googleSignup = async (req, res) => {
       googleId, firstName, lastName, middleName, email, password: hashedPassword, role,
       idNumber, sex, civilStatus, birthday, age, homeAddress, contactNumber,
       emergencyContact, bloodType, allergies, medicalHistory, currentMedications, familyHistory,
+      patientType, course, department,
       isVerified: true // Google users are pre-verified
     });
 

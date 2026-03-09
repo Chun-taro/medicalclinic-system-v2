@@ -136,8 +136,6 @@ const MyAppointments = () => {
             {feedbackApt && (
                 <FeedbackForm
                     appointmentId={feedbackApt._id}
-                    doctorName={feedbackApt.doctorName}
-                    doctorId={feedbackApt.doctorId}
                     onClose={() => setFeedbackApt(null)}
                     onSuccess={() => {
                         fetchAppointments(); // Refresh to update status if needed

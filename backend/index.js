@@ -6,6 +6,8 @@ const session = require('express-session');
 const passport = require('passport');
 const jwt = require('jsonwebtoken');
 const http = require('http');
+const https = require('https');
+const fs = require('fs');
 const socketIo = require('socket.io');
 const helmet = require('helmet');
 const cookieParser = require('cookie-parser');
@@ -33,7 +35,20 @@ require('./passport');
 
 const app = express();
 app.set('trust proxy', 1);
-const server = http.createServer(app);
+
+let server;
+const sslOptions = {
+  key: fs.existsSync('key.pem') ? fs.readFileSync('key.pem') : null,
+  cert: fs.existsSync('cert.pem') ? fs.readFileSync('cert.pem') : null
+};
+
+if (sslOptions.key && sslOptions.cert) {
+  server = https.createServer(sslOptions, app);
+  console.log('🔒 SSL Certificates found. Starting server with HTTPS...');
+} else {
+  server = http.createServer(app);
+  console.log('🔓 No SSL Certificates found. Starting server with HTTP...');
+}
 
 // CORS configuration for Socket.IO and Express
 const CORS_OPTIONS = {
@@ -145,19 +160,6 @@ mongoose.set('debug', process.env.NODE_ENV !== 'production');
 
 // Google OAuth callback is handled in routes/auth.js
 
-// Debug route
-const { auth } = require('./middleware/auth');
-const User = require('./models/User');
-
-app.get('/api/debug/profile/:id', auth, async (req, res) => {
-  try {
-    const user = await User.findById(req.params.id).select('-password');
-    if (!user) return res.status(404).json({ error: 'User not found' });
-    res.json(user);
-  } catch (err) {
-    res.status(500).json({ error: 'Server error' });
-  }
-});
 
 // Socket.IO events
 io.on('connection', (socket) => {

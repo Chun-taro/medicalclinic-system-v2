@@ -28,7 +28,7 @@ const ProtectedRoute = ({ children, requiredRole }) => {
         }
 
         // Redirect logic from old ProtectedRoute.js
-        if ((role === 'doctor' || role === 'nurse') && requiredRole === 'patient') {
+        if (role === 'doctor' && requiredRole === 'patient') {
             return <Navigate to="/admin-dashboard" replace />;
         }
 

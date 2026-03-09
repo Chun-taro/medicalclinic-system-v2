@@ -75,7 +75,6 @@ const ManageUsers = () => {
             case 'superadmin': return <Shield size={16} className="text-purple-600" />;
             case 'admin': return <Briefcase size={16} className="text-blue-600" />;
             case 'doctor': return <Stethoscope size={16} className="text-green-600" />;
-            case 'nurse': return <UserCheck size={16} className="text-teal-600" />;
             default: return <User size={16} className="text-gray-600" />;
         }
     };
@@ -101,7 +100,7 @@ const ManageUsers = () => {
                 </div>
 
                 <div className="tabs">
-                    {['all', 'patient', 'doctor', 'nurse', 'admin', 'superadmin'].map(role => (
+                    {['all', 'patient', 'doctor', 'admin', 'superadmin'].map(role => (
                         <button
                             key={role}
                             className={`tab-btn ${activeTab === role ? 'active' : ''}`}
@@ -119,6 +118,7 @@ const ManageUsers = () => {
                         <tr>
                             <th>User</th>
                             <th>Role</th>
+                            <th>Classification</th>
                             <th>Email</th>
                             <th>ID Number</th>
                             <th>Actions</th>
@@ -157,6 +157,15 @@ const ManageUsers = () => {
                                             <span className={`role-text role-${user.role}`}>{user.role}</span>
                                         </div>
                                     </td>
+                                    <td>
+                                        {user.role === 'patient' ? (
+                                            <div className="classification-cell">
+                                                <div className="type-tag">{user.patientType || 'Student'}</div>
+                                                {user.patientType === 'student' && user.course && <div className="detail-tag">{user.course}</div>}
+                                                {user.patientType === 'faculty' && user.department && <div className="detail-tag">{user.department}</div>}
+                                            </div>
+                                        ) : '—'}
+                                    </td>
                                     <td>{user.email}</td>
                                     <td>{user.idNumber || '—'}</td>
                                     <td>
@@ -168,7 +177,6 @@ const ManageUsers = () => {
                                         >
                                             <option value="patient">Patient</option>
                                             <option value="doctor">Doctor</option>
-                                            <option value="nurse">Nurse</option>
                                             <option value="admin">Admin</option>
                                             <option value="superadmin">Super Admin</option>
                                         </select>
