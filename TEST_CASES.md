@@ -7,155 +7,247 @@
 
 ---
 
-## Module 1: Authentication
+## Table of Contents
 
-| Test Case # | Test Case Description | Test Steps | Test Data | Expected Result | Actual Result | Pass/Fail | Remarks |
-|---|---|---|---|---|---|---|---|
-| TC-AUTH-001 | Patient registers with valid data | 1. Go to signup page. 2. Fill all required fields. 3. Click Sign Up. | firstName: "Juan", lastName: "Dela Cruz", email: "juan@example.com", password: "Pass@123", idNumber: "2021-00001", contactNumber: "09171234567", patientType: "student" | Account created. Success message shown. Welcome email sent. Redirected to login. | | | |
-| TC-AUTH-002 | Signup fails with missing required fields | 1. Go to signup page. 2. Leave firstName blank. 3. Submit. | firstName: "" (all other fields valid) | HTTP 400. Error: "All fields are required." | | | |
-| TC-AUTH-003 | Signup fails with duplicate email | 1. Go to signup page. 2. Use an already-registered email. 3. Submit. | email: "juan@example.com" (already registered) | HTTP 400. Error: "Email already registered." | | | |
-| TC-AUTH-004 | Patient logs in with valid credentials | 1. Go to login page. 2. Enter valid email and password. 3. Click Login. | email: "juan@example.com", password: "Pass@123" | HTTP 200. JWT issued. Redirected to patient dashboard. | | | |
-| TC-AUTH-005 | Login fails with wrong password | 1. Go to login page. 2. Enter valid email, wrong password. 3. Submit. | email: "juan@example.com", password: "wrongPass" | HTTP 400. Error: "Invalid credentials." | | | |
-| TC-AUTH-006 | Login fails with non-existent email | 1. Go to login page. 2. Enter unregistered email. 3. Submit. | email: "ghost@example.com", password: "anyPass" | HTTP 400. Error: "Invalid credentials." | | | |
-| TC-AUTH-007 | Login fails with missing fields | 1. Go to login page. 2. Leave password blank. 3. Submit. | email: "juan@example.com", password: "" | HTTP 400. Error: "Email and password are required." | | | |
-| TC-AUTH-008 | Superadmin logs in successfully | 1. Go to superadmin login. 2. Enter superadmin credentials. 3. Submit. | email: "superadmin@clinic.com", password: "Admin@1234" | HTTP 200. JWT issued. Redirected to superadmin dashboard. | | | |
-| TC-AUTH-009 | Non-superadmin blocked from superadmin login | 1. POST to superadmin login endpoint with patient credentials. | email: "juan@example.com", password: "Pass@123", role: "patient" | HTTP 403. Error: "Access denied. Superadmin only." | | | |
-| TC-AUTH-010 | Google OAuth signup completes successfully | 1. Click Sign up with Google. 2. Complete OAuth flow. 3. Fill extended profile. 4. Submit. | Valid Google ID, idNumber, patientType: "student" | Account created with isVerified: true. JWT issued. Redirected to dashboard. | | | |
-| TC-AUTH-011 | Email verification with valid token | 1. Access verify-email link with a valid token. | token: (valid token from DB) | HTTP 200. isVerified set to true. Token cleared. Success message shown. | | | |
-| TC-AUTH-012 | Email verification fails with invalid token | 1. Access verify-email link with an invalid token. | token: "invalidtoken123" | HTTP 400. Error: "Invalid or expired verification token." | | | |
+1. [Patient Test Cases](#patient-test-cases)
+2. [Admin Test Cases](#admin-test-cases)
+3. [Superadmin Test Cases](#superadmin-test-cases)
 
 ---
 
-## Module 2: User Management
+# 👤 PATIENT TEST CASES
+
+## Authentication – Patient
 
 | Test Case # | Test Case Description | Test Steps | Test Data | Expected Result | Actual Result | Pass/Fail | Remarks |
 |---|---|---|---|---|---|---|---|
-| TC-USER-001 | Admin retrieves the full user list | 1. Log in as admin. 2. GET /api/users. | Admin JWT | HTTP 200. Array of users returned (passwords excluded). | | | |
-| TC-USER-002 | Patient cannot access user list | 1. Log in as patient. 2. GET /api/users. | Patient JWT | HTTP 403. Error: "Access denied. Admins only." | | | |
-| TC-USER-003 | Superadmin promotes patient to admin | 1. Log in as superadmin. 2. PATCH /api/users/:id/role with role: "admin". | role: "admin" | HTTP 200. Role updated. Activity logged. | | | |
-| TC-USER-004 | Role update rejects invalid role string | 1. Log in as superadmin. 2. PATCH /api/users/:id/role with role: "nurse". | role: "nurse" | HTTP 400. Error: "Invalid role specified." | | | |
-| TC-USER-005 | System prevents removing the last superadmin | 1. Log in as superadmin (only one exists). 2. Try to change own role to "admin". | role: "admin" | HTTP 400. Error: "Cannot change role. The system must have at least one superadmin." | | | |
-| TC-USER-006 | Admin cannot change user roles | 1. Log in as admin. 2. PATCH /api/users/:id/role. | Admin JWT | HTTP 403. Error: "Access denied. Superadmins only." | | | |
-| TC-USER-007 | User uploads a profile picture | 1. Log in. 2. POST /api/users/avatar with an image file. | file: valid .jpg or .png image | HTTP 200. Avatar path stored in DB. Path returned in response. | | | |
+| TC-PAT-AUTH-001 | Patient registers with valid data | 1. Go to signup page. 2. Fill all required fields. 3. Click Sign Up. | firstName: "Juan", lastName: "Dela Cruz", email: "juan@example.com", password: "Pass@123", idNumber: "2021-00001", contactNumber: "09171234567", patientType: "student" | Account created. Success message shown. Welcome email sent. Redirected to login. | | | |
+| TC-PAT-AUTH-002 | Signup fails with missing required fields | 1. Go to signup page. 2. Leave firstName blank. 3. Submit. | firstName: "" (all other fields valid) | HTTP 400. Error: "All fields are required." | | | |
+| TC-PAT-AUTH-003 | Signup fails with duplicate email | 1. Go to signup page. 2. Use an already-registered email. 3. Submit. | email: "juan@example.com" (already registered) | HTTP 400. Error: "Email already registered." | | | |
+| TC-PAT-AUTH-004 | Patient logs in with valid credentials | 1. Go to login page. 2. Enter valid email and password. 3. Click Login. | email: "juan@example.com", password: "Pass@123" | HTTP 200. JWT issued. Redirected to patient dashboard. | | | |
+| TC-PAT-AUTH-005 | Login fails with wrong password | 1. Go to login page. 2. Enter valid email, wrong password. 3. Submit. | email: "juan@example.com", password: "wrongPass" | HTTP 400. Error: "Invalid credentials." | | | |
+| TC-PAT-AUTH-006 | Login fails with non-existent email | 1. Go to login page. 2. Enter unregistered email. 3. Submit. | email: "ghost@example.com", password: "anyPass" | HTTP 400. Error: "Invalid credentials." | | | |
+| TC-PAT-AUTH-007 | Login fails with missing fields | 1. Go to login page. 2. Leave password blank. 3. Submit. | email: "juan@example.com", password: "" | HTTP 400. Error: "Email and password are required." | | | |
+| TC-PAT-AUTH-008 | Google OAuth signup completes successfully | 1. Click Sign up with Google. 2. Complete OAuth flow. 3. Fill extended profile. 4. Submit. | Valid Google ID, idNumber, patientType: "student" | Account created with isVerified: true. JWT issued. Redirected to dashboard. | | | |
+| TC-PAT-AUTH-009 | Email verification with valid token | 1. Click the verification link from email. | token: (valid token from DB) | HTTP 200. isVerified set to true. Token cleared. Success message shown. | | | |
+| TC-PAT-AUTH-010 | Email verification fails with invalid token | 1. Access verify-email link with a wrong/expired token. | token: "invalidtoken123" | HTTP 400. Error: "Invalid or expired verification token." | | | |
 
 ---
 
-## Module 3: Profile
+## Profile – Patient
 
 | Test Case # | Test Case Description | Test Steps | Test Data | Expected Result | Actual Result | Pass/Fail | Remarks |
 |---|---|---|---|---|---|---|---|
-| TC-PROF-001 | Logged-in user retrieves own profile | 1. Log in. 2. GET /api/users/profile. | Valid JWT | HTTP 200. User data returned (no password). | | | |
-| TC-PROF-002 | User updates profile with valid data | 1. Log in. 2. PUT /api/users/profile with updated fields. | contactNumber: "09181234567", department: "CIT" | HTTP 200. Updated user data returned. Activity logged. | | | |
-| TC-PROF-003 | Profile update fails on version conflict | 1. Log in. 2. PUT /api/users/profile with a stale version number. | version: 1 (DB version is 2) | HTTP 409. Error: "Profile was modified by another process. Please refresh and try again." | | | |
-| TC-PROF-004 | Admin retrieves a specific user's profile | 1. Log in as admin. 2. GET /api/users/:id. | Admin JWT, target user ID | HTTP 200. Target user data returned. | | | |
+| TC-PAT-PROF-001 | Patient retrieves own profile | 1. Log in as patient. 2. Go to profile page. | Valid patient JWT | HTTP 200. User data displayed (no password). | | | |
+| TC-PAT-PROF-002 | Patient updates profile with valid data | 1. Log in as patient. 2. Edit profile fields. 3. Save. | contactNumber: "09181234567", homeAddress: "123 BukSU St.", department: "CIT" | HTTP 200. Updated data saved and displayed. Activity logged. | | | |
+| TC-PAT-PROF-003 | Profile update fails on version conflict | 1. Log in as patient. 2. Submit profile update with stale version number. | version: 1 (DB version is 2) | HTTP 409. Error: "Profile was modified by another process. Please refresh and try again." | | | |
+| TC-PAT-PROF-004 | Patient uploads a profile picture | 1. Log in as patient. 2. Upload an image file on the profile page. | file: valid .jpg or .png image | HTTP 200. Avatar saved. New photo displayed on profile. | | | |
 
 ---
 
-## Module 4: Appointments
+## Appointments – Patient
 
 | Test Case # | Test Case Description | Test Steps | Test Data | Expected Result | Actual Result | Pass/Fail | Remarks |
 |---|---|---|---|---|---|---|---|
-| TC-APT-001 | Patient books an appointment with valid data | 1. Log in as patient. 2. POST /api/appointments/book with required fields. | appointmentDate: (future date), purpose: "General Checkup", typeOfVisit: "scheduled" | HTTP 201. Appointment created with status "pending". Admin and patient notified. | | | |
-| TC-APT-002 | Booking fails for a past date | 1. Log in as patient. 2. POST /api/appointments/book with a past date. | appointmentDate: "2020-01-01" | HTTP 400. Error: "Cannot book appointments in the past." | | | |
-| TC-APT-003 | Booking fails with missing fields | 1. Log in as patient. 2. POST /api/appointments/book without purpose. | appointmentDate: (future date), purpose: "" | HTTP 400. Error: "Missing required fields." | | | |
-| TC-APT-004 | Admin cannot book an appointment | 1. Log in as admin. 2. POST /api/appointments/book. | Admin JWT | HTTP 403. Error: "Only patients can book appointments." | | | |
-| TC-APT-005 | Patient retrieves their own appointments | 1. Log in as patient. 2. GET /api/appointments/my. | Patient JWT | HTTP 200. List of patient's appointments returned. | | | |
-| TC-APT-006 | Admin retrieves all appointments | 1. Log in as admin. 2. GET /api/appointments. | Admin JWT | HTTP 200. All appointments returned (paginated). | | | |
-| TC-APT-007 | Admin approves a pending appointment | 1. Log in as admin. 2. POST /api/appointments/:id/approve with current version. | version: (current version from DB) | HTTP 200. Status → "approved". Patient notified via app and email. | | | |
-| TC-APT-008 | Approval fails on version conflict | 1. Log in as admin. 2. POST /api/appointments/:id/approve with stale version. | version: 0 (DB version is 2) | HTTP 404. Approval rejected due to optimistic lock failure. | | | |
-| TC-APT-009 | Admin rejects a pending appointment | 1. Log in as admin. 2. PATCH /api/appointments/:id/status with status: "rejected". | status: "rejected", version: N | HTTP 200. Status → "rejected". Patient email sent. Google Calendar event deleted if applicable. | | | |
-| TC-APT-010 | Appointment is rescheduled to a future date | 1. Log in as patient or admin. 2. PUT /api/appointments/:id with new date. | appointmentDate: (new future date), rescheduleReason: "Changed schedule" | HTTP 200. Date updated. Reschedule activity logged. Notifications sent. | | | |
-| TC-APT-011 | Rescheduling to a past date is rejected | 1. Log in. 2. PUT /api/appointments/:id with a past date. | appointmentDate: "2020-01-01" | HTTP 400. Error: "Cannot reschedule to a past date." | | | |
-| TC-APT-012 | Admin deletes an appointment | 1. Log in as admin. 2. DELETE /api/appointments/:id. | Admin JWT | HTTP 200. Appointment deleted. Patient notified. Activity logged. | | | |
-| TC-APT-013 | Patient cannot delete an appointment | 1. Log in as patient. 2. DELETE /api/appointments/:id. | Patient JWT | HTTP 403. Error: "Access denied." | | | |
+| TC-PAT-APT-001 | Patient books an appointment with valid data | 1. Log in as patient. 2. Go to Book Appointment. 3. Fill fields. 4. Submit. | appointmentDate: (future date), purpose: "General Checkup", typeOfVisit: "scheduled" | HTTP 201. Appointment created with status "pending". Admin and patient notified. | | | |
+| TC-PAT-APT-002 | Booking fails for a past date | 1. Log in as patient. 2. Select a past date. 3. Submit. | appointmentDate: "2020-01-01", purpose: "Checkup" | HTTP 400. Error: "Cannot book appointments in the past." | | | |
+| TC-PAT-APT-003 | Booking fails with missing fields | 1. Log in as patient. 2. Leave purpose blank. 3. Submit. | appointmentDate: (future date), purpose: "" | HTTP 400. Error: "Missing required fields." | | | |
+| TC-PAT-APT-004 | Patient views their own appointments | 1. Log in as patient. 2. Go to My Appointments. | Patient JWT | HTTP 200. List of patient's appointments shown with statuses. | | | |
+| TC-PAT-APT-005 | Patient reschedules an appointment to a future date | 1. Log in as patient. 2. Select an existing appointment. 3. Choose a new future date. 4. Save. | appointmentDate: (new future date), rescheduleReason: "Changed schedule" | HTTP 200. Date updated. Reschedule activity logged. Notifications sent. | | | |
+| TC-PAT-APT-006 | Rescheduling to a past date is rejected | 1. Log in as patient. 2. Try to reschedule to a past date. | appointmentDate: "2020-01-01" | HTTP 400. Error: "Cannot reschedule to a past date." | | | |
+| TC-PAT-APT-007 | Patient cannot delete their own appointment | 1. Log in as patient. 2. Try to DELETE /api/appointments/:id. | Patient JWT | HTTP 403. Error: "Access denied." | | | |
+| TC-PAT-APT-008 | Patient cannot view another patient's appointments | 1. Log in as patient A. 2. Try to access /api/appointments/patient/:patientBId. | Patient A JWT, Patient B ID | HTTP 403. Error: "Access denied." | | | |
 
 ---
 
-## Module 5: Consultation
+## Feedback – Patient
 
 | Test Case # | Test Case Description | Test Steps | Test Data | Expected Result | Actual Result | Pass/Fail | Remarks |
 |---|---|---|---|---|---|---|---|
-| TC-CONS-001 | Clinician starts a consultation for an approved appointment | 1. Log in as admin/doctor. 2. POST /api/appointments/:id/start. | Appointment with status "approved" | HTTP 200. Status → "in-consultation". Doctor ID recorded. Patient notified. | | | |
-| TC-CONS-002 | Consultation cannot start for a pending appointment | 1. Log in as admin. 2. POST /api/appointments/:id/start on a pending appointment. | Appointment with status "pending" | HTTP 400. Error: "Only approved appointments can begin consultation." | | | |
-| TC-CONS-003 | Clinician saves full consultation with vitals | 1. Log in as admin/doctor. 2. POST /api/appointments/:id/save-consultation with all clinical fields. | diagnosis: "Flu", bloodPressure: "120/80", temperature: "37.5", heartRate: "75", oxygenSaturation: "98%", bmi: "22.5", medicinesPrescribed: [{name: "Paracetamol", quantity: 10}] | HTTP 200. Vitals and diagnosis saved. Status → "completed". Patient notified via app and email. | | | |
-| TC-CONS-004 | Consultation is marked complete | 1. Log in as admin/doctor. 2. POST /api/appointments/:id/complete with diagnosis. | diagnosis: "Hypertension", management: "Rest" | HTTP 200. Status → "completed". consultationCompletedAt timestamp set. | | | |
-| TC-CONS-005 | Admin retrieves all consultation records | 1. Log in as admin. 2. GET /api/appointments/consultations. | Admin JWT | HTTP 200. Array of appointments with a non-null diagnosis returned. | | | |
-| TC-CONS-006 | Admin retrieves completed Medical Certificate requests | 1. Log in as admin. 2. GET /api/appointments/medical-certificates. | Admin JWT | HTTP 200. Array of Medical Certificate appointments with status "completed" returned. | | | |
+| TC-PAT-FDBK-001 | Patient submits feedback for their appointment | 1. Log in as patient. 2. Go to completed appointment. 3. Submit feedback. | appointmentId: "...", rating: 5, comment: "Great service!" | HTTP 201. Feedback saved. Activity logged. | | | |
+| TC-PAT-FDBK-002 | Duplicate feedback submission is blocked | 1. Log in as patient. 2. Try to submit feedback for an appointment that already has one. | appointmentId: (already has feedback) | HTTP 400. Error: "Feedback already submitted for this appointment." | | | |
+| TC-PAT-FDBK-003 | Feedback fails with out-of-range rating | 1. Log in as patient. 2. Submit feedback with rating 6. | rating: 6 | HTTP 400. Error: "Rating must be between 1 and 5." | | | |
+| TC-PAT-FDBK-004 | Patient cannot submit feedback for another patient's appointment | 1. Log in as patient A. 2. Submit feedback using patient B's appointmentId. | appointmentId: (belongs to patient B) | HTTP 403. Error: "You can only submit feedback for your own appointments." | | | |
+| TC-PAT-FDBK-005 | Patient updates their own feedback | 1. Log in as patient. 2. Edit previously submitted feedback. 3. Save. | rating: 4, comment: "Good but could be better." | HTTP 200. Feedback updated successfully. | | | |
 
 ---
 
-## Module 6: Medicine / Inventory
+## Password Reset – Patient
 
 | Test Case # | Test Case Description | Test Steps | Test Data | Expected Result | Actual Result | Pass/Fail | Remarks |
 |---|---|---|---|---|---|---|---|
-| TC-MED-001 | Admin adds a new medicine to inventory | 1. Log in as admin. 2. POST /api/medicines with required fields. | name: "Paracetamol 500mg", quantityInStock: 100, unit: "tablet", expiryDate: "2027-12-31" | HTTP 201. Medicine saved. Activity logged. | | | |
-| TC-MED-002 | Adding an existing medicine increments stock | 1. Log in as admin. 2. POST /api/medicines with same name and expiry as an existing record. | name: "Paracetamol 500mg", quantityInStock: 30, expiryDate: "2027-12-31" (existing has qty 50) | HTTP 200. Quantity updated to 80. | | | |
-| TC-MED-003 | Medicine creation fails with missing fields | 1. Log in as admin. 2. POST /api/medicines without expiryDate. | name: "Amoxicillin", quantityInStock: 50, unit: "capsule" | HTTP 400. Error: "Missing required fields." | | | |
-| TC-MED-004 | Admin retrieves the full medicine list | 1. Log in as admin. 2. GET /api/medicines. | Admin JWT | HTTP 200. Array of medicines sorted by name and expiry. | | | |
-| TC-MED-005 | Admin dispenses medicine (sufficient stock) | 1. Log in as admin. 2. POST /api/medicines/:id/dispense with quantity 5. | quantity: 5, recipientName: "Juan Dela Cruz" (medicine has 10 in stock) | HTTP 200. Stock reduced by 5. Dispense history entry added. | | | |
-| TC-MED-006 | Dispensing fails with insufficient stock | 1. Log in as admin. 2. POST /api/medicines/:id/dispense with quantity 10. | quantity: 10 (medicine has only 3 in stock) | HTTP 400. Error: "Not enough stock." | | | |
-| TC-MED-007 | Dispensing with zero quantity is rejected | 1. Log in as admin. 2. POST /api/medicines/:id/dispense with quantity 0. | quantity: 0 | HTTP 400. Error: "Invalid quantity." | | | |
-| TC-MED-008 | Batch medicine deduction during consultation | 1. POST /api/medicines/deduct with a list of prescriptions. | prescribed: [{medicineId: "ID1", quantity: 5}, {medicineId: "ID2", quantity: 3}] | HTTP 200. Stock reduced for each item. Transaction committed atomically. | | | |
-| TC-MED-009 | Batch deduction rolls back if one item has no stock | 1. POST /api/medicines/deduct where second medicine has insufficient stock. | prescribed: [{medicineId: "ID1", quantity: 5}, {medicineId: "ID2", quantity: 5}] (ID2 has only 1) | HTTP 400. Transaction rolled back. Error: "Not enough stock for [medicine name]." | | | |
-| TC-MED-010 | Admin deletes a medicine record | 1. Log in as admin. 2. DELETE /api/medicines/:id. | Admin JWT, valid medicine ID | HTTP 200. Medicine deleted. Confirmation message returned. | | | |
-| TC-MED-011 | Delete fails for invalid/malformed ID | 1. Log in as admin. 2. DELETE /api/medicines/invalid-id. | id: "invalidid" | HTTP 400. Error: "Invalid ID." | | | |
-| TC-MED-012 | Retrieve dispense history for a medicine | 1. Log in as admin. 2. GET /api/medicines/:id/dispense-history. | Valid medicine ID with dispense records | HTTP 200. Array of dispense history records returned. | | | |
-| TC-MED-013 | Export dispense history as PDF | 1. Log in as admin. 2. GET /api/medicines/dispense-history/report (with optional date filter). | startDate: "2026-01-01", endDate: "2026-03-31" | HTTP 200. PDF file downloaded with matching records. | | | |
+| TC-PAT-RESET-001 | Patient requests a password reset for a valid email | 1. Go to Forgot Password page. 2. Enter registered email. 3. Submit. | email: "juan@example.com" | HTTP 200. 6-digit token sent to email. Token expires in 10 minutes. | | | |
+| TC-PAT-RESET-002 | Reset request fails for unregistered email | 1. Go to Forgot Password page. 2. Enter unknown email. 3. Submit. | email: "unknown@example.com" | HTTP 404. Error: "User not found." | | | |
+| TC-PAT-RESET-003 | Valid reset token is verified successfully | 1. Enter the 6-digit code received by email. 2. Submit. | email: "juan@example.com", token: (valid code) | HTTP 200. Message: "Token verified." Proceed to reset password step. | | | |
+| TC-PAT-RESET-004 | Expired or wrong reset token is rejected | 1. Enter incorrect or expired code. 2. Submit. | email: "juan@example.com", token: "000000" | HTTP 400. Error: "Invalid or expired token." | | | |
+| TC-PAT-RESET-005 | Password is reset with a valid token | 1. Enter new password and confirm. 2. Submit with valid token. | email: "juan@example.com", token: (valid), newPassword: "NewPass@456" | HTTP 200. Password updated. Token cleared. Message: "Password reset successful." | | | |
+| TC-PAT-RESET-006 | Password reset fails with expired token | 1. Use a token that has already expired. 2. Submit new password. | email: "juan@example.com", token: (expired), newPassword: "NewPass@456" | HTTP 400. Error: "Invalid or expired token." | | | |
 
 ---
 
-## Module 7: Feedback
+## Notifications – Patient
 
 | Test Case # | Test Case Description | Test Steps | Test Data | Expected Result | Actual Result | Pass/Fail | Remarks |
 |---|---|---|---|---|---|---|---|
-| TC-FDBK-001 | Patient submits feedback for their appointment | 1. Log in as patient. 2. POST /api/feedback with appointmentId and rating. | appointmentId: "...", rating: 5, comment: "Great service!" | HTTP 201. Feedback saved. Activity logged. | | | |
-| TC-FDBK-002 | Duplicate feedback submission is blocked | 1. Log in as patient. 2. POST /api/feedback for an appointment that already has feedback. | appointmentId: (already has feedback) | HTTP 400. Error: "Feedback already submitted for this appointment." | | | |
-| TC-FDBK-003 | Feedback fails with out-of-range rating | 1. Log in as patient. 2. POST /api/feedback with rating: 6. | rating: 6 | HTTP 400. Error: "Rating must be between 1 and 5." | | | |
-| TC-FDBK-004 | Patient cannot submit feedback for another patient's appointment | 1. Log in as patient A. 2. POST /api/feedback using patient B's appointmentId. | appointmentId: (belongs to patient B) | HTTP 403. Error: "You can only submit feedback for your own appointments." | | | |
-| TC-FDBK-005 | Patient updates their own feedback | 1. Log in as patient. 2. PUT /api/feedback/:feedbackId with updated rating/comment. | rating: 4, comment: "Good but could be better." | HTTP 200. Feedback updated successfully. | | | |
-| TC-FDBK-006 | Admin retrieves all feedback | 1. Log in as admin. 2. GET /api/feedback/all. | Admin JWT | HTTP 200. Paginated list of all feedback returned. | | | |
-| TC-FDBK-007 | Admin views overall feedback analytics | 1. Log in as admin. 2. GET /api/feedback/analytics/overall. | Admin JWT | HTTP 200. Returns total count, average rating, rating distribution, 7-day trend, top recipients. | | | |
+| TC-PAT-NOTIF-001 | Patient is notified when appointment is approved | 1. Admin approves patient's appointment. 2. Patient checks notification feed. | Pending appointment belonging to patient | In-app notification and email: "Your appointment on [date] has been approved." | | | |
+| TC-PAT-NOTIF-002 | Patient is notified when consultation is completed | 1. Clinician completes consultation. 2. Patient checks notifications. | In-consultation appointment | In-app notification: "Your medical records have been updated." Email sent with diagnosis. | | | |
+| TC-PAT-NOTIF-003 | Patient is notified when appointment is cancelled | 1. Admin deletes patient's appointment. 2. Patient checks notifications. | Existing appointment | In-app notification: "Your appointment on [date] has been cancelled by the administrator." | | | |
+
+---
+---
+
+# 🛡️ ADMIN TEST CASES
+
+## Authentication – Admin
+
+| Test Case # | Test Case Description | Test Steps | Test Data | Expected Result | Actual Result | Pass/Fail | Remarks |
+|---|---|---|---|---|---|---|---|
+| TC-ADM-AUTH-001 | Admin logs in with valid credentials | 1. Go to login page. 2. Enter admin credentials. 3. Submit. | email: "admin@clinic.com", password: "AdminPass@1" | HTTP 200. JWT issued. Redirected to admin dashboard. | | | |
+| TC-ADM-AUTH-002 | Admin login fails with wrong password | 1. Go to login page. 2. Enter admin email with wrong password. 3. Submit. | email: "admin@clinic.com", password: "wrongPass" | HTTP 400. Error: "Invalid credentials." | | | |
 
 ---
 
-## Module 8: Password Reset
+## User Management – Admin
 
 | Test Case # | Test Case Description | Test Steps | Test Data | Expected Result | Actual Result | Pass/Fail | Remarks |
 |---|---|---|---|---|---|---|---|
-| TC-RESET-001 | User requests a password reset for a valid email | 1. POST /api/reset/send with registered email. | email: "juan@example.com" | HTTP 200. 6-digit token stored in DB (expires in 10 min). Email with code sent. | | | |
-| TC-RESET-002 | Reset request fails for unregistered email | 1. POST /api/reset/send with unknown email. | email: "unknown@example.com" | HTTP 404. Error: "User not found." | | | |
-| TC-RESET-003 | Valid reset token is verified successfully | 1. POST /api/reset/verify with email and correct 6-digit code. | email: "juan@example.com", token: (valid code) | HTTP 200. Message: "Token verified." | | | |
-| TC-RESET-004 | Expired or wrong reset token is rejected | 1. POST /api/reset/verify with wrong code. | email: "juan@example.com", token: "000000" | HTTP 400. Error: "Invalid or expired token." | | | |
-| TC-RESET-005 | Password is reset with a valid token | 1. POST /api/reset/reset with email, token, and new password. | email: "juan@example.com", token: (valid), newPassword: "NewPass@456" | HTTP 200. Password updated (hashed). Token cleared. Message: "Password reset successful." | | | |
-| TC-RESET-006 | Password reset fails with expired token | 1. POST /api/reset/reset using a token that has expired. | email: "juan@example.com", token: (expired), newPassword: "NewPass@456" | HTTP 400. Error: "Invalid or expired token." | | | |
+| TC-ADM-USER-001 | Admin retrieves the full user list | 1. Log in as admin. 2. Go to Manage Users page. | Admin JWT | HTTP 200. All users listed (passwords excluded). | | | |
+| TC-ADM-USER-002 | Admin retrieves a specific patient's profile | 1. Log in as admin. 2. Click on a user in Manage Users. | Admin JWT, target user ID | HTTP 200. Target user profile displayed. | | | |
+| TC-ADM-USER-003 | Admin cannot change user roles | 1. Log in as admin. 2. PATCH /api/users/:id/role. | Admin JWT, role: "doctor" | HTTP 403. Error: "Access denied. Superadmins only." | | | |
 
 ---
 
-## Module 9: Reports
+## Appointments – Admin
 
 | Test Case # | Test Case Description | Test Steps | Test Data | Expected Result | Actual Result | Pass/Fail | Remarks |
 |---|---|---|---|---|---|---|---|
-| TC-RPT-001 | Admin generates an appointment summary report | 1. Log in as admin. 2. GET /api/appointments/reports. | Admin JWT | HTTP 200. Returns total, approved, rejected, completed, walk-in, scheduled counts, top diagnosis, top complaint, referral rate. | | | |
-| TC-RPT-002 | Report figures match actual database counts | 1. Create 5 appointments (2 approved, 2 completed, 1 rejected). 2. GET /api/appointments/reports. | Known appointment dataset | totalAppointments: 5, approved: 2, completed: 2, rejected: 1. Values match actual DB. | | | |
+| TC-ADM-APT-001 | Admin retrieves all appointments | 1. Log in as admin. 2. Go to All Appointments page. | Admin JWT | HTTP 200. Paginated list of all appointments shown. | | | |
+| TC-ADM-APT-002 | Admin approves a pending appointment | 1. Log in as admin. 2. Select a pending appointment. 3. Click Approve. | Appointment with status "pending", current version number | HTTP 200. Status → "approved". Patient notified via app and email. | | | |
+| TC-ADM-APT-003 | Approval fails on version conflict (concurrent edit) | 1. Log in as admin. 2. Approve with a stale version number. | version: 0 (DB version is 2) | HTTP 404. Approval rejected due to optimistic lock failure. | | | |
+| TC-ADM-APT-004 | Admin rejects a pending appointment | 1. Log in as admin. 2. Select a pending appointment. 3. Click Reject. | Appointment with status "pending" | HTTP 200. Status → "rejected". Patient email sent. Google Calendar event deleted if applicable. | | | |
+| TC-ADM-APT-005 | Admin reschedules an appointment | 1. Log in as admin. 2. Edit an appointment's date. 3. Save. | appointmentDate: (new future date), rescheduleReason: "Clinic unavailable" | HTTP 200. Date updated. Activity logged. Notifications sent. | | | |
+| TC-ADM-APT-006 | Admin deletes an appointment | 1. Log in as admin. 2. Select an appointment. 3. Click Delete. | Admin JWT | HTTP 200. Appointment removed. Patient notified. Activity logged. | | | |
 
 ---
 
-## Module 10: Role-Based Access Control (RBAC)
+## Consultation – Admin
 
 | Test Case # | Test Case Description | Test Steps | Test Data | Expected Result | Actual Result | Pass/Fail | Remarks |
 |---|---|---|---|---|---|---|---|
-| TC-RBAC-001 | Patient is blocked from accessing admin-only routes | 1. Log in as patient. 2. Navigate to /admin/dashboard or call admin-only API. | Patient JWT | HTTP 403. Error: "Access denied." Redirected to patient dashboard. | | | |
-| TC-RBAC-002 | Unauthenticated request is rejected | 1. Access any protected API endpoint without a JWT. | No token | HTTP 401. Redirected to login page. | | | |
-| TC-RBAC-003 | Doctor can access and start consultations | 1. Log in as doctor. 2. GET /api/appointments. 3. POST /api/appointments/:id/start. | Doctor JWT | HTTP 200 for both. Doctor assigned to consultation. | | | |
-| TC-RBAC-004 | Patient cannot view another patient's appointments | 1. Log in as patient A. 2. GET /api/appointments/patient/:patientBId. | Patient A JWT, Patient B ID | HTTP 403. Error: "Access denied." | | | |
+| TC-ADM-CONS-001 | Admin starts consultation for an approved appointment | 1. Log in as admin. 2. Open an approved appointment. 3. Click Start Consultation. | Appointment with status "approved" | HTTP 200. Status → "in-consultation". Admin set as clinician. Patient notified. | | | |
+| TC-ADM-CONS-002 | Consultation cannot start for a non-approved appointment | 1. Log in as admin. 2. Try to start consultation on a pending appointment. | Appointment with status "pending" | HTTP 400. Error: "Only approved appointments can begin consultation." | | | |
+| TC-ADM-CONS-003 | Admin saves full consultation details | 1. Log in as admin. 2. Fill in vitals, diagnosis, and prescriptions. 3. Save. | diagnosis: "Flu", bloodPressure: "120/80", temperature: "37.5", heartRate: "75", oxygenSaturation: "98%", bmi: "22.5", medicinesPrescribed: [{name: "Paracetamol", quantity: 10}] | HTTP 200. All fields saved. Status → "completed". Patient notified. | | | |
+| TC-ADM-CONS-004 | Admin retrieves all consultation records | 1. Log in as admin. 2. Go to Consultations page. | Admin JWT | HTTP 200. All appointments with a diagnosis returned. | | | |
+| TC-ADM-CONS-005 | Admin retrieves completed Medical Certificate requests | 1. Log in as admin. 2. Go to Medical Certificates page. | Admin JWT | HTTP 200. All completed Medical Certificate appointments shown. | | | |
 
 ---
 
-## Module 11: Notifications
+## Medicine / Inventory – Admin
 
 | Test Case # | Test Case Description | Test Steps | Test Data | Expected Result | Actual Result | Pass/Fail | Remarks |
 |---|---|---|---|---|---|---|---|
-| TC-NOTIF-001 | Admin is notified when a patient books an appointment | 1. Patient books an appointment. 2. Admin checks notification feed. | Valid patient and admin accounts | Admin receives in-app notification: "New appointment booked by [patient name]." | | | |
-| TC-NOTIF-002 | Patient is notified when appointment is approved | 1. Admin approves a pending appointment. 2. Patient checks notifications. | Pending appointment | Patient receives in-app notification and email: "Your appointment on [date] has been approved." | | | |
-| TC-NOTIF-003 | Patient is notified when consultation is completed | 1. Clinician saves/completes consultation. 2. Patient checks notifications. | In-consultation appointment | Patient receives in-app notification: "Your medical records have been updated." Email sent with diagnosis. | | | |
-| TC-NOTIF-004 | Patient is notified when appointment is cancelled by admin | 1. Admin deletes an appointment. 2. Patient checks notifications. | Existing appointment | Patient receives in-app notification: "Your appointment on [date] has been cancelled by the administrator." | | | |
+| TC-ADM-MED-001 | Admin adds a new medicine to inventory | 1. Log in as admin. 2. Go to Inventory. 3. Click Add Medicine. 4. Fill form. 5. Submit. | name: "Paracetamol 500mg", quantityInStock: 100, unit: "tablet", expiryDate: "2027-12-31" | HTTP 201. Medicine saved. Activity logged. | | | |
+| TC-ADM-MED-002 | Adding an existing medicine increments stock | 1. Log in as admin. 2. Add medicine with same name and expiry as an existing entry. | name: "Paracetamol 500mg", quantityInStock: 30, expiryDate: "2027-12-31" (existing has qty 50) | HTTP 200. Quantity updated to 80 (merged). | | | |
+| TC-ADM-MED-003 | Medicine creation fails with missing fields | 1. Log in as admin. 2. Submit form without expiryDate. | name: "Amoxicillin", quantityInStock: 50, unit: "capsule" | HTTP 400. Error: "Missing required fields." | | | |
+| TC-ADM-MED-004 | Admin views full medicine list | 1. Log in as admin. 2. Go to Inventory. | Admin JWT | HTTP 200. All medicines shown, sorted by name and expiry. | | | |
+| TC-ADM-MED-005 | Admin manually dispenses medicine (sufficient stock) | 1. Log in as admin. 2. Select a medicine. 3. Click Dispense. 4. Enter quantity. 5. Submit. | quantity: 5, recipientName: "Juan Dela Cruz" (medicine has 10 in stock) | HTTP 200. Stock reduced by 5. Dispense history entry recorded. | | | |
+| TC-ADM-MED-006 | Dispensing fails with insufficient stock | 1. Log in as admin. 2. Try to dispense more than what's in stock. | quantity: 10 (medicine has only 3 in stock) | HTTP 400. Error: "Not enough stock." | | | |
+| TC-ADM-MED-007 | Dispensing with zero quantity is rejected | 1. Log in as admin. 2. Submit dispense form with quantity 0. | quantity: 0 | HTTP 400. Error: "Invalid quantity." | | | |
+| TC-ADM-MED-008 | Batch medicine deduction during consultation | 1. Complete a consultation with prescribed medicines. | prescribed: [{medicineId: "ID1", quantity: 5}, {medicineId: "ID2", quantity: 3}] | HTTP 200. Stock reduced for each item atomically. | | | |
+| TC-ADM-MED-009 | Batch deduction rolls back if one item has no stock | 1. Prescribe medicines where one has insufficient stock. | prescribed: [{medicineId: "ID1", quantity: 5}, {medicineId: "ID2", quantity: 5}] (ID2 has only 1) | HTTP 400. Transaction rolled back. Error: "Not enough stock for [medicine name]." | | | |
+| TC-ADM-MED-010 | Admin deletes a medicine record | 1. Log in as admin. 2. Select a medicine. 3. Click Delete. 4. Confirm. | Admin JWT, valid medicine ID | HTTP 200. Medicine deleted. | | | |
+| TC-ADM-MED-011 | Delete fails for invalid ID | 1. Log in as admin. 2. DELETE /api/medicines/invalidid. | id: "invalidid" | HTTP 400. Error: "Invalid ID." | | | |
+| TC-ADM-MED-012 | Admin views dispense history for a medicine | 1. Log in as admin. 2. Click on a medicine. 3. View dispense history. | Valid medicine ID with dispense records | HTTP 200. Full dispense history shown with dates and recipients. | | | |
+| TC-ADM-MED-013 | Admin exports dispense history as PDF | 1. Log in as admin. 2. Go to dispense history. 3. Click Print/Export PDF. | (optionally) startDate: "2026-01-01", endDate: "2026-03-31" | HTTP 200. PDF downloaded with matching records. | | | |
+
+---
+
+## Feedback – Admin
+
+| Test Case # | Test Case Description | Test Steps | Test Data | Expected Result | Actual Result | Pass/Fail | Remarks |
+|---|---|---|---|---|---|---|---|
+| TC-ADM-FDBK-001 | Admin retrieves all feedback | 1. Log in as admin. 2. Go to Feedback page. | Admin JWT | HTTP 200. Paginated list of all patient feedback shown. | | | |
+| TC-ADM-FDBK-002 | Admin views overall feedback analytics | 1. Log in as admin. 2. Go to Feedback Analytics. | Admin JWT | HTTP 200. Displays total count, average rating, rating distribution, 7-day trend, top recipients. | | | |
+
+---
+
+## Reports – Admin
+
+| Test Case # | Test Case Description | Test Steps | Test Data | Expected Result | Actual Result | Pass/Fail | Remarks |
+|---|---|---|---|---|---|---|---|
+| TC-ADM-RPT-001 | Admin generates an appointment summary report | 1. Log in as admin. 2. Go to Reports page. 3. View summary. | Admin JWT | HTTP 200. Returns total, approved, rejected, completed, walk-in, scheduled counts, top diagnosis, top complaint, referral rate. | | | |
+| TC-ADM-RPT-002 | Report figures match actual database counts | 1. Create 5 appointments (2 approved, 2 completed, 1 rejected). 2. View report. | Known appointment dataset in DB | totalAppointments: 5, approved: 2, completed: 2, rejected: 1. Values match actual DB. | | | |
+
+---
+
+## Notifications – Admin
+
+| Test Case # | Test Case Description | Test Steps | Test Data | Expected Result | Actual Result | Pass/Fail | Remarks |
+|---|---|---|---|---|---|---|---|
+| TC-ADM-NOTIF-001 | Admin is notified when a patient books an appointment | 1. Patient books an appointment. 2. Admin checks notification feed. | Valid patient and admin accounts | Admin receives in-app notification: "New appointment booked by [patient name]." | | | |
+| TC-ADM-NOTIF-002 | Admin is notified when a consultation is completed | 1. Clinician completes a consultation. 2. Admin checks notifications. | Completed appointment | Admin receives in-app notification: "Consultation completed for patient [name]." | | | |
+
+---
+
+## Access Control – Admin
+
+| Test Case # | Test Case Description | Test Steps | Test Data | Expected Result | Actual Result | Pass/Fail | Remarks |
+|---|---|---|---|---|---|---|---|
+| TC-ADM-RBAC-001 | Patient is blocked from admin routes | 1. Log in as patient. 2. Navigate to /admin/dashboard. | Patient JWT | HTTP 403. Error: "Access denied." Redirected to patient dashboard. | | | |
+| TC-ADM-RBAC-002 | Unauthenticated user is redirected to login | 1. Access any admin route without a JWT. | No token | HTTP 401. Redirected to login page. | | | |
+| TC-ADM-RBAC-003 | Doctor can access consultation-related views | 1. Log in as doctor. 2. View appointments. 3. Start consultation. | Doctor JWT | HTTP 200. Doctor permitted to view and start consultations. | | | |
+
+---
+---
+
+# 👑 SUPERADMIN TEST CASES
+
+## Authentication – Superadmin
+
+| Test Case # | Test Case Description | Test Steps | Test Data | Expected Result | Actual Result | Pass/Fail | Remarks |
+|---|---|---|---|---|---|---|---|
+| TC-SA-AUTH-001 | Superadmin logs in via superadmin login portal | 1. Go to superadmin login. 2. Enter superadmin credentials. 3. Submit. | email: "superadmin@clinic.com", password: "Admin@1234" | HTTP 200. JWT issued. Redirected to superadmin dashboard. | | | |
+| TC-SA-AUTH-002 | Non-superadmin user blocked from superadmin login | 1. POST to /api/auth/superadmin-login with a patient's credentials. | email: "juan@example.com", password: "Pass@123", role: "patient" | HTTP 403. Error: "Access denied. Superadmin only." | | | |
+| TC-SA-AUTH-003 | Superadmin login fails with wrong password | 1. Go to superadmin login. 2. Enter wrong password. 3. Submit. | email: "superadmin@clinic.com", password: "wrongPass" | HTTP 400. Error: "Invalid credentials." | | | |
+
+---
+
+## User Management – Superadmin
+
+| Test Case # | Test Case Description | Test Steps | Test Data | Expected Result | Actual Result | Pass/Fail | Remarks |
+|---|---|---|---|---|---|---|---|
+| TC-SA-USER-001 | Superadmin retrieves the full user list | 1. Log in as superadmin. 2. Go to Manage Users. | Superadmin JWT | HTTP 200. All users listed (passwords excluded). | | | |
+| TC-SA-USER-002 | Superadmin promotes a patient to admin | 1. Log in as superadmin. 2. Select a user. 3. Change role to "admin". 4. Save. | role: "admin" | HTTP 200. Role updated. Activity logged. | | | |
+| TC-SA-USER-003 | Superadmin promotes a user to doctor | 1. Log in as superadmin. 2. Select a user. 3. Change role to "doctor". 4. Save. | role: "doctor" | HTTP 200. Role updated to "doctor". Activity logged. | | | |
+| TC-SA-USER-004 | Role update fails with an invalid role value | 1. Log in as superadmin. 2. PATCH /api/users/:id/role with role: "nurse". | role: "nurse" | HTTP 400. Error: "Invalid role specified." | | | |
+| TC-SA-USER-005 | Superadmin cannot remove the last superadmin | 1. Log in as superadmin (only one exists). 2. Try to change own role to "admin". | role: "admin" | HTTP 400. Error: "Cannot change role. The system must have at least one superadmin." | | | |
+| TC-SA-USER-006 | Superadmin demotes an admin to patient | 1. Log in as superadmin. 2. Select an admin user. 3. Change role to "patient". 4. Save. | role: "patient" | HTTP 200. Role updated to "patient". Activity logged. | | | |
+
+---
+
+## Appointments – Superadmin
+
+| Test Case # | Test Case Description | Test Steps | Test Data | Expected Result | Actual Result | Pass/Fail | Remarks |
+|---|---|---|---|---|---|---|---|
+| TC-SA-APT-001 | Superadmin retrieves all appointments | 1. Log in as superadmin. 2. Go to All Appointments. | Superadmin JWT | HTTP 200. Full paginated list of all appointments shown. | | | |
+| TC-SA-APT-002 | Superadmin approves a pending appointment | 1. Log in as superadmin. 2. Select a pending appointment. 3. Click Approve. | Appointment with status "pending", current version | HTTP 200. Status → "approved". Patient notified via app and email. | | | |
+| TC-SA-APT-003 | Superadmin deletes an appointment | 1. Log in as superadmin. 2. Select an appointment. 3. Click Delete. 4. Confirm. | Superadmin JWT | HTTP 200. Appointment deleted. Patient notified. Activity logged. | | | |
+
+---
+
+## Medicine / Inventory – Superadmin
+
+| Test Case # | Test Case Description | Test Steps | Test Data | Expected Result | Actual Result | Pass/Fail | Remarks |
+|---|---|---|---|---|---|---|---|
+| TC-SA-MED-001 | Superadmin views the full medicine inventory | 1. Log in as superadmin. 2. Go to Inventory. | Superadmin JWT | HTTP 200. Full medicine list displayed. | | | |
+| TC-SA-MED-002 | Superadmin views dispense history report | 1. Log in as superadmin. 2. Go to dispense history. 3. Click Export PDF. | Superadmin JWT | HTTP 200. PDF downloaded with all dispense records. | | | |
+
+---
+
+## Access Control – Superadmin
+
+| Test Case # | Test Case Description | Test Steps | Test Data | Expected Result | Actual Result | Pass/Fail | Remarks |
+|---|---|---|---|---|---|---|---|
+| TC-SA-RBAC-001 | Superadmin can access all admin routes | 1. Log in as superadmin. 2. Access all admin API endpoints. | Superadmin JWT | HTTP 200 for all admin-accessible routes. Full access granted. | | | |
+| TC-SA-RBAC-002 | Unauthenticated user cannot access superadmin routes | 1. Access any superadmin route without a JWT. | No token | HTTP 401. Redirected to login page. | | | |
+| TC-SA-RBAC-003 | Admin cannot access superadmin-exclusive routes | 1. Log in as admin. 2. Try PATCH /api/users/:id/role or superadmin-only endpoints. | Admin JWT | HTTP 403. Error: "Access denied. Superadmins only." | | | |
