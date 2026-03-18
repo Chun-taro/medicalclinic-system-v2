@@ -52,7 +52,6 @@ function App() {
               <Route path="/oauth/success" element={<OAuthSuccess />} />
               <Route path="/oauth/failure" element={<OAuthFailure />} />
               <Route path="/oauth/google-signup" element={<GoogleSignup />} />
-              <Route path="/superadmin-login" element={<Login />} /> {/* Re-use login for superadmin, logic handles redirection */}
             </Route>
 
             {/* Protected Routes */}

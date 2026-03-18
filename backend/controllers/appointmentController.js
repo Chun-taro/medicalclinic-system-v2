@@ -1,6 +1,7 @@
 const Appointment = require('../models/Appointment');
 const User = require('../models/User');
 const Medicine = require('../models/Medicine');
+const Feedback = require('../models/Feedback');
 const { google } = require('googleapis');
 const { sendNotification } = require('../utils/sendNotification');
 const sendEmail = require('../utils/mailer');
@@ -86,7 +87,12 @@ const getMyAppointments = async (req, res) => {
       .limit(limit)
       .lean();
 
-    res.json(appointments);
+    const appointmentsWithFeedback = await Promise.all(appointments.map(async (apt) => {
+      const fbCount = await Feedback.countDocuments({ appointmentId: apt._id });
+      return { ...apt, hasFeedback: fbCount > 0 };
+    }));
+
+    res.json(appointmentsWithFeedback);
   } catch (err) {
     console.error(' Fetch my appointments error:', err.message);
     res.status(500).json({ error: 'Internal server error' });

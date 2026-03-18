@@ -18,8 +18,8 @@
   --info: #3b82f6;
 
   /* Neutral Colors */
-  --bg-body: #f8fafc;
-  --bg-card: #ffffff;
+  --bg-body: #f1f5f9;  /* Light grayish-blue instead of #f8fafc */
+  --bg-card: #f8fafc;  /* Slightly off-white grayish instead of pure #ffffff */
   --text-main: #0f172a;
   --text-secondary: #64748b;
   --text-muted: #94a3b8;

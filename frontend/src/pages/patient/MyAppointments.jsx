@@ -27,6 +27,16 @@ const MyAppointments = () => {
         }
     };
 
+    // Auto-popup feedback for the first completed appointment missing feedback
+    useEffect(() => {
+        if (!loading && appointments.length > 0 && !feedbackApt) {
+            const pendingFeedback = appointments.find(apt => apt.status === 'completed' && !apt.hasFeedback);
+            if (pendingFeedback) {
+                setFeedbackApt(pendingFeedback);
+            }
+        }
+    }, [appointments, loading]); // Excluded feedbackApt so it doesn't pop up immediately after closing
+
     const handleCancel = async (id) => {
         if (!window.confirm('Are you sure you want to cancel this appointment?')) return;
         try {
@@ -76,6 +86,9 @@ const MyAppointments = () => {
                                     <span className={`status-badge status-${apt.status.toLowerCase()}`}>
                                         {apt.status}
                                     </span>
+                                    {apt.status === 'completed' && !apt.hasFeedback && (
+                                        <div className="feedback-needed-indicator" title="Feedback Required"></div>
+                                    )}
                                     {expandedId === apt._id ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
                                 </div>
                             </div>
@@ -108,13 +121,18 @@ const MyAppointments = () => {
                                     </div>
 
                                     <div className="apt-actions">
-                                        {apt.status === 'completed' && (
+                                        {apt.status === 'completed' && !apt.hasFeedback && (
                                             <button
                                                 className="btn-secondary"
                                                 onClick={() => setFeedbackApt(apt)}
                                             >
                                                 Leave Feedback
                                             </button>
+                                        )}
+                                        {apt.status === 'completed' && apt.hasFeedback && (
+                                            <span style={{ color: 'var(--success)', fontSize: '0.875rem', fontWeight: '500' }}>
+                                                ✓ Feedback submitted
+                                            </span>
                                         )}
 
                                         {['pending', 'approved'].includes(apt.status.toLowerCase()) && (

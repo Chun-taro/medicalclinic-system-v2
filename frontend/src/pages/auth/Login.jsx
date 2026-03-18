@@ -16,6 +16,7 @@ const Login = () => {
     const [recaptchaToken, setRecaptchaToken] = useState('');
     const [loading, setLoading] = useState(false);
     const [logoClicks, setLogoClicks] = useState(0);
+    const [isSuperadminMode, setIsSuperadminMode] = useState(false);
 
     const { login, logout } = useAuth();
     const { setForceLightMode } = useTheme();
@@ -30,17 +31,18 @@ const Login = () => {
 
     // Logo secret click for Superadmin
     useEffect(() => {
-        if (logoClicks > 0) {
+        if (logoClicks > 0 && logoClicks < 5 && !isSuperadminMode) {
             const timer = setTimeout(() => setLogoClicks(0), 2000);
             return () => clearTimeout(timer);
         }
-    }, [logoClicks]);
+    }, [logoClicks, isSuperadminMode]);
 
     useEffect(() => {
-        if (logoClicks === 5) {
-            navigate('/superadmin-login');
+        if (logoClicks === 5 && !isSuperadminMode) {
+            setIsSuperadminMode(true);
+            setLogoClicks(0);
         }
-    }, [logoClicks, navigate]);
+    }, [logoClicks, isSuperadminMode]);
 
     const handleLogin = async (e) => {
         e.preventDefault();
@@ -90,7 +92,7 @@ const Login = () => {
     };
 
     return (
-        <div className="auth-container">
+        <div className={`auth-container ${isSuperadminMode ? 'superadmin-mode' : ''}`}>
             {/* Left Side - Image */}
             <div
                 className="auth-sidebar"
@@ -113,10 +115,20 @@ const Login = () => {
                             src={logo}
                             alt="Logo"
                             className="auth-logo"
-                            onClick={() => setLogoClicks(c => c + 1)}
+                            onClick={() => {
+                                if (!isSuperadminMode) {
+                                    setLogoClicks(c => c + 1);
+                                }
+                            }}
                         />
-                        <h2 className="auth-title">Welcome Back</h2>
-                        <p className="auth-subtitle">Sign in to your account to continue</p>
+                        <h2 className="auth-title">
+                            {isSuperadminMode ? 'Superadmin Portal' : 'Welcome Back'}
+                        </h2>
+                        <p className="auth-subtitle">
+                            {isSuperadminMode 
+                                ? 'Enter your superadmin credentials to proceed' 
+                                : 'Sign in to your account to continue'}
+                        </p>
                     </div>
 
                     <form className="auth-form" onSubmit={handleLogin}>
@@ -178,6 +190,20 @@ const Login = () => {
                             Sign up
                         </span>
                     </div>
+
+                    {isSuperadminMode && (
+                        <div className="auth-footer-superadmin">
+                            <span 
+                                className="text-link" 
+                                onClick={() => {
+                                    setIsSuperadminMode(false);
+                                    setLogoClicks(0);
+                                }}
+                            >
+                                Back to User Login
+                            </span>
+                        </div>
+                    )}
                 </div>
             </div>
         </div>

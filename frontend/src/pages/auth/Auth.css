@@ -194,6 +194,12 @@
     color: var(--text-secondary);
 }
 
+.auth-footer-superadmin {
+    margin-top: 1.5rem;
+    text-align: center;
+    font-size: 0.875rem;
+}
+
 .text-link {
     color: var(--primary);
     font-weight: 500;
@@ -215,3 +221,11 @@
     font-size: 0.875rem;
     margin-top: 0.25rem;
 }
+
+/* Superadmin Secret Mode UI */
+/* Hide non-superadmin elements */
+.auth-container.superadmin-mode .btn-google,
+.auth-container.superadmin-mode .auth-divider,
+.auth-container.superadmin-mode .auth-footer {
+    display: none;
+}

@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { useTheme } from '../../context/ThemeContext';
 import Recaptcha from '../../components/ui/Recaptcha';
 import { toast } from 'react-toastify';
 import api from '../../services/api';
@@ -28,7 +29,14 @@ const Signup = () => {
     const [loading, setLoading] = useState(false);
 
     const { login } = useAuth();
+    const { setForceLightMode } = useTheme();
     const navigate = useNavigate();
+
+    // Force Light Mode on Signup page
+    useEffect(() => {
+        setForceLightMode(true);
+        return () => setForceLightMode(false);
+    }, [setForceLightMode]);
 
     const handleChange = (e) => {
         setForm({ ...form, [e.target.name]: e.target.value });
@@ -268,7 +276,7 @@ const Signup = () => {
 
                     <div className="auth-footer">
                         Already have an account?{' '}
-                        <span className="text-link" onClick={() => navigate('/')}>
+                        <span className="text-link" onClick={() => navigate('/login')}>
                             Sign in
                         </span>
                     </div>
