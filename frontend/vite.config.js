@@ -27,6 +27,8 @@ export default defineConfig({
   build: {
     rollupOptions: {
       output: {
+        // Commented out manualChunks to avoid splitting react-dom and scheduler in React 19
+        /*
         manualChunks: (id) => {
           if (id.includes('node_modules')) {
             if (id.includes('lucide-react')) return 'vendor-lucide';
@@ -36,6 +38,7 @@ export default defineConfig({
             return 'vendor'; // all other node_modules
           }
         },
+        */
       },
     },
   },
