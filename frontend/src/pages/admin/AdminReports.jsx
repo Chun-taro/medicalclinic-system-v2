@@ -69,6 +69,44 @@ const AdminReports = () => {
         setExpandedId(prev => prev === id ? null : id);
     };
 
+    const handleDownload = async (id, type) => {
+        try {
+            const endpoint = type === 'consultation' 
+                ? `/appointments/export/consultation/${id}`
+                : `/appointments/export/certificate/${id}`;
+            
+            const filename = type === 'consultation' ? `Consultation_${id}.pdf` : `MedCert_${id}.pdf`;
+
+            const res = await api.get(endpoint, { responseType: 'blob' });
+            const url = window.URL.createObjectURL(new Blob([res.data]));
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', filename);
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            toast.success('Download started');
+        } catch (err) {
+            toast.error('Failed to download report');
+        }
+    };
+
+    const handleExportSummary = async () => {
+        try {
+            const res = await api.get('/appointments/export/summary', { responseType: 'blob' });
+            const url = window.URL.createObjectURL(new Blob([res.data]));
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', 'Clinic_Appointment_Summary.pdf');
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            toast.success('Summary report downloaded');
+        } catch (err) {
+            toast.error('Failed to export summary');
+        }
+    };
+
     const formatDate = (date) => {
         if (!date) return '—';
         return new Date(date).toLocaleString();
@@ -79,8 +117,13 @@ const AdminReports = () => {
     return (
         <div className="admin-reports-page">
             <div className="page-header">
-                <h1>Reports Dashboard</h1>
-                <p>View patient consultations and medical certificates.</p>
+                <div className="header-content">
+                    <h1>Reports Dashboard</h1>
+                    <p>View patient consultations and medical certificates.</p>
+                </div>
+                <button className="btn-export" onClick={handleExportSummary}>
+                    <Download size={18} /> Export Summary
+                </button>
             </div>
 
             <div className="reports-tabs">
@@ -140,7 +183,16 @@ const AdminReports = () => {
                                     {activeTab === 'consultations' && (
                                         <span className="diagnosis-preview">{item.diagnosis || 'No Diagnosis'}</span>
                                     )}
-                                    {/* <button className="btn-icon" title="Download PDF"><Download size={18}/></button> */}
+                                    <button 
+                                        className="btn-icon" 
+                                        title="Download PDF"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleDownload(item._id, activeTab === 'consultations' ? 'consultation' : 'certificate');
+                                        }}
+                                    >
+                                        <Download size={18}/>
+                                    </button>
                                 </div>
                             </div>
 

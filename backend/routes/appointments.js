@@ -18,7 +18,10 @@ const {
   saveConsultation,
   prescribeMedicines,
   lockAppointmentForEdit,
-  unlockAppointmentForEdit
+  unlockAppointmentForEdit,
+  exportConsultationPDF,
+  exportMedicalCertificatePDF,
+  exportAppointmentSummaryPDF
 } = require('../controllers/appointmentController');
 
 const { auth, requireRole } = require('../middleware/auth');
@@ -49,6 +52,11 @@ router.get('/reports', auth, requireRole('admin', 'doctor', 'superadmin'), gener
 router.get('/consultations', auth, requireRole('admin', 'doctor', 'superadmin'), getConsultations);
 router.get('/medical-certificates', auth, requireRole('admin', 'doctor', 'superadmin'), getMedicalCertificates);
 router.get('/consultations/:id', auth, requireRole('admin', 'doctor', 'superadmin'), getConsultationById);
+
+// Export routes
+router.get('/export/consultation/:id', auth, requireRole('admin', 'doctor', 'superadmin'), exportConsultationPDF);
+router.get('/export/certificate/:id', auth, requireRole('admin', 'doctor', 'superadmin'), exportMedicalCertificatePDF);
+router.get('/export/summary', auth, requireRole('admin', 'doctor', 'superadmin'), exportAppointmentSummaryPDF);
 
 
 

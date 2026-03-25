@@ -7,7 +7,7 @@ const { sendNotification } = require('../utils/sendNotification');
 const sendEmail = require('../utils/mailer');
 const logActivity = require('../utils/logActivity');
 const mongoose = require('mongoose');
-
+const { createBaseDoc } = require('../utils/pdfTemplate');
 
 
 
@@ -960,8 +960,161 @@ const unlockAppointmentForEdit = async (req, res) => {
 };
 
 
+// Export Consultation to PDF
+const exportConsultationPDF = async (req, res) => {
+  try {
+    const consultation = await Appointment.findById(req.params.id).populate('patientId').lean();
+    if (!consultation || !consultation.diagnosis) {
+      return res.status(404).json({ error: 'Consultation not found' });
+    }
 
+    const { doc, buffers, helpers } = createBaseDoc(
+      'Consultation Report',
+      `Patient: ${consultation.patientId?.firstName} ${consultation.patientId?.lastName}`
+    );
 
+    doc.on('end', () => {
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `attachment; filename=Consultation_${consultation._id}.pdf`);
+      res.send(Buffer.concat(buffers));
+    });
+
+    let y = doc.y;
+    y = helpers.drawSectionHeader('Patient Information', y);
+    y = helpers.drawField('Full Name', `${consultation.patientId?.firstName} ${consultation.patientId?.lastName}`, 40, y);
+    helpers.drawField('Patient ID', consultation.patientId?.idNumber || 'N/A', 300, y - 30);
+    y = helpers.drawField('Visit Date', new Date(consultation.appointmentDate).toLocaleDateString(), 40, y);
+    helpers.drawField('Type of Visit', consultation.typeOfVisit || 'Scheduled', 300, y - 30);
+
+    y += 20;
+    y = helpers.drawSectionHeader('Clinical Assessment', y);
+    y = helpers.drawField('Chief Complaint', consultation.additionalNotes || consultation.chiefComplaint, 40, y, 500);
+    y = helpers.drawField('Diagnosis', consultation.diagnosis, 40, y, 500);
+    y = helpers.drawField('Management', consultation.management, 40, y, 500);
+
+    y += 20;
+    y = helpers.drawSectionHeader('Vitals', y);
+    y = helpers.drawField('Blood Pressure', consultation.bloodPressure, 40, y);
+    helpers.drawField('Temperature', consultation.temperature ? `${consultation.temperature}°C` : 'N/A', 300, y - 30);
+    y = helpers.drawField('Heart Rate', consultation.heartRate ? `${consultation.heartRate} bpm` : 'N/A', 40, y);
+    helpers.drawField('Oxygen Saturation', consultation.oxygenSaturation ? `${consultation.oxygenSaturation}%` : 'N/A', 300, y - 30);
+    doc.end();
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to generate PDF' });
+  }
+};
+
+// Export Medical Certificate to PDF
+const exportMedicalCertificatePDF = async (req, res) => {
+  try {
+    const cert = await Appointment.findById(req.params.id).populate('patientId').lean();
+    if (!cert || cert.purpose !== 'Medical Certificate') {
+      return res.status(404).json({ error: 'Medical Certificate not found' });
+    }
+
+    const { doc, buffers, helpers } = createBaseDoc('MEDICAL CERTIFICATE', 'Bukidnon State University - Medical Clinic');
+
+    doc.on('end', () => {
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `attachment; filename=MedCert_${cert._id}.pdf`);
+      res.send(Buffer.concat(buffers));
+    });
+
+    doc.moveDown(2);
+    doc.fontSize(14).font('Helvetica').text('TO WHOM IT MAY CONCERN:', { align: 'left' });
+    doc.moveDown(2);
+
+    const patientName = `${cert.patientId?.firstName} ${cert.patientId?.lastName}`.toUpperCase();
+    const dateStr = new Date(cert.consultationCompletedAt || cert.appointmentDate).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+
+    doc.fontSize(12).leading(20).text(
+      `This is to certify that ${patientName}, had been physically examined and/or treated at this clinic on ${dateStr} with the following diagnosis:`,
+      { align: 'justify' }
+    );
+
+    doc.moveDown(1);
+    doc.font('Helvetica-Bold').text(cert.diagnosis || 'General Consultation', { align: 'center', indent: 20 });
+    doc.moveDown(2);
+
+    doc.font('Helvetica').text(
+      `The patient is recommended for ${cert.restDays || 0} day(s) of rest and is ${cert.fitToWork ? 'FIT to return' : 'NOT YET FIT to return'} to regular duties/classes.`,
+      { align: 'justify' }
+    );
+
+    doc.moveDown(4);
+    doc.text('__________________________', { align: 'right' });
+    doc.font('Helvetica-Bold').text(cert.physicianName || 'Clinic Physician', { align: 'right' });
+    doc.font('Helvetica').fontSize(10).text('Medical Officer', { align: 'right' });
+
+    helpers.drawFooter(1, 1);
+    doc.end();
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to generate PDF' });
+  }
+};
+
+// Export Appointment Summary to PDF
+const exportAppointmentSummaryPDF = async (req, res) => {
+  try {
+    const appointments = await Appointment.find().lean();
+    
+    const { doc, buffers, helpers } = createBaseDoc('Clinic Appointment Summary', `Report Period: All Time`);
+
+    doc.on('end', () => {
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', 'attachment; filename=Appointment_Summary.pdf');
+      res.send(Buffer.concat(buffers));
+    });
+
+    const stats = {
+      total: appointments.length,
+      completed: appointments.filter(a => a.status === 'completed').length,
+      pending: appointments.filter(a => a.status === 'pending').length,
+      approved: appointments.filter(a => a.status === 'approved').length,
+      walkIn: appointments.filter(a => a.typeOfVisit === 'walk-in').length,
+      scheduled: appointments.filter(a => a.typeOfVisit === 'scheduled').length,
+    };
+
+    let y = doc.y;
+    y = helpers.drawSectionHeader('Key Metrics', y);
+    
+    y = helpers.drawField('Total Appointments', stats.total.toString(), 40, y);
+    helpers.drawField('Completed', stats.completed.toString(), 300, y - 30);
+    
+    y = helpers.drawField('Pending Approval', stats.pending.toString(), 40, y);
+    helpers.drawField('Approved / Ongoing', stats.approved.toString(), 300, y - 30);
+    
+    y = helpers.drawField('Walk-in Patients', stats.walkIn.toString(), 40, y);
+    helpers.drawField('Scheduled Visits', stats.scheduled.toString(), 300, y - 30);
+
+    y += 40;
+    y = helpers.drawSectionHeader('Recent Activity', y);
+    
+    // Draw a simple list of last 10 appointments
+    const recent = appointments.slice(-10).reverse();
+    recent.forEach(app => {
+      if (y > doc.page.height - 100) {
+        doc.addPage();
+        y = 40;
+      }
+      const name = `${app.firstName || ''} ${app.lastName || ''}`.trim() || 'Unknown';
+      doc.fontSize(9).fillColor('#1e293b').text(
+        `${new Date(app.appointmentDate).toLocaleDateString()} - ${name} (${app.purpose || 'Check-up'}) - [${app.status.toUpperCase()}]`,
+        40, y
+      );
+      y += 15;
+    });
+
+    helpers.drawFooter(1, 1);
+    doc.end();
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to generate summary PDF' });
+  }
+};
 
 module.exports = {
   bookAppointment,
@@ -981,5 +1134,9 @@ module.exports = {
   saveConsultation,
   prescribeMedicines,
   lockAppointmentForEdit,
-  unlockAppointmentForEdit
-}
+  unlockAppointmentForEdit,
+  exportConsultationPDF,
+  exportMedicalCertificatePDF,
+  exportAppointmentSummaryPDF
+};
+;
