@@ -1,18 +1,22 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Bell, Menu, User, ChevronDown, Moon, Sun } from 'lucide-react';
+import { Bell, Menu, User, ChevronDown, Moon, Sun, MessageSquare } from 'lucide-react';
 import api from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
+import { useChat } from '../../context/ChatContext';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../../context/ThemeContext';
+import ChatDropdown from '../chat/ChatDropdown';
 
 const Header = ({ toggleSidebar }) => {
     const { user, role, logout } = useAuth();
     const { isDarkMode, toggleTheme } = useTheme();
-    const navigate = useNavigate();
+    const { unreadTotal } = useChat();
     const [showProfileMenu, setShowProfileMenu] = useState(false);
     const [showNotifications, setShowNotifications] = useState(false);
+    const [showChat, setShowChat] = useState(false);
     const profileRef = useRef(null);
     const notifRef = useRef(null);
+    const chatRef = useRef(null);
 
     // Close dropdowns when clicking outside
     useEffect(() => {
@@ -22,6 +26,9 @@ const Header = ({ toggleSidebar }) => {
             }
             if (notifRef.current && !notifRef.current.contains(event.target)) {
                 setShowNotifications(false);
+            }
+            if (chatRef.current && !chatRef.current.contains(event.target)) {
+                setShowChat(false);
             }
         };
         document.addEventListener('mousedown', handleClickOutside);
@@ -102,6 +109,19 @@ const Header = ({ toggleSidebar }) => {
                 >
                     {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
                 </button>
+                
+                {/* Chat */}
+                <div className="chat-wrapper" ref={chatRef} style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                    <button
+                        className="icon-btn"
+                        onClick={() => setShowChat(!showChat)}
+                    >
+                        <MessageSquare size={20} />
+                        {unreadTotal > 0 && <span className="badge-dot"></span>}
+                    </button>
+
+                    {showChat && <ChatDropdown onClose={() => setShowChat(false)} />}
+                </div>
 
                 {/* Notifications */}
                 <div className="notification-wrapper" ref={notifRef}>

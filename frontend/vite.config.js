@@ -17,6 +17,11 @@ export default defineConfig({
         changeOrigin: true,
         secure: false,
       },
+      '/socket.io': {
+        target: 'https://localhost:5000',
+        ws: true,
+        secure: false,
+      },
     },
   },
   build: {

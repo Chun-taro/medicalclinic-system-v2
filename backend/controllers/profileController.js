@@ -1,6 +1,8 @@
 const User = require('../models/User');
 const cloudinary = require('../config/cloudinary');
 const { Readable } = require('stream');
+const bcrypt = require('bcryptjs');
+const logActivity = require('../utils/logActivity');
 
 //  GET profile
 const getProfile = async (req, res) => {
@@ -85,8 +87,41 @@ const uploadAvatar = async (req, res) => {
   }
 };
 
+// CHANGE password
+const changePassword = async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ error: 'Both current and new passwords are required' });
+    }
+
+    const user = await User.findById(req.user.userId);
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
+    if (!isMatch) return res.status(400).json({ error: 'Invalid current password' });
+
+    user.password = await bcrypt.hash(newPassword, 10);
+    await user.save();
+
+    await logActivity({
+      userId: req.user.userId,
+      userName: `${user.firstName} ${user.lastName}`,
+      userRole: user.role,
+      action: 'update_password',
+      entityType: 'user',
+      entityId: user._id
+    });
+
+    res.json({ message: 'Password updated successfully' });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to update password' });
+  }
+};
+
 module.exports = {
   getProfile,
   updateProfile,
-  uploadAvatar
+  uploadAvatar,
+  changePassword
 };

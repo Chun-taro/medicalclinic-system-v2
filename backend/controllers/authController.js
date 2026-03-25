@@ -143,6 +143,11 @@ const login = async (req, res) => {
     const user = await User.findOne({ email });
     if (!user) return res.status(400).json({ error: 'Invalid credentials' });
 
+    // Check if account is active
+    if (!user.isActive) {
+      return res.status(403).json({ error: 'Your account has been deactivated. Please contact support.' });
+    }
+
     // Check if email is verified
     if (!user.isVerified && user.password) { // Google users don't have password and are verified
       return res.status(401).json({
@@ -220,6 +225,10 @@ const googleSignup = async (req, res) => {
     if (existingUser) {
       return res.status(400).json({ error: 'User already exists' });
     }
+
+    // Check if account is active (for Google users who might have been deactivated)
+    // Though usually Google signup creates a new user, they might have been deactivated and then try to signup again with same email
+    // but the findOne above would catch that.
 
     const hashedPassword = await bcrypt.hash(password, 10);
 

@@ -16,6 +16,8 @@ const rateLimit = require('express-rate-limit');
 const requestLogger = require('./middleware/requestLogger');
 const calendarRoutes = require('./routes/calendar');
 
+const PORT = process.env.PORT || 5000;
+
 
 // Route imports
 const authRoutes = require('./routes/auth');
@@ -29,6 +31,7 @@ const systemRoutes = require('./routes/system');
 const weatherRoutes = require('./routes/weather');
 const logsRoutes = require('./routes/logs');
 const feedbackRoutes = require('./routes/feedback');
+const chatRoutes = require('./routes/chat');
 
 
 require('./passport');
@@ -44,10 +47,10 @@ const sslOptions = {
 
 if (sslOptions.key && sslOptions.cert) {
   server = https.createServer(sslOptions, app);
-  console.log('🔒 SSL Certificates found. Starting server with HTTPS...');
+  console.log(`🔒 SSL Certificates found. Starting server with HTTPS on port ${PORT}...`);
 } else {
   server = http.createServer(app);
-  console.log('🔓 No SSL Certificates found. Starting server with HTTP...');
+  console.log(`🔓 No SSL Certificates found. Starting server with HTTP on port ${PORT}...`);
 }
 
 // CORS configuration for Socket.IO and Express
@@ -129,6 +132,7 @@ app.use('/api/calendar', calendarRoutes);
 app.use('/api/weather', weatherRoutes);
 app.use('/api/logs', logsRoutes);
 app.use('/api/feedback', feedbackRoutes);
+app.use('/api/chat', chatRoutes);
 
 
 // MongoDB connection
@@ -138,7 +142,6 @@ if (!uri) {
   process.exit(1);
 }
 
-const PORT = process.env.PORT || 5000;
 
 mongoose.connect(uri)
   .then(() => {
@@ -165,9 +168,14 @@ mongoose.set('debug', process.env.NODE_ENV !== 'production');
 io.on('connection', (socket) => {
   console.log(' New client connected:', socket.id);
 
-  socket.on('join', (userId) => {
+  socket.on('join', ({ userId, role }) => {
     socket.join(userId);
     console.log(` User ${userId} joined their room`);
+    
+    if (role === 'admin' || role === 'superadmin') {
+      socket.join('staff');
+      console.log(` Staff ${userId} joined staff room`);
+    }
   });
 
   socket.on('disconnect', () => {

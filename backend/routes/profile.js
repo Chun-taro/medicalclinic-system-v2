@@ -5,7 +5,8 @@ const { auth } = require('../middleware/auth');
 const {
   getProfile,
   updateProfile,
-  uploadAvatar
+  uploadAvatar,
+  changePassword
 } = require('../controllers/profileController');
 
 const upload = multer({ storage: multer.memoryStorage() });
@@ -13,6 +14,7 @@ const upload = multer({ storage: multer.memoryStorage() });
 router.get('/', auth, getProfile);
 router.put('/', auth, updateProfile);
 router.post('/avatar', auth, upload.single('avatar'), uploadAvatar);
+router.put('/change-password', auth, changePassword);
 
 // Protected route
 router.get('/profile', auth, (req, res) => {

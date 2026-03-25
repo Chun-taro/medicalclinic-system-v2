@@ -24,7 +24,13 @@ const userSchema = new mongoose.Schema({
     type: String,
     unique: true,
     sparse: true, // Allows multiple null values
-    trim: true
+    trim: true,
+    validate: {
+      validator: function(v) {
+        return !v || /^20\d{2}-\d{5}$/.test(v);
+      },
+      message: props => `${props.value} is not a valid ID number! Format should be 20XX-XXXXX.`
+    }
   },
 
   //  Demographics
@@ -155,6 +161,9 @@ const userSchema = new mongoose.Schema({
   // Email Verification
   isVerified: { type: Boolean, default: false },
   verificationToken: { type: String },
+
+  // Account Status
+  isActive: { type: Boolean, default: true },
 
   // Version for optimistic concurrency control
   version: { type: Number, default: 0 }

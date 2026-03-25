@@ -29,6 +29,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
         ],
         admin: [
             { path: '/admin-dashboard', label: 'Dashboard', icon: LayoutDashboard },
+            { path: '/admin-messages', label: 'Messages', icon: MessageSquare }, // Added
             { path: '/admin-appointments', label: 'All Appointments', icon: CalendarDays },
             { path: '/admin-users', label: 'Manage Users', icon: Users },
             { path: '/admin-reports', label: 'Reports', icon: FileText },
@@ -39,6 +40,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
         ],
         superadmin: [
             { path: '/superadmin-dashboard', label: 'Dashboard', icon: LayoutDashboard },
+            { path: '/superadmin-messages', label: 'Messages', icon: MessageSquare }, // Added
             { path: '/superadmin-appointments', label: 'All Appointments', icon: CalendarDays },
             { path: '/superadmin-users', label: 'Manage Users', icon: Users },
             { path: '/superadmin-reports', label: 'Reports', icon: FileText },

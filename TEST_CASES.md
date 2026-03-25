@@ -31,6 +31,8 @@
 | TC-PAT-AUTH-008 | Google OAuth signup completes successfully | 1. Click Sign up with Google. 2. Complete OAuth flow. 3. Fill extended profile. 4. Submit. | Valid Google ID, idNumber, patientType: "student" | Account created with isVerified: true. JWT issued. Redirected to dashboard. | | | |
 | TC-PAT-AUTH-009 | Email verification with valid token | 1. Click the verification link from email. | token: (valid token from DB) | HTTP 200. isVerified set to true. Token cleared. Success message shown. | | | |
 | TC-PAT-AUTH-010 | Email verification fails with invalid token | 1. Access verify-email link with a wrong/expired token. | token: "invalidtoken123" | HTTP 400. Error: "Invalid or expired verification token." | | | |
+| TC-PAT-AUTH-011 | Signup fails with invalid ID Number format | 1. Enter ID number not matching "20YY-XXXXX". 2. Submit. | idNumber: "ABC-12345" | HTTP 400. Error: "ID Number must follow the format 20XX-XXXXX." | | | |
+| TC-PAT-AUTH-012 | Signup fails with invalid Recaptcha | 1. Attempt signup without completing Recaptcha. 2. Submit. | recaptchaToken: "" | HTTP 400. Error: "Recaptcha verification failed." | | | |
 
 ---
 
@@ -42,6 +44,8 @@
 | TC-PAT-PROF-002 | Patient updates profile with valid data | 1. Log in as patient. 2. Edit profile fields. 3. Save. | contactNumber: "09181234567", homeAddress: "123 BukSU St.", department: "CIT" | HTTP 200. Updated data saved and displayed. Activity logged. | | | |
 | TC-PAT-PROF-003 | Profile update fails on version conflict | 1. Log in as patient. 2. Submit profile update with stale version number. | version: 1 (DB version is 2) | HTTP 409. Error: "Profile was modified by another process. Please refresh and try again." | | | |
 | TC-PAT-PROF-004 | Patient uploads a profile picture | 1. Log in as patient. 2. Upload an image file on the profile page. | file: valid .jpg or .png image | HTTP 200. Avatar saved. New photo displayed on profile. | | | |
+| TC-PAT-PROF-005 | Patient changes password within profile | 1. Log in. 2. Go to Security/Profile. 3. Enter current and new password. 4. Save. | current: "Pass@123", new: "NewPass@789" | HTTP 200. "Password updated successfully." | | | |
+| TC-PAT-PROF-006 | Restricted fields are readonly in profile | 1. Go to Profile. 2. Attempt to edit idNumber or email. | N/A | Fields are disabled in UI. POST/PATCH ignores these fields if tampered. | | | |
 
 ---
 
@@ -57,6 +61,7 @@
 | TC-PAT-APT-006 | Rescheduling to a past date is rejected | 1. Log in as patient. 2. Try to reschedule to a past date. | appointmentDate: "2020-01-01" | HTTP 400. Error: "Cannot reschedule to a past date." | | | |
 | TC-PAT-APT-007 | Patient cannot delete their own appointment | 1. Log in as patient. 2. Try to DELETE /api/appointments/:id. | Patient JWT | HTTP 403. Error: "Access denied." | | | |
 | TC-PAT-APT-008 | Patient cannot view another patient's appointments | 1. Log in as patient A. 2. Try to access /api/appointments/patient/:patientBId. | Patient A JWT, Patient B ID | HTTP 403. Error: "Access denied." | | | |
+| TC-PAT-APT-009 | Patient cancels their own pending appointment | 1. Log in. 2. Go to My Appointments. 3. Click Cancel on a pending record. | appointmentId: (pending) | HTTP 200. Status → "cancelled". Activity logged. | | | |
 
 ---
 
@@ -94,6 +99,24 @@
 | TC-PAT-NOTIF-003 | Patient is notified when appointment is cancelled | 1. Admin deletes patient's appointment. 2. Patient checks notifications. | Existing appointment | In-app notification: "Your appointment on [date] has been cancelled by the administrator." | | | |
 
 ---
+
+## Dashboard – Patient
+
+| Test Case # | Test Case Description | Test Steps | Test Data | Expected Result | Actual Result | Pass/Fail | Remarks |
+|---|---|---|---|---|---|---|---|
+| TC-PAT-DASH-001 | Patient views upcoming appointment summary | 1. Log in as patient. 2. View dashboard. | Patient with 1 upcoming appt | "Upcoming Appointment" card shows date, time, and purpose clearly. | | | |
+
+---
+
+## Medical Certificates – Patient
+
+| Test Case # | Test Case Description | Test Steps | Test Data | Expected Result | Actual Result | Pass/Fail | Remarks |
+|---|---|---|---|---|---|---|---|
+| TC-PAT-CERT-001 | Patient requests certificate for completed consultation | 1. Go to a completed appointment. 2. Click "Request Medical Certificate". | Completed appointment ID | Request sent. Status shows "requested" or "ready". | | | |
+| TC-PAT-CERT-002 | Patient views list of generated certificates | 1. Go to "My Certificates" page. | Patient JWT | HTTP 200. List of all available certificates shown. | | | |
+| TC-PAT-CERT-003 | Patient downloads certificate PDF | 1. Click "Download" icon/button on a certificate. | Valid certificate ID | Browser downloads a PDF file named "Medical_Certificate_[ID].pdf". | | | |
+
+---
 ---
 
 # 🛡️ ADMIN TEST CASES
@@ -127,6 +150,7 @@
 | TC-ADM-APT-004 | Admin rejects a pending appointment | 1. Log in as admin. 2. Select a pending appointment. 3. Click Reject. | Appointment with status "pending" | HTTP 200. Status → "rejected". Patient email sent. Google Calendar event deleted if applicable. | | | |
 | TC-ADM-APT-005 | Admin reschedules an appointment | 1. Log in as admin. 2. Edit an appointment's date. 3. Save. | appointmentDate: (new future date), rescheduleReason: "Clinic unavailable" | HTTP 200. Date updated. Activity logged. Notifications sent. | | | |
 | TC-ADM-APT-006 | Admin deletes an appointment | 1. Log in as admin. 2. Select an appointment. 3. Click Delete. | Admin JWT | HTTP 200. Appointment removed. Patient notified. Activity logged. | | | |
+| TC-ADM-APT-007 | Admin creates a Walk-in appointment | 1. Log in. 2. Go to Appointments. 3. Click "Add Walk-in". 4. Fill patient details and purpose. 5. Submit. | patientName: "Jane Doe", purpose: "Emergency" | HTTP 201. Appointment created with status "completed" or "in-consultation". | | | |
 
 ---
 
@@ -139,6 +163,9 @@
 | TC-ADM-CONS-003 | Admin saves full consultation details | 1. Log in as admin. 2. Fill in vitals, diagnosis, and prescriptions. 3. Save. | diagnosis: "Flu", bloodPressure: "120/80", temperature: "37.5", heartRate: "75", oxygenSaturation: "98%", bmi: "22.5", medicinesPrescribed: [{name: "Paracetamol", quantity: 10}] | HTTP 200. All fields saved. Status → "completed". Patient notified. | | | |
 | TC-ADM-CONS-004 | Admin retrieves all consultation records | 1. Log in as admin. 2. Go to Consultations page. | Admin JWT | HTTP 200. All appointments with a diagnosis returned. | | | |
 | TC-ADM-CONS-005 | Admin retrieves completed Medical Certificate requests | 1. Log in as admin. 2. Go to Medical Certificates page. | Admin JWT | HTTP 200. All completed Medical Certificate appointments shown. | | | |
+| TC-ADM-CONS-006 | Consultation fails with invalid vitals | 1. Enter negative temperature or impossible BP. 2. Save. | temperature: -10, bloodPressure: "0/0" | HTTP 400. Error: "Please enter valid vital signs." | | | |
+| TC-ADM-CONS-007 | Admin generates a Referral Letter | 1. In consultation, click "Create Referral". 2. Fill specialist and reason. 3. Save. | referralTo: "Cardiologist", reason: "Irregular heart rate" | Referral saved. PDF option available. Activity logged. | | | |
+| TC-ADM-CONS-008 | Admin exports Consultation Summary PDF | 1. View a completed consultation. 2. Click "Export PDF". | Valid consultation ID | Browser downloads PDF with all vitals and diagnosis. | | | |
 
 ---
 
@@ -159,6 +186,9 @@
 | TC-ADM-MED-011 | Delete fails for invalid ID | 1. Log in as admin. 2. DELETE /api/medicines/invalidid. | id: "invalidid" | HTTP 400. Error: "Invalid ID." | | | |
 | TC-ADM-MED-012 | Admin views dispense history for a medicine | 1. Log in as admin. 2. Click on a medicine. 3. View dispense history. | Valid medicine ID with dispense records | HTTP 200. Full dispense history shown with dates and recipients. | | | |
 | TC-ADM-MED-013 | Admin exports dispense history as PDF | 1. Log in as admin. 2. Go to dispense history. 3. Click Print/Export PDF. | (optionally) startDate: "2026-01-01", endDate: "2026-03-31" | HTTP 200. PDF downloaded with matching records. | | | |
+| TC-ADM-MED-014 | Admin views low stock alerts | 1. Go to Inventory. 2. Observe medicines with quantity < 10. | Medicine with qty: 5 | Highlighted in red/yellow. "Low Stock" badge visible. | | | |
+| TC-ADM-MED-015 | Admin filters medicines by expiry date | 1. Go to Inventory. 2. Use expiry filter (e.g., "Expiring in 3 months"). | Current date: March 2026 | Only medicines expiring before June 2026 are shown. | | | |
+| TC-ADM-MED-016 | Admin updates medicine details | 1. Select medicine. 2. Edit name/unit/minStock. 3. Save. | minStock: 20 | HTTP 200. Details updated. Activity logged. | | | |
 
 ---
 
@@ -177,6 +207,8 @@
 |---|---|---|---|---|---|---|---|
 | TC-ADM-RPT-001 | Admin generates an appointment summary report | 1. Log in as admin. 2. Go to Reports page. 3. View summary. | Admin JWT | HTTP 200. Returns total, approved, rejected, completed, walk-in, scheduled counts, top diagnosis, top complaint, referral rate. | | | |
 | TC-ADM-RPT-002 | Report figures match actual database counts | 1. Create 5 appointments (2 approved, 2 completed, 1 rejected). 2. View report. | Known appointment dataset in DB | totalAppointments: 5, approved: 2, completed: 2, rejected: 1. Values match actual DB. | | | |
+| TC-ADM-RPT-003 | Admin filters report by customized date range | 1. Go to Reports. 2. Select Start and End date. 3. Refresh. | startDate: "2026-03-01", endDate: "2026-03-10" | Report updates to show data ONLY within that range. | | | |
+| TC-ADM-RPT-004 | Admin exports Inventory Report to Excel | 1. Go to Reports/Inventory. 2. Click "Export Excel". | Admin JWT | Browser downloads .xlsx file with current stock levels. | | | |
 
 ---
 
@@ -186,6 +218,16 @@
 |---|---|---|---|---|---|---|---|
 | TC-ADM-NOTIF-001 | Admin is notified when a patient books an appointment | 1. Patient books an appointment. 2. Admin checks notification feed. | Valid patient and admin accounts | Admin receives in-app notification: "New appointment booked by [patient name]." | | | |
 | TC-ADM-NOTIF-002 | Admin is notified when a consultation is completed | 1. Clinician completes a consultation. 2. Admin checks notifications. | Completed appointment | Admin receives in-app notification: "Consultation completed for patient [name]." | | | |
+| TC-ADM-NOTIF-003 | Admin is notified of low stock levels | 1. Dispense medicine until stock < threshold. 2. Check notifications. | Threshold: 10, Stock → 9 | Admin receive alert: "Low stock warning: [Medicine Name]." | | | |
+
+---
+
+## Dashboard – Admin
+
+| Test Case # | Test Case Description | Test Steps | Test Data | Expected Result | Actual Result | Pass/Fail | Remarks |
+|---|---|---|---|---|---|---|---|
+| TC-ADM-DASH-001 | Admin dashboard counters update in real-time | 1. Log in. 2. Have another user book an appointment. 3. Watch dashboard. | New appointment created | "Pending Appointments" counter increments immediately without refresh. | | | |
+| TC-ADM-DASH-002 | Admin views daily schedule on dashboard | 1. Log in. 2. View "Today's Appointments" section. | 3 appointments scheduled for today | List displays the 3 patients and their visit times correctly. | | | |
 
 ---
 
@@ -222,6 +264,9 @@
 | TC-SA-USER-004 | Role update fails with an invalid role value | 1. Log in as superadmin. 2. PATCH /api/users/:id/role with role: "nurse". | role: "nurse" | HTTP 400. Error: "Invalid role specified." | | | |
 | TC-SA-USER-005 | Superadmin cannot remove the last superadmin | 1. Log in as superadmin (only one exists). 2. Try to change own role to "admin". | role: "admin" | HTTP 400. Error: "Cannot change role. The system must have at least one superadmin." | | | |
 | TC-SA-USER-006 | Superadmin demotes an admin to patient | 1. Log in as superadmin. 2. Select an admin user. 3. Change role to "patient". 4. Save. | role: "patient" | HTTP 200. Role updated to "patient". Activity logged. | | | |
+| TC-SA-USER-007 | Superadmin deactivates a user account | 1. Log in. 2. Select a user. 3. Click "Deactivate". 4. Confirm. | User ID | HTTP 200. Account disabled. User cannot login. | | | |
+| TC-SA-USER-008 | Superadmin reactivates a user account | 1. Log in. 2. Select deactivated user. 3. Click "Activate". | User ID | HTTP 200. Account enabled. User can login again. | | | |
+| TC-SA-USER-009 | Superadmin views user login history | 1. Select a user. 2. Click "Login History". | Admin JWT | HTTP 200. List of recent login timestamps and IP addresses shown. | | | |
 
 ---
 
@@ -241,6 +286,7 @@
 |---|---|---|---|---|---|---|---|
 | TC-SA-MED-001 | Superadmin views the full medicine inventory | 1. Log in as superadmin. 2. Go to Inventory. | Superadmin JWT | HTTP 200. Full medicine list displayed. | | | |
 | TC-SA-MED-002 | Superadmin views dispense history report | 1. Log in as superadmin. 2. Go to dispense history. 3. Click Export PDF. | Superadmin JWT | HTTP 200. PDF downloaded with all dispense records. | | | |
+| TC-SA-MED-003 | Superadmin performs bulk stock adjustment | 1. Go to Inventory. 2. Select multiple items. 3. Click "Bulk Update". 4. Add +10 to all. | Medicine IDs | HTTP 200. All selected items' quantities incremented by 10. | | | |
 
 ---
 
@@ -251,3 +297,22 @@
 | TC-SA-RBAC-001 | Superadmin can access all admin routes | 1. Log in as superadmin. 2. Access all admin API endpoints. | Superadmin JWT | HTTP 200 for all admin-accessible routes. Full access granted. | | | |
 | TC-SA-RBAC-002 | Unauthenticated user cannot access superadmin routes | 1. Access any superadmin route without a JWT. | No token | HTTP 401. Redirected to login page. | | | |
 | TC-SA-RBAC-003 | Admin cannot access superadmin-exclusive routes | 1. Log in as admin. 2. Try PATCH /api/users/:id/role or superadmin-only endpoints. | Admin JWT | HTTP 403. Error: "Access denied. Superadmins only." | | | |
+| TC-SA-RBAC-004 | Unauthorized direct URL access is blocked | 1. Copy a superadmin URL (e.g. /superadmin/logs). 2. Logout. 3. Paste URL in browser. | N/A | Redirected to login. No data leaked. | | | |
+
+---
+
+## Audit Logs – System
+
+| Test Case # | Test Case Description | Test Steps | Test Data | Expected Result | Actual Result | Pass/Fail | Remarks |
+|---|---|---|---|---|---|---|---|
+| TC-SYS-LOG-001 | Superadmin views system-wide audit logs | 1. Log in as superadmin. 2. Go to Audit Logs. | Superadmin JWT | HTTP 200. List of all actions (CREATE, UPDATE, DELETE) shown with timestamps. | | | |
+| TC-SYS-LOG-002 | Filter audit logs by specific User | 1. In Audit Logs, search for a User ID. 2. Apply filter. | targetUserId: "..." | Only actions performed by that user are displayed. | | | |
+| TC-SYS-LOG-003 | Filter audit logs by Action Type | 1. In Audit Logs, filter by "DELETE". | Action: "DELETE" | Only deletion events are shown across the system. | | | |
+
+---
+
+## Global Access & Redirection – System
+
+| Test Case # | Test Case Description | Test Steps | Test Data | Expected Result | Actual Result | Pass/Fail | Remarks |
+|---|---|---|---|---|---|---|---|
+| TC-SYS-RBAC-001 | User is redirected to correct dashboard on login | 1. Login as Patient. 2. Check URL. 3. Logout. 4. Login as Admin. 5. Check URL. | Valid credentials | Patient → /patient/dashboard, Admin → /admin/dashboard. | | | |

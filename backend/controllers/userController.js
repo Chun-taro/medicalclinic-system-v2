@@ -177,6 +177,77 @@ const uploadAvatar = async (req, res) => {
   }
 };
 
+// Deactivate user (superadmin only)
+const deactivateUser = async (req, res) => {
+  try {
+    if (req.user.role !== 'superadmin') {
+      return res.status(403).json({ error: 'Access denied. Superadmins only.' });
+    }
+
+    const user = await User.findByIdAndUpdate(req.params.id, { isActive: false }, { new: true });
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    await logActivity({
+      userId: req.user.userId,
+      userName: `${req.user.firstName} ${req.user.lastName}`,
+      userRole: req.user.role,
+      action: 'deactivate_user',
+      entityType: 'user',
+      entityId: user._id,
+      details: { targetUserName: `${user.firstName} ${user.lastName}` }
+    });
+
+    res.json({ message: 'User deactivated successfully', user });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// Reactivate user (superadmin only)
+const reactivateUser = async (req, res) => {
+  try {
+    if (req.user.role !== 'superadmin') {
+      return res.status(403).json({ error: 'Access denied. Superadmins only.' });
+    }
+
+    const user = await User.findByIdAndUpdate(req.params.id, { isActive: true }, { new: true });
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    await logActivity({
+      userId: req.user.userId,
+      userName: `${req.user.firstName} ${req.user.lastName}`,
+      userRole: req.user.role,
+      action: 'reactivate_user',
+      entityType: 'user',
+      entityId: user._id,
+      details: { targetUserName: `${user.firstName} ${user.lastName}` }
+    });
+
+    res.json({ message: 'User reactivated successfully', user });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// Get user login history (admin/superadmin only)
+const getUserLoginHistory = async (req, res) => {
+  try {
+    if (req.user.role !== 'admin' && req.user.role !== 'superadmin') {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+
+    const Log = require('../models/Log');
+    const history = await Log.find({
+      entityId: req.params.id,
+      action: 'user_login'
+    }).sort({ timestamp: -1 }).limit(50);
+
+    res.json(history);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
 module.exports = {
   getAllUsers,
   updateUserRole,
@@ -184,5 +255,8 @@ module.exports = {
   getProfileById,
   getProfile,
   updateProfile,
-  uploadAvatar
+  uploadAvatar,
+  deactivateUser,
+  reactivateUser,
+  getUserLoginHistory
 };

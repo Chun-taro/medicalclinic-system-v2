@@ -9,12 +9,18 @@ const {
   getProfileById,
   getProfile,
   updateProfile,
-  uploadAvatar
+  uploadAvatar,
+  deactivateUser,
+  reactivateUser,
+  getUserLoginHistory
 } = require('../controllers/userController');
 
 // Admin/superadmin only routes
 router.get('/', auth, requireRole('superadmin', 'admin'), getAllUsers);
 router.put('/:id/role', auth, requireRole('superadmin'), updateUserRole);
+router.put('/:id/deactivate', auth, requireRole('superadmin'), deactivateUser);
+router.put('/:id/reactivate', auth, requireRole('superadmin'), reactivateUser);
+router.get('/:id/login-history', auth, requireRole('superadmin', 'admin'), getUserLoginHistory);
 
 // Public/non-authenticated route for Google OAuth
 router.get('/role-by-google/:googleId', getRoleByGoogleId);

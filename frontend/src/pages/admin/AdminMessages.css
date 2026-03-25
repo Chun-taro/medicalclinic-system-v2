@@ -1,0 +1,141 @@
+/* AdminMessages.css */
+.admin-messages-page {
+    display: flex;
+    height: calc(100vh - 120px);
+    background-color: var(--bg-card);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border);
+    overflow: hidden;
+}
+
+.admin-messages-page.loading {
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+}
+
+.admin-messages-page .str-chat {
+    display: flex;
+    width: 100%;
+    height: 100%;
+}
+
+.messages-sidebar {
+    width: 320px;
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+}
+
+.messages-sidebar .sidebar-header {
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--border);
+}
+
+.messages-sidebar .sidebar-header h2 {
+    margin: 0;
+    font-size: 1.25rem;
+    color: var(--text-main);
+}
+
+.messages-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background-color: var(--bg-body);
+}
+
+/* Stream Chat Overrides to match App Theme */
+.str-chat__theme-light {
+    --str-chat__primary-color: var(--primary);
+    --str-chat__active-primary-color: var(--primary-dark);
+    --str-chat__surface-color: var(--bg-card);
+    --str-chat__body-color: var(--bg-body);
+    --str-chat__primary-surface-color: var(--primary-light);
+    --str-chat__secondary-surface-color: var(--bg-body);
+    --str-chat__border-color: var(--border);
+    --str-chat__main-font-family: inherit;
+}
+
+.str-chat-channel-list {
+    width: 100% !important;
+}
+
+.str-chat__channel-list-messenger {
+    background: transparent !important;
+}
+
+.str-chat__channel {
+    height: 100%;
+}
+
+.messages-content {
+    position: relative;
+}
+
+.no-channel-selected {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: var(--text-muted);
+    background-color: var(--bg-body);
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 1;
+}
+
+/* Hide fallback when a channel is active */
+.str-chat-channel.str-chat__channel .no-channel-selected {
+    display: none;
+}
+
+/* When a channel is active, it will naturally cover or be shown by Stream components */
+/* Actually, Stream handles empty state better if we use active channel */
+
+.admin-chat-search {
+    margin-top: 1rem;
+    position: relative;
+}
+
+.admin-chat-search input {
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    background: var(--bg-body);
+    font-size: 0.85rem;
+}
+
+.admin-search-results {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-md);
+    z-index: 10;
+    max-height: 200px;
+    overflow-y: auto;
+    margin-top: 0.25rem;
+}
+
+.search-result-item {
+    padding: 0.75rem 1rem;
+    cursor: pointer;
+    font-size: 0.85rem;
+    border-bottom: 1px solid var(--border);
+}
+
+.search-result-item:last-child {
+    border-bottom: none;
+}
+
+.search-result-item:hover {
+    background-color: var(--primary-light);
+    color: var(--primary);
+}
