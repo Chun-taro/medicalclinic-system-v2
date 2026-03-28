@@ -12,35 +12,51 @@ const ChatWindow = ({ conversation }) => {
     const [channel, setChannel] = useState(null);
     const messagesEndRef = useRef(null);
 
-    const otherParticipant = conversation.participants?.find(p => 
-        (p._id || p.id || p.userId) !== (currentUser.userId || currentUser._id)
-    ) || conversation.targetUser;
+    const otherParticipant = conversation.participants?.find(p => {
+        const pId = (p._id || p.id || p.userId)?.toString();
+        const currentId = (currentUser.userId || currentUser._id)?.toString();
+        return pId !== currentId;
+    }) || conversation.targetUser;
 
     useEffect(() => {
         if (!streamClient || !conversation) return;
 
+        let activeChannel;
         const initChannel = async () => {
             try {
                 setLoading(true);
                 let newChannel;
                 
                 if (conversation.isNew) {
+                    const otherId = (otherParticipant._id || otherParticipant.id || otherParticipant.userId)?.toString();
                     newChannel = streamClient.channel('messaging', {
-                        members: [streamClient.userID, otherParticipant._id.toString()]
+                        members: [streamClient.userID, otherId]
                     });
                 } else {
                     newChannel = streamClient.channel('messaging', conversation._id);
                 }
 
                 await newChannel.watch();
+                activeChannel = newChannel;
                 setChannel(newChannel);
                 setMessages(newChannel.state.messages);
 
-                newChannel.on('message.new', (event) => {
-                    setMessages(prev => [...prev, event.message]);
-                });
+                const handleNewMessage = (event) => {
+                    setMessages(prev => {
+                        // Avoid duplication by checking if message already exists
+                        if (prev.find(m => m.id === event.message.id)) return prev;
+                        return [...prev, event.message];
+                    });
+                };
 
+                newChannel.on('message.new', handleNewMessage);
                 await newChannel.markRead();
+                
+                // Final scroll-to-bottom after load
+                setTimeout(() => {
+                    messagesEndRef.current?.scrollIntoView({ behavior: 'auto' });
+                }, 100);
+
             } catch (err) {
                 console.error('Failed to init channel:', err);
             } finally {
@@ -49,10 +65,19 @@ const ChatWindow = ({ conversation }) => {
         };
 
         initChannel();
-    }, [streamClient, conversation]);
+
+        return () => {
+            if (activeChannel) {
+                activeChannel.off('message.new');
+            }
+        };
+    }, [streamClient, conversation, otherParticipant]);
 
     useEffect(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+        // Smooth scroll for subsequent messages
+        if (messages.length > 0) {
+            messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+        }
     }, [messages]);
 
     const handleSend = async (e) => {
@@ -102,12 +127,52 @@ const ChatWindow = ({ conversation }) => {
                     </div>
                 ) : (
                     messages.map((msg, index) => {
-                        const isMe = msg.user.id === streamClient.userID;
+                        const nextMsg = messages[index + 1];
+                        const prevMsg = messages[index - 1];
+                        const currentMsgUserId = msg.user?.id?.toString();
+                        const nextMsgUserId = nextMsg?.user?.id?.toString();
+                        const isMe = currentMsgUserId === streamClient?.userID?.toString();
+                        
+                        // Show footer (name/avatar) if it's the last message in a chain or time gap
+                        const TIME_GAP = 5 * 60 * 1000;
+                        const showFooter = !nextMsg || 
+                                          nextMsgUserId !== currentMsgUserId || 
+                                          (new Date(nextMsg.created_at) - new Date(msg.created_at)) > TIME_GAP;
+
+                        const prevMsgUserId = prevMsg?.user?.id?.toString();
+                        const isSameAsPrev = prevMsg && 
+                                           prevMsgUserId === currentMsgUserId && 
+                                           (new Date(msg.created_at) - new Date(prevMsg.created_at)) < TIME_GAP;
+                        
+                        const formatTimestamp = (dateStr) => {
+                            const date = new Date(dateStr);
+                            const now = new Date();
+                            const isToday = date.toDateString() === now.toDateString();
+                            const timeStr = date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true });
+                            
+                            if (isToday) return `Today at ${timeStr}`;
+                            return `${date.toLocaleDateString([], { month: 'short', day: 'numeric' })} at ${timeStr}`;
+                        };
+
                         return (
-                            <div key={index} className={`message ${isMe ? 'sent' : 'received'}`}>
-                                <div className="message-content">{msg.text}</div>
-                                <div className="message-time">
-                                    {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            <div key={index} className={`message-group ${isMe ? 'sent' : 'received'} ${isSameAsPrev ? 'is-grouped' : ''}`}>
+                                <div className="message-row">
+                                    {!isMe && (
+                                        <div className={`message-avatar ${!showFooter ? 'empty' : ''}`}>
+                                            {showFooter ? (
+                                                msg.user.image ? <img src={msg.user.image} alt="" /> : (msg.user.name?.[0] || '?')
+                                            ) : null}
+                                        </div>
+                                    )}
+                                    <div className="message-content-wrapper">
+                                        <div className="message-content">{msg.text}</div>
+                                        {showFooter && (
+                                            <div className="message-info">
+                                                <span className="message-username">{msg.user.name || 'User'}</span>
+                                                <span className="message-date">{formatTimestamp(msg.created_at)}</span>
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
                         );

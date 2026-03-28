@@ -11,15 +11,71 @@ import {
 } from 'stream-chat-react';
 import { useChat } from '../../context/ChatContext';
 import { useAuth } from '../../context/AuthContext';
+import { useTheme } from '../../context/ThemeContext';
 import 'stream-chat-react/dist/css/v2/index.css';
 import './AdminMessages.css';
 
-const AdminMessages = () => {
-    const [searchQuery, setSearchQuery] = React.useState('');
-    const [searchResults, setSearchResults] = React.useState([]);
-    const [activeChannel, setActiveChannel] = React.useState(null);
-    const { streamClient, error } = useChat();
+import { useChatContext } from 'stream-chat-react';
+
+const AdminMessagesContent = () => {
+    const { channel: activeChannel, setActiveChannel, client } = useChatContext();
     const { user: currentUser } = useAuth();
+    const isStationAdmin = currentUser?.role === 'admin' || currentUser?.role === 'superadmin';
+
+    // Broaden filters for admins to see all messaging channels
+    const filters = isStationAdmin 
+        ? { type: 'messaging' } 
+        : { type: 'messaging', members: { $in: [client.userID] } };
+
+    return (
+        <>
+            <div className="messages-sidebar">
+                <div className="sidebar-header">
+                    <h2>Messages</h2>
+                </div>
+                <ChannelList 
+                    filters={filters} 
+                    sort={{ last_message_at: -1 }}
+                    options={{ state: true, presence: true, limit: 10 }}
+                    onSelect={async (channel) => {
+                        console.log('AdminMessages: onSelect', channel.id);
+                        
+                        // If admin is not a member, add them so they can "jump in"
+                        if (isStationAdmin && !channel.state.members[client.userID]) {
+                            try {
+                                console.log('Admin joining channel:', channel.id);
+                                await channel.addMembers([client.userID]);
+                            } catch (err) {
+                                console.error('Failed to join channel:', err);
+                            }
+                        }
+                        
+                        setActiveChannel(channel);
+                    }}
+                />
+            </div>
+            <div className="messages-content">
+                <Channel>
+                    <Window>
+                        <ChannelHeader />
+                        <MessageList />
+                        <MessageInput />
+                    </Window>
+                    <Thread />
+                </Channel>
+                {!activeChannel && (
+                    <div className="no-channel-selected">
+                        <p>Select a conversation or start a new one</p>
+                    </div>
+                )}
+            </div>
+        </>
+    );
+};
+
+const AdminMessages = () => {
+    const { streamClient, error } = useChat();
+    const { isDarkMode } = useTheme();
 
     if (error) {
         return (
@@ -30,7 +86,6 @@ const AdminMessages = () => {
                     <ul style={{ textAlign: 'left', marginTop: '0.5rem' }}>
                         <li>Verify your <b>Stream API Keys</b> in <code>.env</code> files.</li>
                         <li>Ensure the <b>Backend Server</b> is running.</li>
-                        <li>If using HTTPS, visit <a href="https://localhost:5000/api/chat/token" target="_blank" rel="noopener noreferrer">this link</a> and accept the certificate.</li>
                     </ul>
                 </div>
             </div>
@@ -45,82 +100,10 @@ const AdminMessages = () => {
         );
     }
 
-    const handleSearch = async (query) => {
-        setSearchQuery(query);
-        if (query.length >= 2) {
-            const results = await chatService.searchUsers(query);
-            setSearchResults(results);
-        } else {
-            setSearchResults([]);
-        }
-    };
-
-    const startNewChannel = async (targetUser) => {
-        const targetId = (targetUser._id || targetUser.userId || targetUser.id).toString();
-        const channel = streamClient.channel('messaging', {
-            members: [streamClient.userID, targetId],
-        });
-        await channel.watch();
-        setActiveChannel(channel);
-        setSearchQuery('');
-        setSearchResults([]);
-    };
-
-    const filters = { type: 'messaging', members: { $in: [streamClient.userID] } };
-    const sort = { last_message_at: -1 };
-    const options = { state: true, presence: true, limit: 10 };
-
     return (
         <div className="admin-messages-page">
-            <Chat client={streamClient} theme="str-chat__theme-light">
-                <div className="messages-sidebar">
-                    <div className="sidebar-header">
-                        <h2>Messages</h2>
-                        <div className="admin-chat-search">
-                            <input 
-                                type="text" 
-                                placeholder="Search users to start chat..." 
-                                value={searchQuery}
-                                onChange={(e) => handleSearch(e.target.value)}
-                            />
-                            {searchResults.length > 0 && (
-                                <div className="admin-search-results">
-                                    {searchResults.map(user => (
-                                        <div 
-                                            key={user._id} 
-                                            className="search-result-item"
-                                            onClick={() => startNewChannel(user)}
-                                        >
-                                            {user.firstName} {user.lastName}
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                    <ChannelList 
-                        filters={filters} 
-                        sort={sort} 
-                        options={options}
-                        onSelect={(channel) => setActiveChannel(channel)}
-                    />
-                </div>
-                <div className="messages-content">
-                    <Channel channel={activeChannel}>
-                        <Window>
-                            <ChannelHeader />
-                            <MessageList />
-                            <MessageInput />
-                        </Window>
-                        <Thread />
-                    </Channel>
-                    {/* Fallback for no selected channel */}
-                    {!activeChannel && (
-                        <div className="no-channel-selected">
-                            <p>Select a conversation or start a new one</p>
-                        </div>
-                    )}
-                </div>
+            <Chat client={streamClient} theme={isDarkMode ? 'str-chat__theme-dark' : 'str-chat__theme-light'}>
+                <AdminMessagesContent />
             </Chat>
         </div>
     );

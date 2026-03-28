@@ -128,7 +128,7 @@ const ChatDropdown = ({ onClose }) => {
                         ) : (
                             searchResults.map(user => (
                                 <div 
-                                    key={user._id} 
+                                    key={user._id || user.id} 
                                     className="chat-item"
                                     onClick={() => {
                                         startChatWithUser(user);

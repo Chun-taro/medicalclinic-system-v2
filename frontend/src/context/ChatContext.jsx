@@ -8,20 +8,18 @@ const ChatContext = createContext();
 export const useChat = () => useContext(ChatContext);
 
 export const ChatProvider = ({ children }) => {
-    const { user, token } = useAuth();
+    const { user } = useAuth();
     const [conversations, setConversations] = useState([]);
     const [activeChats, setActiveChats] = useState([]); 
     const [streamClient, setStreamClient] = useState(null);
     const [unreadTotal, setUnreadTotal] = useState(0);
     const [error, setError] = useState(null);
-
-    // Initialize Stream Chat
     useEffect(() => {
         let isSubscribed = true;
 
         const initChat = async () => {
-            console.log('ChatContext: initChat starting', { user: !!user, token: !!token });
-            if (user && token) {
+            console.log('ChatContext: initChat starting', { user: !!user });
+            if (user) {
                 try {
                     setError(null);
                     console.log('ChatContext: Fetching stream token...');
@@ -60,12 +58,16 @@ export const ChatProvider = ({ children }) => {
             isSubscribed = false;
             disconnectStreamUser();
         };
-    }, [user, token]);
+    }, [user]);
 
     const fetchConversations = useCallback(async () => {
         if (!streamClient) return;
         try {
-            const filters = { members: { $in: [streamClient.userID] } };
+            const isStaff = user?.role === 'admin' || user?.role === 'superadmin';
+            const filters = isStaff 
+                ? { type: 'messaging' }
+                : { members: { $in: [streamClient.userID] } };
+            
             const sort = { last_message_at: -1 };
             const channels = await streamClient.queryChannels(filters, sort, {
                 watch: true,
@@ -75,7 +77,7 @@ export const ChatProvider = ({ children }) => {
         } catch (err) {
             console.error('Failed to fetch Stream channels', err);
         }
-    }, [streamClient]);
+    }, [streamClient, user]);
 
     useEffect(() => {
         if (streamClient) {
@@ -106,12 +108,17 @@ export const ChatProvider = ({ children }) => {
     };
 
     const startChatWithUser = async (targetUser) => {
-        const targetId = (targetUser._id || targetUser.id || targetUser.userId).toString();
+        const targetId = (targetUser._id || targetUser.id || targetUser.userId)?.toString();
+        if (!targetId) {
+            console.error('startChatWithUser: No target ID found', targetUser);
+            return;
+        }
         
         // Try to find existing conversation in the current list
-        const existing = conversations.find(c => 
-            Object.keys(c.state.members).includes(targetId)
-        );
+        const existing = conversations.find(c => {
+            const members = Object.keys(c.state.members);
+            return members.includes(targetId);
+        });
 
         if (existing) {
             openChat({ _id: existing.id, participants: [user, targetUser] });
