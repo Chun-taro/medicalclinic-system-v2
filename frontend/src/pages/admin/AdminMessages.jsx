@@ -46,7 +46,7 @@ const CustomChannelHeader = () => {
 };
 
 const CustomChannelPreview = (props) => {
-    const { channel, setActiveChannel } = props;
+    const { channel, setActiveChannel, active } = props;
     const { client } = useChatContext();
     
     // Safety check for channel state
@@ -64,7 +64,7 @@ const CustomChannelPreview = (props) => {
     const lastMessage = channel.state.messages[channel.state.messages.length - 1];
     
     return (
-        <div className={`custom-channel-preview ${channel.id === setActiveChannel?.id ? 'active' : ''}`}
+        <div className={`custom-channel-preview ${active ? 'active' : ''}`}
              onClick={() => setActiveChannel(channel)}>
             <div className="preview-avatar">
                 {patientMember?.user.image ? <img src={patientMember.user.image} alt="" /> : (displayName[0] || '?')}
