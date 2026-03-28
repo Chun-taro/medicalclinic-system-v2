@@ -14,6 +14,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import 'stream-chat-react/dist/css/v2/index.css';
 import './AdminMessages.css';
+import { useChatContext } from 'stream-chat-react';
 
 const CustomChannelHeader = () => {
     const { channel, client } = useChatContext();
