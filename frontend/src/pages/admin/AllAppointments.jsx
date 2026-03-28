@@ -323,9 +323,18 @@ const AllAppointments = () => {
             {showEditModal && (
                 <div className="modal-overlay">
                     <div className="modal-card">
-                        <div className="modal-header">
-                            <h3>Reschedule Appointment</h3>
-                            <button className="close-btn" onClick={closeEditModal}><XCircle size={24} /></button>
+                        <div className="modal-header" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                            <div style={{ width: '40px', height: '40px', borderRadius: '50%', overflow: 'hidden', flexShrink: 0 }}>
+                                {editingApt?.patientId?.profilePicture ? (
+                                    <img src={getImageUrl(editingApt.patientId.profilePicture)} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                ) : (
+                                    <div style={{ width: '100%', height: '100%', background: 'var(--primary)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>
+                                        {(editingApt?.patientId?.firstName?.[0] || 'U').toUpperCase()}
+                                    </div>
+                                )}
+                            </div>
+                            <h3 style={{ margin: 0 }}>Reschedule Appointment</h3>
+                            <button className="close-btn" style={{ marginLeft: 'auto' }} onClick={closeEditModal}><XCircle size={24} /></button>
                         </div>
                         <form onSubmit={handleEditSubmit}>
                             <div className="modal-body">
@@ -360,9 +369,18 @@ const AllAppointments = () => {
             {showNotesModal && (
                 <div className="modal-overlay">
                     <div className="modal-card">
-                        <div className="modal-header">
-                            <h3>Appointment Notes</h3>
-                            <button className="close-btn" onClick={() => setShowNotesModal(false)}><XCircle size={24} /></button>
+                        <div className="modal-header" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                            <div style={{ width: '40px', height: '40px', borderRadius: '50%', overflow: 'hidden', flexShrink: 0 }}>
+                                {filteredAppointments.find(a => a.additionalNotes === selectedNotes)?.patientId?.profilePicture ? (
+                                    <img src={getImageUrl(filteredAppointments.find(a => a.additionalNotes === selectedNotes).patientId.profilePicture)} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                ) : (
+                                    <div style={{ width: '100%', height: '100%', background: 'var(--primary)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>
+                                        ?
+                                    </div>
+                                )}
+                            </div>
+                            <h3 style={{ margin: 0 }}>Appointment Notes</h3>
+                            <button className="close-btn" style={{ marginLeft: 'auto' }} onClick={() => setShowNotesModal(false)}><XCircle size={24} /></button>
                         </div>
                         <div className="modal-body">
                             <div className="notes-content">
