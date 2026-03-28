@@ -34,8 +34,19 @@ const ChatDropdown = ({ onClose }) => {
     }, [searchQuery]);
 
     const getOtherParticipant = (channel) => {
-        const otherId = Object.keys(channel.state.members).find(id => id !== streamClient.userID);
-        return channel.state.members[otherId]?.user;
+        const members = Object.values(channel.state.members);
+        const currentUserId = streamClient.userID;
+        
+        const otherMember = members.find(m => {
+            if (m.user.id === currentUserId) return false;
+            // If current user is staff, look for the patient
+            if (currentUser.role === 'admin' || currentUser.role === 'superadmin') {
+                return m.user.role !== 'admin' && m.user.role !== 'staff';
+            }
+            return true;
+        }) || members.find(m => m.user.id !== currentUserId);
+        
+        return otherMember?.user;
     };
 
     return (
