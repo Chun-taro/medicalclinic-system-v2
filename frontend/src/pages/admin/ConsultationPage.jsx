@@ -215,6 +215,13 @@ const ConsultationPage = () => {
                     {selectedApp.purpose === 'Medical Certificate' ? (
                         <div className="certificate-view">
                             <div className="cert-preview">
+                                <div className="avatar" style={{ width: '80px', height: '80px', fontSize: '2rem', marginBottom: '1rem' }}>
+                                    {selectedApp.patientId?.profilePicture ? (
+                                        <img src={getImageUrl(selectedApp.patientId.profilePicture)} alt="" className="avatar-img" />
+                                    ) : (
+                                        selectedApp.patientId?.firstName ? selectedApp.patientId.firstName[0] : 'P'
+                                    )}
+                                </div>
                                 <FileText size={48} className="text-primary" />
                                 <h3>Medical Certificate Ongoing</h3>
                                 <p><strong>Patient:</strong> {selectedApp.patientId?.firstName} {selectedApp.patientId?.lastName}</p>
