@@ -77,10 +77,10 @@ app.use(helmet({
       defaultSrc: ["'self'"],
       scriptSrc: ["'self'", "https://www.google.com", "https://www.gstatic.com"],
       frameSrc: ["'self'", "https://www.google.com"],
-      connectSrc: ["'self'", "https://www.google.com", "https://play.google.com"],
+      connectSrc: ["'self'", "https://www.google.com", "https://play.google.com", "https://*.stream-io-api.com", "wss://*.stream-io-api.com"],
       styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
       fontSrc: ["'self'", "https://fonts.gstatic.com"],
-      imgSrc: ["'self'", "data:", "https://res.cloudinary.com"],
+      imgSrc: ["'self'", "data:", "https://res.cloudinary.com", "https://*.stream-io-api.com"],
     },
   },
 })); // security headers
