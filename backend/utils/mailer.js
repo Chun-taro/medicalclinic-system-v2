@@ -1,50 +1,46 @@
-const nodemailer = require('nodemailer');
+const axios = require('axios');
 
-const transporter = nodemailer.createTransport({
-  host: 'smtp.gmail.com',
-  port: 587,
-  secure: false, // use STARTTLS
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS ? process.env.EMAIL_PASS.replace(/["']|\s+/g, '') : ''
-  },
-  tls: {
-    rejectUnauthorized: false
-  },
-  connectionTimeout: 10000, // 10 seconds
-  greetingTimeout: 5000,    // 5 seconds
-  debug: true,              // show debug output
-  logger: true              // log information to console
-});
-
+/**
+ * Send email via Resend API (HTTP) to bypass Render's SMTP restrictions.
+ * @param {Object} options - { to, subject, html }
+ */
 const sendEmail = async ({ to, subject, html }) => {
-  console.log(`Attempting to send email to: ${to} with subject: ${subject}`);
-
-  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-    console.error('Email credentials missing in .env');
-    throw new Error('Email credentials are not configured on the server.');
+  const apiKey = process.env.RESEND_API_KEY;
+  
+  if (!apiKey) {
+    console.error('RESEND_API_KEY missing in .env');
+    return;
   }
 
-  const mailOptions = {
-    from: `"Buksu Medical Clinic" <${process.env.EMAIL_USER}>`,
-    to,
-    subject,
-    html
-  };
+  console.log(`Attempting to send email via Resend to: ${to} with subject: ${subject}`);
 
   try {
-    const info = await transporter.sendMail(mailOptions);
-    console.log('Email sent successfully:', info.response);
-    return info;
+    const response = await axios.post(
+      'https://api.resend.com/emails',
+      {
+        from: 'Buksu Medical Clinic <onboarding@resend.dev>',
+        to: Array.isArray(to) ? to : [to],
+        subject: subject,
+        html: html,
+      },
+      {
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+
+    console.log('Email sent successfully via Resend:', response.data);
+    return response.data;
   } catch (err) {
-    console.error('Email send failed. Error details:', err.message);
-    // Log more details if available
-    if (err.code === 'EAUTH') {
-      console.error('Authentication failed. Please check EMAIL_PASS (App Password) and EMAIL_USER.');
+    console.error('Email send failed via Resend. Error details:', err.response?.data || err.message);
+    if (err.response?.status === 401) {
+      console.error('Unauthorized: Please check if your RESEND_API_KEY is correct.');
+    } else if (err.response?.status === 422) {
+      console.error('Validation Error: Usually happens if the recipient list or from address is invalid.');
     }
-    // throw err; // Suppress throw so app doesn't crash on email failure
   }
 };
-
 
 module.exports = sendEmail;
