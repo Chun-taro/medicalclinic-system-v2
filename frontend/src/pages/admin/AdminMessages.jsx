@@ -15,7 +15,66 @@ import { useTheme } from '../../context/ThemeContext';
 import 'stream-chat-react/dist/css/v2/index.css';
 import './AdminMessages.css';
 
-import { useChatContext } from 'stream-chat-react';
+const CustomChannelHeader = () => {
+    const { channel, client } = useChatContext();
+    
+    // Find the participant who is NOT an admin/staff (the patient)
+    const members = Object.values(channel.state.members);
+    const patientMember = members.find(m => 
+        m.user.id !== client.userID && 
+        m.user.role !== 'admin' && 
+        m.user.role !== 'staff'
+    ) || members.find(m => m.user.id !== client.userID);
+
+    const displayName = patientMember?.user.name || 'Patient';
+    const displayImage = patientMember?.user.image;
+
+    return (
+        <div className="custom-channel-header">
+            <div className="header-info">
+                <div className="header-avatar">
+                   {displayImage ? <img src={displayImage} alt="" /> : (displayName[0] || '?')}
+                </div>
+                <div className="header-text">
+                    <span className="header-name">{displayName}</span>
+                    <span className="header-status">Patient Conversation</span>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+const CustomChannelPreview = (props) => {
+    const { channel, setActiveChannel, client } = props;
+    
+    const members = Object.values(channel.state.members);
+    const patientMember = members.find(m => 
+        m.user.id !== client.userID && 
+        m.user.role !== 'admin' && 
+        m.user.role !== 'staff'
+    ) || members.find(m => m.user.id !== client.userID);
+
+    const displayName = patientMember?.user.name || 'Patient';
+    
+    const lastMessage = channel.state.messages[channel.state.messages.length - 1];
+    
+    return (
+        <div className={`custom-channel-preview ${channel.id === channel.state.activeChannel?.id ? 'active' : ''}`}
+             onClick={() => setActiveChannel(channel)}>
+            <div className="preview-avatar">
+                {patientMember?.user.image ? <img src={patientMember.user.image} alt="" /> : (displayName[0] || '?')}
+            </div>
+            <div className="preview-content">
+                <div className="preview-header">
+                    <span className="preview-name">{displayName}</span>
+                </div>
+                <div className="preview-message">
+                    {lastMessage?.text || 'No messages yet'}
+                </div>
+            </div>
+        </div>
+    );
+};
 
 const AdminMessagesContent = () => {
     const { channel: activeChannel, setActiveChannel, client } = useChatContext();
@@ -37,6 +96,7 @@ const AdminMessagesContent = () => {
                     filters={filters} 
                     sort={{ last_message_at: -1 }}
                     options={{ state: true, presence: true, limit: 10 }}
+                    Preview={CustomChannelPreview}
                     onSelect={async (channel) => {
                         console.log('AdminMessages: onSelect', channel.id);
                         
@@ -57,7 +117,7 @@ const AdminMessagesContent = () => {
             <div className="messages-content">
                 <Channel>
                     <Window>
-                        <ChannelHeader />
+                        <CustomChannelHeader />
                         <MessageList />
                         <MessageInput />
                     </Window>

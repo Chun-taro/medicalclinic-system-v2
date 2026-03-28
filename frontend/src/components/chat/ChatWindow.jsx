@@ -15,8 +15,14 @@ const ChatWindow = ({ conversation }) => {
     const otherParticipant = conversation.participants?.find(p => {
         const pId = (p._id || p.id || p.userId)?.toString();
         const currentId = (currentUser.userId || currentUser._id)?.toString();
-        return pId !== currentId;
-    }) || conversation.targetUser;
+        if (pId === currentId) return false;
+        
+        // If I'm an admin, prioritize showing the patient's name
+        if (currentUser.role === 'admin' || currentUser.role === 'superadmin') {
+            return p.role === 'patient';
+        }
+        return true;
+    }) || conversation.participants?.find(p => (p._id || p.id || p.userId)?.toString() !== (currentUser.userId || currentUser._id)?.toString()) || conversation.targetUser;
 
     useEffect(() => {
         if (!streamClient || !conversation) return;
