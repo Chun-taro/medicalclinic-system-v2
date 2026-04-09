@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../services/api';
 import { useTheme } from '../../context/ThemeContext';
-import { Bar } from 'react-chartjs-2';
+import { Bar, Doughnut } from 'react-chartjs-2';
 import {
     Chart as ChartJS,
     CategoryScale,
     LinearScale,
     BarElement,
+    ArcElement,
     Title,
     Tooltip,
     Legend,
@@ -15,7 +16,7 @@ import AdminCalendar from '../../components/feature/AdminCalendar';
 import { Users, Calendar, BarChart2, Sun } from 'lucide-react';
 import './AdminDashboard.css';
 
-ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
+ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, Title, Tooltip, Legend);
 
 const AdminDashboard = () => {
     const { isDarkMode } = useTheme();
@@ -26,6 +27,7 @@ const AdminDashboard = () => {
         totalAppointments: 0,
         totalUsers: 0,
         todayAppointments: 0,
+        courseStats: {}
     });
     const [loading, setLoading] = useState(true);
     const [showNotesModal, setShowNotesModal] = useState(false);
@@ -37,7 +39,7 @@ const AdminDashboard = () => {
                 const [aptRes, usersRes, reportsRes] = await Promise.all([
                     api.get('/appointments'),
                     api.get('/users'),
-                    api.get('/appointments/reports') // Ensure this endpoint exists or mock it
+                    api.get('/appointments/reports')
                 ]);
 
                 const overallStats = reportsRes.data;
@@ -47,7 +49,8 @@ const AdminDashboard = () => {
                 setStats({
                     totalAppointments: totalApts,
                     totalUsers: usersRes.data.length,
-                    todayAppointments: todayAptCount
+                    todayAppointments: todayAptCount,
+                    courseStats: overallStats.courseStats || {}
                 });
                 setAppointments(aptRes.data);
             } catch (err) {
@@ -70,8 +73,8 @@ const AdminDashboard = () => {
         fetchWeather();
     }, []);
 
-    const chartData = {
-        labels: ['Total Appointments', 'Total Users', "Today's Appointments"],
+    const metricsChartData = {
+        labels: ['Appointments', 'Users', "Today"],
         datasets: [
             {
                 label: 'System Metrics',
@@ -80,6 +83,50 @@ const AdminDashboard = () => {
                 borderRadius: 4,
             },
         ],
+    };
+
+    const backgroundColors = [
+        '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444',
+        '#06b6d4', '#ec4899', '#f97316', '#14b8a6', '#6366f1'
+    ];
+
+    const courseChartData = {
+        labels: Object.keys(stats.courseStats),
+        datasets: [
+            {
+                label: 'Appointments',
+                data: Object.values(stats.courseStats),
+                backgroundColor: Object.keys(stats.courseStats).map((_, i) => backgroundColors[i % backgroundColors.length]),
+                borderColor: isDarkMode ? '#1e293b' : '#fff',
+                borderWidth: 2,
+                hoverOffset: 15,
+            },
+        ],
+    };
+
+    const doughnutOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'right',
+                labels: {
+                    color: isDarkMode ? '#e2e8f0' : '#475569',
+                    font: { size: 12 },
+                    padding: 20
+                }
+            },
+            tooltip: {
+                backgroundColor: isDarkMode ? '#1e293b' : '#fff',
+                titleColor: isDarkMode ? '#fff' : '#1e293b',
+                bodyColor: isDarkMode ? '#cbd5e1' : '#64748b',
+                borderColor: 'var(--primary)',
+                borderWidth: 1,
+                padding: 12,
+                displayColors: true,
+            }
+        },
+        cutout: '70%',
     };
 
     const chartOptions = {
@@ -100,7 +147,8 @@ const AdminDashboard = () => {
                     color: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'
                 },
                 ticks: {
-                    color: isDarkMode ? '#e2e8f0' : '#475569'
+                    color: isDarkMode ? '#e2e8f0' : '#475569',
+                    stepSize: 1
                 }
             },
             x: {
@@ -174,7 +222,27 @@ const AdminDashboard = () => {
                     <div className="card">
                         <h3>Metrics Overview</h3>
                         <div className="chart-container">
-                            <Bar data={chartData} options={chartOptions} />
+                            <Bar data={metricsChartData} options={chartOptions} />
+                        </div>
+                    </div>
+
+                    <div className="card mt-4">
+                        <h3>Appointments per Course</h3>
+                        <div className="chart-container" style={{ height: '300px', position: 'relative' }}>
+                            <Doughnut data={courseChartData} options={doughnutOptions} />
+                            <div style={{
+                                position: 'absolute',
+                                top: '50%',
+                                left: '33%', // Adjusted because legend is on the right
+                                transform: 'translate(-50%, -50%)',
+                                textAlign: 'center',
+                                pointerEvents: 'none'
+                            }}>
+                                <div style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>Total</div>
+                                <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'var(--text-main)' }}>
+                                    {Object.values(stats.courseStats).reduce((a, b) => a + b, 0)}
+                                </div>
+                            </div>
                         </div>
                     </div>
 

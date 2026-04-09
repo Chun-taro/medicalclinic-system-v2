@@ -81,7 +81,7 @@ const getMyAppointments = async (req, res) => {
 
     const appointments = await Appointment.find({ patientId: req.user.userId })
       .populate('patientId', 'firstName lastName email contactNumber')
-      .populate('doctorId', 'firstName lastName role')
+      .populate('doctorId', 'firstName lastName role profilePicture')
       .sort({ appointmentDate: -1 })
       .skip(page * limit)
       .limit(limit)
@@ -112,7 +112,8 @@ const getPatientAppointments = async (req, res) => {
 
     // Include management and medicinesPrescribed so the patient view shows consultation details
     const appointments = await Appointment.find({ patientId: requestedPatientId })
-      .select('appointmentDate status purpose reasonForVisit typeOfVisit diagnosis management medicinesPrescribed consultationCompletedAt rescheduleReason')
+      .populate('doctorId', 'firstName lastName')
+      .select('appointmentDate status purpose reasonForVisit typeOfVisit diagnosis management medicinesPrescribed consultationCompletedAt rescheduleReason doctorId')
       .sort({ appointmentDate: -1 })
       .lean();
 
@@ -134,8 +135,9 @@ const getAllAppointments = async (req, res) => {
     const limit = parseInt(req.query.limit, 10) || 20;
 
     const appointments = await Appointment.find()
-      .populate('patientId', 'firstName lastName email contactNumber')
-      .select('appointmentDate status purpose typeOfVisit patientId version additionalNotes')
+      .populate('patientId', 'firstName lastName email contactNumber role patientType course department college profilePicture')
+      .populate('doctorId', 'firstName lastName')
+      .select('appointmentDate status purpose typeOfVisit patientId doctorId version additionalNotes')
       .sort({ appointmentDate: -1 })
       .skip(page * limit)
       .limit(limit)
@@ -412,6 +414,7 @@ const completeConsultation = async (req, res) => {
     const updateFields = {
       diagnosis, treatment, medications, notes, followUpDate,
       status: 'completed',
+      doctorId: req.user.userId,
       consultationCompletedAt: new Date() // Always set to current time when completing
     };
 
@@ -517,6 +520,8 @@ const saveConsultation = async (req, res) => {
     appointment.firstAidDone = firstAidDone;
     appointment.firstAidWithin30Mins = firstAidWithin30Mins;
     appointment.status = 'completed';
+    // Allow manual assignment if provided in req.body, otherwise default to current user
+    appointment.doctorId = req.body.doctorId || req.user.userId;
     appointment.consultationCompletedAt = consultationCompletedAt || new Date();
 
     await appointment.save();
@@ -639,7 +644,7 @@ const deleteAppointment = async (req, res) => {
 //  Generate reports
 const generateReports = async (req, res) => {
   try {
-    const appointments = await Appointment.find().lean();
+    const appointments = await Appointment.find().populate('patientId', 'course department').lean();
 
     const totalAppointments = appointments.length;
     const approved = appointments.filter(app => app.status === 'approved').length;
@@ -655,6 +660,14 @@ const generateReports = async (req, res) => {
       (appointments.filter(app => app.referredToPhysician).length / (totalAppointments || 1)) * 100
     );
 
+    // Group by course/department
+    const courseStats = {};
+    appointments.forEach(app => {
+      let classification = app.patientId?.course || app.patientId?.department || 'Other';
+      // Sometimes courses are long, you could trim them if necessary, but this keeps full name
+      courseStats[classification] = (courseStats[classification] || 0) + 1;
+    });
+
     res.json({
       totalAppointments,
       approved,
@@ -664,7 +677,8 @@ const generateReports = async (req, res) => {
       walkIn,
       topDiagnosis,
       topComplaint,
-      referralRate
+      referralRate,
+      courseStats
     });
   } catch (err) {
     console.error(' Report error:', err.message);
@@ -680,8 +694,9 @@ const getConsultations = async (req, res) => {
       diagnosis: { $ne: null }
     })
       .populate('patientId', 'firstName lastName email contactNumber')
+      .populate('doctorId', 'firstName lastName')
       .select(
-        'patientId firstName lastName appointmentDate consultationCompletedAt chiefComplaint additionalNotes diagnosis management bloodPressure temperature heartRate oxygenSaturation bmi bmiIntervention medicinesPrescribed referredToPhysician physicianName firstAidDone firstAidWithin30Mins purpose'
+        'patientId doctorId firstName lastName appointmentDate consultationCompletedAt chiefComplaint additionalNotes diagnosis management bloodPressure temperature heartRate oxygenSaturation bmi bmiIntervention medicinesPrescribed referredToPhysician physicianName firstAidDone firstAidWithin30Mins purpose'
       )
       .sort({ consultationCompletedAt: -1 })
       .lean();
@@ -702,8 +717,9 @@ const getMedicalCertificates = async (req, res) => {
       status: 'completed'
     })
       .populate('patientId', 'firstName lastName email contactNumber')
+      .populate('doctorId', 'firstName lastName')
       .select(
-        'patientId firstName lastName appointmentDate consultationCompletedAt purpose status diagnosis fitToWork fitToWorkFrom fitToWorkTo restDays remarks'
+        'patientId doctorId firstName lastName appointmentDate consultationCompletedAt purpose status diagnosis fitToWork fitToWorkFrom fitToWorkTo restDays remarks'
       )
       .sort({ consultationCompletedAt: -1 })
       .lean();
@@ -963,7 +979,10 @@ const unlockAppointmentForEdit = async (req, res) => {
 // Export Consultation to PDF
 const exportConsultationPDF = async (req, res) => {
   try {
-    const consultation = await Appointment.findById(req.params.id).populate('patientId').lean();
+    const consultation = await Appointment.findById(req.params.id)
+      .populate('patientId')
+      .populate('doctorId', 'firstName lastName')
+      .lean();
     if (!consultation || !consultation.diagnosis) {
       return res.status(404).json({ error: 'Consultation not found' });
     }
@@ -998,7 +1017,18 @@ const exportConsultationPDF = async (req, res) => {
     helpers.drawField('Temperature', consultation.temperature ? `${consultation.temperature}°C` : 'N/A', 300, y - 30);
     y = helpers.drawField('Heart Rate', consultation.heartRate ? `${consultation.heartRate} bpm` : 'N/A', 40, y);
     helpers.drawField('Oxygen Saturation', consultation.oxygenSaturation ? `${consultation.oxygenSaturation}%` : 'N/A', 300, y - 30);
-    doc.end();
+
+    // Signature section
+    y += 40;
+    const doctorName = consultation.doctorId 
+      ? `Dr. ${consultation.doctorId.firstName} ${consultation.doctorId.lastName}`
+      : (consultation.physicianName || 'Clinic Physician');
+    
+    doc.font('Helvetica-Bold').fontSize(10).text(doctorName, 400, y, { align: 'center', width: 150 });
+    doc.font('Helvetica').fontSize(8).text('Attending Physician / Staff', 400, y + 12, { align: 'center', width: 150 });
+    doc.moveTo(400, y + 10).lineTo(550, y + 10).stroke();
+
+    doc.end();
   } catch (err) {
     res.status(500).json({ error: 'Failed to generate PDF' });
   }
@@ -1007,7 +1037,10 @@ const exportConsultationPDF = async (req, res) => {
 // Export Medical Certificate to PDF
 const exportMedicalCertificatePDF = async (req, res) => {
   try {
-    const cert = await Appointment.findById(req.params.id).populate('patientId').lean();
+    const cert = await Appointment.findById(req.params.id)
+      .populate('patientId')
+      .populate('doctorId', 'firstName lastName')
+      .lean();
     if (!cert || cert.purpose !== 'Medical Certificate') {
       return res.status(404).json({ error: 'Medical Certificate not found' });
     }
@@ -1047,8 +1080,13 @@ const exportMedicalCertificatePDF = async (req, res) => {
 
     doc.moveDown(4);
     doc.text('__________________________', { align: 'right' });
-    doc.font('Helvetica-Bold').text(cert.physicianName || 'Clinic Physician', { align: 'right' });
-    doc.font('Helvetica').fontSize(10).text('Medical Officer', { align: 'right' });
+    
+    const signingDoctor = cert.doctorId 
+      ? `Dr. ${cert.doctorId.firstName} ${cert.doctorId.lastName}`
+      : (cert.physicianName || 'Clinic Physician');
+
+    doc.font('Helvetica-Bold').text(signingDoctor, { align: 'right' });
+    doc.font('Helvetica').fontSize(10).text('Medical Officer / Attending Staff', { align: 'right' });
 
     helpers.drawFooter(1, 1);
     doc.end();
@@ -1060,7 +1098,9 @@ const exportMedicalCertificatePDF = async (req, res) => {
 // Export Appointment Summary to PDF
 const exportAppointmentSummaryPDF = async (req, res) => {
   try {
-    const appointments = await Appointment.find().lean();
+    const appointments = await Appointment.find()
+      .populate('patientId', 'college')
+      .lean();
     
     const { doc, buffers, helpers } = createBaseDoc('Clinic Appointment Summary', `Report Period: All Time`);
 

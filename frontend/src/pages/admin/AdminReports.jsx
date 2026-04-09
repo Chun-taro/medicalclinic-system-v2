@@ -199,9 +199,15 @@ const AdminReports = () => {
                             {expandedId === item._id && (
                                 <div className="report-details">
                                     <div className="details-grid">
-                                        <div className="detail-item full-width">
+                                        <div className="detail-item">
                                             <label>Report ID</label>
                                             <p>{item._id}</p>
+                                        </div>
+                                        <div className="detail-item">
+                                            <label>Attending Doctor</label>
+                                            <p className="doctor-highlight" style={{ color: 'var(--primary)', fontWeight: '600' }}>
+                                                {item.doctorId ? `Dr. ${item.doctorId.firstName} ${item.doctorId.lastName}` : 'System Assigned'}
+                                            </p>
                                         </div>
                                         {activeTab === 'consultations' ? (
                                             <>

@@ -3,17 +3,20 @@ import api, { getImageUrl } from '../../services/api'; // Use api instance and g
 import { toast } from 'react-toastify';
 import {
     Users, Calendar, FileText, CheckCircle, Clock,
-    Activity, ChevronRight, Search, X
+    Activity, ChevronRight, Search, X, Stethoscope
 } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
 import './ConsultationPage.css';
 
 const ConsultationPage = () => {
+    const { user: currentUser } = useAuth();
     const [queue, setQueue] = useState([]);
     const [selectedApp, setSelectedApp] = useState(null);
     const [loading, setLoading] = useState(true);
     const [medicines, setMedicines] = useState([]);
     const [medSearch, setMedSearch] = useState('');
     const [prescribed, setPrescribed] = useState([]);
+    const [doctors, setDoctors] = useState([]);
 
     // Consultation Form
     const [form, setForm] = useState({
@@ -21,7 +24,8 @@ const ConsultationPage = () => {
         heartRate: '', bmi: '', bmiIntervention: '',
         diagnosis: '', management: '',
         referredToPhysician: false, physicianName: '',
-        firstAidDone: 'n', firstAidWithin30Mins: 'n/a'
+        firstAidDone: 'n', firstAidWithin30Mins: 'n/a',
+        doctorId: ''
     });
 
     // MRF State
@@ -31,7 +35,17 @@ const ConsultationPage = () => {
     useEffect(() => {
         fetchQueue();
         fetchMedicines();
+        fetchDoctors();
     }, []);
+
+    const fetchDoctors = async () => {
+        try {
+            const res = await api.get('/users?role=doctor');
+            setDoctors(res.data);
+        } catch (err) {
+            console.error('Failed to load doctors');
+        }
+    };
 
     const fetchQueue = async () => {
         try {
@@ -84,7 +98,8 @@ const ConsultationPage = () => {
             heartRate: '', bmi: '', bmiIntervention: '',
             diagnosis: '', management: '',
             referredToPhysician: false, physicianName: '',
-            firstAidDone: 'n', firstAidWithin30Mins: 'n/a'
+            firstAidDone: 'n', firstAidWithin30Mins: 'n/a',
+            doctorId: currentUser?.role === 'doctor' ? currentUser.userId : ''
         });
         setPrescribed([]);
     };
@@ -228,11 +243,29 @@ const ConsultationPage = () => {
                                 <p><strong>Purpose:</strong> {selectedApp.purpose}</p>
                                 <p><strong>Date:</strong> {new Date(selectedApp.appointmentDate).toLocaleDateString()}</p>
                                 <div className="cert-actions">
+                                    <div className="doctor-assignment" style={{ marginBottom: '1.5rem', width: '100%', maxWidth: '300px' }}>
+                                        <label style={{ display: 'block', textAlign: 'left', marginBottom: '0.5rem', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Assign Attending Doctor</label>
+                                        <select 
+                                            value={form.doctorId} 
+                                            onChange={e => setForm({ ...form, doctorId: e.target.value })}
+                                            style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)' }}
+                                            required
+                                        >
+                                            <option value="">Select Doctor...</option>
+                                            {doctors.map(doc => (
+                                                <option key={doc._id} value={doc._id}>Dr. {doc.firstName} {doc.lastName}</option>
+                                            ))}
+                                        </select>
+                                    </div>
                                     <button
                                         className="btn-primary big"
+                                        disabled={!form.doctorId}
                                         onClick={async () => {
                                             try {
-                                                await api.patch(`/appointments/${selectedApp._id}`, { status: 'completed' });
+                                                await api.patch(`/appointments/${selectedApp._id}`, { 
+                                                    status: 'completed',
+                                                    doctorId: form.doctorId 
+                                                });
                                                 toast.success('Medical Certificate completed');
                                                 setSelectedApp(null);
                                                 fetchQueue();
@@ -267,6 +300,28 @@ const ConsultationPage = () => {
                                         <label>Sat (%)</label>
                                         <input value={form.oxygenSaturation} onChange={e => setForm({ ...form, oxygenSaturation: e.target.value })} placeholder="98" />
                                     </div>
+                                </div>
+                            </div>
+
+                            <div className="form-section">
+                                <h3><Stethoscope size={20} /> Clinician Assignment</h3>
+                                <div className="input-group full">
+                                    <label>Attending Doctor</label>
+                                    <select 
+                                        value={form.doctorId} 
+                                        onChange={e => setForm({ ...form, doctorId: e.target.value })}
+                                        required
+                                        className="doctor-select"
+                                        style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)', background: 'var(--bg-card)', color: 'var(--text-main)' }}
+                                    >
+                                        <option value="">Select Attending Doctor...</option>
+                                        {doctors.map(doc => (
+                                            <option key={doc._id} value={doc._id}>Dr. {doc.firstName} {doc.lastName}</option>
+                                        ))}
+                                    </select>
+                                    <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>
+                                        * This name will appear on the patient's records and medical certificates.
+                                    </p>
                                 </div>
                             </div>
 

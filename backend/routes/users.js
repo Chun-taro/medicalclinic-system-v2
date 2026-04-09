@@ -17,9 +17,9 @@ const {
 
 // Admin/superadmin only routes
 router.get('/', auth, requireRole('superadmin', 'admin'), getAllUsers);
-router.put('/:id/role', auth, requireRole('superadmin'), updateUserRole);
-router.put('/:id/deactivate', auth, requireRole('superadmin'), deactivateUser);
-router.put('/:id/reactivate', auth, requireRole('superadmin'), reactivateUser);
+router.put('/:id/role', auth, requireRole('superadmin', 'admin'), updateUserRole);
+router.put('/:id/deactivate', auth, requireRole('superadmin', 'admin'), deactivateUser);
+router.put('/:id/reactivate', auth, requireRole('superadmin', 'admin'), reactivateUser);
 router.get('/:id/login-history', auth, requireRole('superadmin', 'admin'), getUserLoginHistory);
 
 // Public/non-authenticated route for Google OAuth

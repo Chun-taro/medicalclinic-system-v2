@@ -228,6 +228,8 @@ const AllAppointments = () => {
                     <thead>
                         <tr>
                             <th>Patient</th>
+                            <th>College/Course</th>
+                            <th>Doctor</th>
                             <th>Date & Time</th>
                             <th>Purpose</th>
                             <th>Contact</th>
@@ -237,7 +239,7 @@ const AllAppointments = () => {
                     </thead>
                     <tbody>
                         {filteredAppointments.length === 0 ? (
-                            <tr><td colSpan="6" className="no-data">No appointments found.</td></tr>
+                            <tr><td colSpan="8" className="no-data">No appointments found.</td></tr>
                         ) : (
                             filteredAppointments.map(apt => (
                                 <tr key={apt._id}>
@@ -256,17 +258,28 @@ const AllAppointments = () => {
                                             </div>
                                             <div className="patient-info">
                                                 <span className="name">{apt.patientId ? `${apt.patientId.firstName} ${apt.patientId.lastName}` : apt.firstName + ' ' + apt.lastName}</span>
-                                                <span className="email">
-                                                    {apt.patientId?.email || apt.email}
-                                                    {apt.patientId?.role === 'patient' && (
-                                                        <span className="patient-type-badge">
-                                                            {apt.patientId.patientType || 'Student'}
-                                                            {apt.patientId.patientType === 'student' && apt.patientId.course ? ` - ${apt.patientId.course}` : ''}
-                                                            {apt.patientId.patientType === 'faculty' && apt.patientId.department ? ` - ${apt.patientId.department}` : ''}
-                                                        </span>
-                                                    )}
-                                                </span>
+                                                <span className="email">{apt.patientId?.email || apt.email}</span>
                                             </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div className="classification-cell">
+                                            {apt.patientId?.role === 'patient' ? (
+                                                <>
+                                                    <div className="type-tag">{apt.patientId.patientType || 'Student'}</div>
+                                                    {apt.patientId.patientType === 'student' && apt.patientId.course && <div className="detail-tag">{apt.patientId.course}</div>}
+                                                    {apt.patientId.patientType === 'faculty' && apt.patientId.department && <div className="detail-tag">{apt.patientId.department}</div>}
+                                                </>
+                                            ) : '—'}
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div className="doctor-info">
+                                            {apt.doctorId ? (
+                                                <span className="doctor-name">Dr. {apt.doctorId.firstName} {apt.doctorId.lastName}</span>
+                                            ) : (
+                                                <span className="text-muted">—</span>
+                                            )}
                                         </div>
                                     </td>
                                     <td>
@@ -305,9 +318,7 @@ const AllAppointments = () => {
                                                     <button className="btn-icon primary" onClick={() => openEditModal(apt)} title="Edit">
                                                         <Edit size={18} />
                                                     </button>
-                                                    <button className="btn-icon danger" onClick={() => handleDelete(apt._id)} title="Delete">
-                                                        <Trash2 size={18} />
-                                                    </button>
+                                                    {/* Delete button removed per request */}
                                                 </>
                                             )}
                                         </div>

@@ -155,99 +155,100 @@ const dispenseCapsules = async (req, res) => {
   }
 };
 
-// Deduct multiple medicines (used in consultation) with pessimistic locking via transaction
+// Deduct multiple medicines (used in consultation)
 const deductMedicines = async (req, res) => {
-  const session = await mongoose.startSession();
-  session.startTransaction();
-
   try {
     const { prescribed } = req.body;
-
-    if (!Array.isArray(prescribed)) {
-      await session.abortTransaction();
-      session.endSession();
+    if (!prescribed || !Array.isArray(prescribed)) {
       return res.status(400).json({ error: 'Invalid prescribed list' });
     }
 
     const Appointment = mongoose.model('Appointment');
+    const userId = req.user?.userId || req.user?.id || req.body.userId;
+    
+    console.log(`[Deduction] User ${userId} starting deduction for ${prescribed.length} items`);
 
-    const authHeader = req.headers.authorization || '';
-    const token = authHeader.split(' ')[1];
-    let userId = null;
-    if (token) {
-      try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        userId = decoded.id;
-      } catch (err) {
-        console.warn('Token decode failed:', err.message);
-      }
-    }
+    const results = [];
 
     for (const item of prescribed) {
-      const med = await Medicine.findById(item.medicineId).session(session);
-      if (!med) continue;
-
       const qty = parseInt(item.quantity);
-      if (!qty || qty <= 0) {
-        console.warn(`Invalid quantity for ${med.name}:`, item.quantity);
-        continue;
-      }
+      if (!qty || qty <= 0) continue;
 
-      if (med.quantityInStock < qty) {
-        await session.abortTransaction();
-        session.endSession();
-        return res.status(400).json({ error: `Not enough stock for ${med.name}` });
-      }
-
-      med.quantityInStock -= qty;
-      med.available = med.quantityInStock > 0;
-
-      let patientName = null;
+      // 1. Resolve Patient Name for history
+      let patientName = 'Unknown Patient';
       if (item.appointmentId) {
-        const app = await Appointment.findById(item.appointmentId).populate('patientId').session(session);
-        if (app && app.patientId) {
-          patientName = `${app.patientId.firstName} ${app.patientId.lastName}`.trim();
-        } else if (app) {
-          patientName = `${app.firstName || ''} ${app.lastName || ''}`.trim();
+        try {
+          const app = await Appointment.findById(item.appointmentId).populate('patientId');
+          if (app) {
+            patientName = app.patientId 
+              ? `${app.patientId.firstName} ${app.patientId.lastName}`.trim() 
+              : `${app.firstName || ''} ${app.lastName || ''}`.trim();
+          }
+        } catch (e) {
+          console.warn('[Deduction] Error resolving patient:', e.message);
         }
       }
 
-      med.dispenseHistory = med.dispenseHistory || [];
-      med.dispenseHistory.push({
-        appointmentId: item.appointmentId ? new mongoose.Types.ObjectId(item.appointmentId) : null,
-        quantity: qty,
-        dispensedBy: userId ? new mongoose.Types.ObjectId(userId) : null,
-        dispensedAt: new Date(),
-        source: 'consultation',
-        recipientName: patientName
-      });
+      console.log(`[Deduction] Processing: ${item.name || item.medicineId}, Qty: ${qty}, Patient: ${patientName}`);
 
-      await med.save({ session });
+      // 2. Atomic update: Deduct stock and Push history in ONE operation
+      try {
+        const updatedMed = await Medicine.findOneAndUpdate(
+          { 
+            _id: item.medicineId, 
+            quantityInStock: { $gte: qty } 
+          },
+          { 
+            $inc: { quantityInStock: -qty },
+            $push: { 
+              dispenseHistory: {
+                appointmentId: item.appointmentId ? new mongoose.Types.ObjectId(item.appointmentId) : null,
+                quantity: qty,
+                dispensedBy: userId ? new mongoose.Types.ObjectId(userId) : null,
+                dispensedAt: new Date(),
+                source: 'consultation',
+                recipientName: patientName
+              }
+            }
+          },
+          { new: true }
+        );
 
-      // Log the activity for each dispensed medicine
-      await logActivity(
-        userId,
-        req.user?.name || `${req.user?.firstName} ${req.user?.lastName}` || 'Unknown',
-        req.user?.role || 'admin',
-        'dispense_medicine',
-        'medicine',
-        med._id,
-        {
-          medicineName: med.name,
-          quantity: qty,
-          appointmentId: item.appointmentId
+        if (!updatedMed) {
+          return res.status(400).json({ error: `Not enough stock for ${item.name || 'selected medicine'}` });
         }
-      );
+
+        // 3. Update 'available' status if stock hit zero
+        if (updatedMed.quantityInStock <= 0 && updatedMed.available) {
+          await Medicine.updateOne({ _id: updatedMed._id }, { $set: { available: false } });
+        }
+
+        // 4. Log Activity (Fire and forget)
+        logActivity(
+          userId,
+          req.user?.name || 'Admin',
+          req.user?.role || 'admin',
+          'dispense_medicine',
+          'medicine',
+          updatedMed._id,
+          {
+            medicineName: updatedMed.name,
+            quantity: qty,
+            source: 'consultation',
+            patientName
+          }
+        ).catch(e => console.error('[Deduction] LogActivity error:', e.message));
+
+        results.push({ medicineId: item.medicineId, newStock: updatedMed.quantityInStock });
+      } catch (dbErr) {
+         throw dbErr;
+      }
     }
 
-    await session.commitTransaction();
-    session.endSession();
-    res.json({ success: true });
+    res.json({ success: true, results });
   } catch (err) {
-    await session.abortTransaction();
-    session.endSession();
-    console.error('Deduction error:', err);
-    res.status(500).json({ error: err.message });
+    console.error('[Deduction] Critical error:', err.message);
+    res.status(500).json({ error: 'Internal server error during medicine deduction' });
   }
 };
 

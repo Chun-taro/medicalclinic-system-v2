@@ -20,6 +20,9 @@ const logActivity = async (adminId, adminName, adminRole, action, entityType, en
     // Generate description based on action
     let description = '';
     switch (actionStr) {
+      case 'user_login':
+        description = `${adminName || details.userName || 'User'} logged into the system`;
+        break;
       case 'approve_appointment':
         description = `${adminName} (${adminRole}) approved an appointment for ${details.patientName}`;
         break;

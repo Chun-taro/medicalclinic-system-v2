@@ -91,7 +91,7 @@ router.get('/google/callback', (req, res, next) => {
           'user_login',
           'auth',
           user._id,
-          { email: user.email, provider: 'google' }
+          { email: user.email, provider: 'google', userName: `${user.firstName} ${user.lastName}` }
         );
 
         // Determine frontend URL more robustly

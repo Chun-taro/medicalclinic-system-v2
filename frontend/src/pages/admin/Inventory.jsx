@@ -102,10 +102,14 @@ const Inventory = () => {
     };
 
     const handlePrintHistory = async () => {
+        if (!printFilters.startDate || !printFilters.endDate) {
+            toast.warn('Please select both Start and End dates to generate a report. Printing all data is disabled for performance.');
+            return;
+        }
         try {
             const params = new URLSearchParams();
-            if (printFilters.startDate) params.append('startDate', printFilters.startDate);
-            if (printFilters.endDate) params.append('endDate', printFilters.endDate);
+            params.append('startDate', printFilters.startDate);
+            params.append('endDate', printFilters.endDate);
 
             const res = await api.get(`/medicines/history/pdf?${params.toString()}`, { responseType: 'blob' });
             const url = window.URL.createObjectURL(new Blob([res.data]));
@@ -179,9 +183,16 @@ const Inventory = () => {
                                 </div>
                             </div>
                             <div className="card-footer">
-                                <button className="btn-icon danger" onClick={() => handleDelete(med._id)} title="Delete">
-                                    <Trash2 size={18} />
-                                </button>
+                                {med.quantityInStock <= 0 && (
+                                    <button 
+                                        className="btn-icon danger" 
+                                        style={{ width: '100%', justifyContent: 'center' }}
+                                        onClick={() => handleDelete(med._id)}
+                                        title="Delete Medicine"
+                                    >
+                                        <Trash2 size={16} /> Delete Out of Stock
+                                    </button>
+                                )}
                             </div>
                         </div>
                     );
@@ -247,23 +258,39 @@ const Inventory = () => {
                             <h3>Dispense History</h3>
                             <button className="close-btn" onClick={() => setShowHistoryModal(false)}><X size={24} /></button>
                         </div>
-                        <div className="history-filters" style={{ padding: '0 1.5rem', display: 'flex', gap: '1rem', alignItems: 'center', marginTop: '1rem' }}>
-                            <input
-                                type="date"
-                                value={printFilters.startDate}
-                                onChange={e => setPrintFilters({ ...printFilters, startDate: e.target.value })}
-                                style={{ padding: '0.5rem', border: '1px solid #e2e8f0', borderRadius: '0.375rem' }}
-                            />
+                        <div className="history-filters" style={{ padding: '0 1.5rem', display: 'flex', gap: '1rem', alignItems: 'center', marginTop: '1rem', flexWrap: 'wrap' }}>
+                            <div className="input-group">
+                                <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Start Date</label>
+                                <input
+                                    type="date"
+                                    value={printFilters.startDate}
+                                    onChange={e => setPrintFilters({ ...printFilters, startDate: e.target.value })}
+                                    style={{ padding: '0.5rem', border: '1px solid #e2e8f0', borderRadius: '0.375rem' }}
+                                />
+                            </div>
                             <span>to</span>
-                            <input
-                                type="date"
-                                value={printFilters.endDate}
-                                onChange={e => setPrintFilters({ ...printFilters, endDate: e.target.value })}
-                                style={{ padding: '0.5rem', border: '1px solid #e2e8f0', borderRadius: '0.375rem' }}
-                            />
-                            <button className="btn-secondary" onClick={handlePrintHistory} title="Print Report">
-                                <Printer size={18} /> Print
+                            <div className="input-group">
+                                <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>End Date</label>
+                                <input
+                                    type="date"
+                                    value={printFilters.endDate}
+                                    onChange={e => setPrintFilters({ ...printFilters, endDate: e.target.value })}
+                                    style={{ padding: '0.5rem', border: '1px solid #e2e8f0', borderRadius: '0.375rem' }}
+                                />
+                            </div>
+                            <button 
+                                className={`btn-${(!printFilters.startDate || !printFilters.endDate) ? 'secondary' : 'primary'}`} 
+                                onClick={handlePrintHistory} 
+                                title="Print Report"
+                                style={{ marginTop: 'auto' }}
+                            >
+                                <Printer size={18} /> Print Report
                             </button>
+                            {(!printFilters.startDate || !printFilters.endDate) && (
+                                <p style={{ color: 'var(--error)', fontSize: '0.8rem', margin: '0', flexBasis: '100%', marginTop: '0.5rem' }}>
+                                    ⚠️ Please select a date range to enable printing.
+                                </p>
+                            )}
                         </div>
                         <div className="modal-body history-list">
                             {history.length === 0 ? <p>No history found.</p> : (

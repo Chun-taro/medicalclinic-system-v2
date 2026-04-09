@@ -150,6 +150,11 @@ const userSchema = new mongoose.Schema({
   },
   course: { type: String, trim: true },
   department: { type: String, trim: true },
+  college: {
+    type: String,
+    enum: ['CAS', 'COE', 'CON', 'COT', 'CBA', 'CPAG', 'CSCS', 'Other'],
+    default: 'Other'
+  },
 
   //  Password Reset
   resetToken: String,

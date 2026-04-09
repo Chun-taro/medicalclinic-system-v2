@@ -13,15 +13,22 @@ const AdminCalendar = ({ appointments = [], selectedDate, onDateChange }) => {
         return new Date(date.getFullYear(), date.getMonth(), 1).getDay();
     };
 
-    const getAppointmentCount = (day) => {
-        return appointments.filter((apt) => {
+    const getDayStats = (day) => {
+        const dayApts = appointments.filter((apt) => {
             const aptDate = new Date(apt.appointmentDate);
             return (
                 aptDate.getDate() === day &&
                 aptDate.getMonth() === currentDate.getMonth() &&
                 aptDate.getFullYear() === currentDate.getFullYear()
             );
-        }).length;
+        });
+
+        return {
+            total: dayApts.length,
+            pending: dayApts.filter(a => a.status === 'pending').length,
+            approved: dayApts.filter(a => a.status === 'approved').length,
+            completed: dayApts.filter(a => a.status === 'completed').length
+        };
     };
 
     const isToday = (day) => {
@@ -79,22 +86,36 @@ const AdminCalendar = ({ appointments = [], selectedDate, onDateChange }) => {
             </div>
 
             <div className="days-matrix">
-                {calendarDays.map((day, index) => (
-                    <div
-                        key={index}
-                        className={`calendar-day-cell ${day === null ? 'empty' : ''} ${day && isToday(day) ? 'today' : ''} ${day && isSelected(day) ? 'selected' : ''}`}
-                        onClick={() => day && handleDayClick(day)}
-                    >
-                        {day && (
-                            <>
-                                <span className="day-text">{day}</span>
-                                {getAppointmentCount(day) > 0 && (
-                                    <div className="apt-badge">{getAppointmentCount(day)}</div>
-                                )}
-                            </>
-                        )}
-                    </div>
-                ))}
+                {calendarDays.map((day, index) => {
+                    const stats = day ? getDayStats(day) : null;
+                    return (
+                        <div
+                            key={index}
+                            className={`calendar-day-cell ${day === null ? 'empty' : ''} ${day && isToday(day) ? 'today' : ''} ${day && isSelected(day) ? 'selected' : ''}`}
+                            onClick={() => day && handleDayClick(day)}
+                        >
+                            {day && (
+                                <>
+                                    <span className="day-text">{day}</span>
+                                    <div className="day-indicators">
+                                        {stats.approved > 0 && (
+                                            <div className="indicator approved" title={`${stats.approved} Approved`}></div>
+                                        )}
+                                        {stats.pending > 0 && (
+                                            <div className="indicator pending" title={`${stats.pending} Pending`}></div>
+                                        )}
+                                        {stats.completed > 0 && (
+                                            <div className="indicator completed" title={`${stats.completed} Completed`}></div>
+                                        )}
+                                    </div>
+                                    {stats.total > 0 && (
+                                        <div className="apt-badge-total">{stats.total}</div>
+                                    )}
+                                </>
+                            )}
+                        </div>
+                    );
+                })}
             </div>
         </div>
     );

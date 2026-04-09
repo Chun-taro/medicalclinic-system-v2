@@ -25,32 +25,26 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
             { path: '/patient-dashboard', label: 'Dashboard', icon: LayoutDashboard },
             { path: '/patient-appointments', label: 'My Appointments', icon: CalendarDays },
             { path: '/patient-book', label: 'Book Appointment', icon: CalendarPlus },
-            { path: '/patient-profile', label: 'Profile', icon: Users },
         ],
         admin: [
             { path: '/admin-dashboard', label: 'Dashboard', icon: LayoutDashboard },
-            { path: '/admin-messages', label: 'Messages', icon: MessageSquare }, // Added
+            { path: '/admin-messages', label: 'Messages', icon: MessageSquare },
             { path: '/admin-appointments', label: 'All Appointments', icon: CalendarDays },
             { path: '/admin-users', label: 'Manage Users', icon: Users },
             { path: '/admin-reports', label: 'Reports', icon: FileText },
             { path: '/admin-inventory', label: 'Inventory', icon: ClipboardList },
             { path: '/admin-consultation', label: 'Consultation', icon: Stethoscope },
             { path: '/admin-doctor-feedback', label: 'Doctor Feedback', icon: MessageSquare },
-            { path: '/admin-profile', label: 'Profile', icon: Settings },
         ],
         superadmin: [
             { path: '/superadmin-dashboard', label: 'Dashboard', icon: LayoutDashboard },
-            { path: '/superadmin-messages', label: 'Messages', icon: MessageSquare }, // Added
-            { path: '/superadmin-appointments', label: 'All Appointments', icon: CalendarDays },
+            { path: '/superadmin-messages', label: 'Messages', icon: MessageSquare },
             { path: '/superadmin-users', label: 'Manage Users', icon: Users },
-            { path: '/superadmin-reports', label: 'Reports', icon: FileText },
-            { path: '/superadmin-inventory', label: 'Inventory', icon: ClipboardList },
-            { path: '/superadmin-consultation', label: 'Consultation', icon: Stethoscope },
-            { path: '/superadmin-logs', label: 'System Logs', icon: History },
             { path: '/superadmin-doctor-feedback', label: 'Doctor Feedback', icon: MessageSquare },
-            { path: '/superadmin-profile', label: 'Profile', icon: Settings },
+            { path: '/superadmin-logs', label: 'System Logs', icon: History },
         ],
         doctor: [
+            { path: '/admin-consultation', label: 'Consultation', icon: Stethoscope },
             { path: '/doctor-feedback', label: 'Feedback', icon: MessageSquare },
         ]
     };

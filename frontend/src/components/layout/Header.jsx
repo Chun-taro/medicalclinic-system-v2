@@ -11,6 +11,7 @@ const Header = ({ toggleSidebar }) => {
     const { user, role, logout } = useAuth();
     const { isDarkMode, toggleTheme } = useTheme();
     const { unreadTotal } = useChat();
+    const navigate = useNavigate();
     const [showProfileMenu, setShowProfileMenu] = useState(false);
     const [showNotifications, setShowNotifications] = useState(false);
     const [showChat, setShowChat] = useState(false);

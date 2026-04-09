@@ -111,7 +111,7 @@ const superadminLogin = async (req, res) => {
       'user_login',
       'auth',
       user._id,
-      { email: user.email, role: 'superadmin' }
+      { email: user.email, role: 'superadmin', userName: `${user.firstName} ${user.lastName}` }
     );
 
     res.cookie('token', token, {
@@ -173,7 +173,7 @@ const login = async (req, res) => {
       'user_login',
       'auth',
       user._id,
-      { email: user.email }
+      { email: user.email, userName: `${user.firstName} ${user.lastName}` }
     );
 
     res.cookie('token', token, {

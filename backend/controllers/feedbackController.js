@@ -52,6 +52,7 @@ const submitFeedback = async (req, res) => {
     const feedback = new Feedback({
       appointmentId,
       patientId,
+      doctorId: appointment.doctorId, // Automatically link the assigned doctor
       rating,
       comment: comment || ''
     });
@@ -71,9 +72,7 @@ const submitFeedback = async (req, res) => {
         patientId: req.user.userId,
         rating,
         comment: comment || '',
-        userName: `${req.user.firstName || ''} ${req.user.lastName || ''}`.trim(),
-        recipientId: finalRecipientId,
-        recipientRole: finalRecipientRole
+        userName: `${req.user.firstName || ''} ${req.user.lastName || ''}`.trim()
       }
     });
 

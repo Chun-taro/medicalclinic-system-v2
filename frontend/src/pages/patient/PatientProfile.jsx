@@ -84,7 +84,29 @@ const PatientProfile = () => {
         }));
     };
 
+    const validateForm = () => {
+        // Allow letters, spaces, hyphens, and periods in names
+        const nameRegex = /^[A-Za-z\s\-\.]+$/;
+        // Allow numbers, spaces, plus signs, hyphens, and parentheses in phone numbers
+        const phoneRegex = /^[0-9\s\+\-\(\)]+$/;
+
+        if (formData.firstName && !nameRegex.test(formData.firstName.trim())) {
+            toast.error('First name contains invalid characters');
+            return false;
+        }
+        if (formData.lastName && !nameRegex.test(formData.lastName.trim())) {
+            toast.error('Last name contains invalid characters');
+            return false;
+        }
+        if (formData.contactNumber && !phoneRegex.test(formData.contactNumber.trim())) {
+            toast.error('Phone number contains invalid characters');
+            return false;
+        }
+        return true;
+    };
+
     const saveProfile = async () => {
+        if (!validateForm()) return;
         setIsSaving(true);
         try {
             const res = await api.put('/profile', formData);

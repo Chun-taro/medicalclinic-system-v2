@@ -22,11 +22,6 @@ const AdminDoctorFeedback = () => {
         fetchAllFeedback();
     }, []);
 
-    useEffect(() => {
-        fetchInitialData();
-        fetchAllFeedback();
-    }, []);
-
     const fetchInitialData = async () => {
         try {
             setLoading(true);

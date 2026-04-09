@@ -119,19 +119,47 @@ const BookAppointment = () => {
                         <div className="form-grid">
                             <div className="form-group">
                                 <label><User size={16} /> First Name</label>
-                                <input type="text" className="form-control" name="firstName" value={form.firstName} readOnly />
+                                <input 
+                                    type="text" 
+                                    className="form-control" 
+                                    name="firstName" 
+                                    value={form.firstName} 
+                                    readOnly 
+                                    placeholder="Auto-filled from profile"
+                                />
                             </div>
                             <div className="form-group">
                                 <label><User size={16} /> Last Name</label>
-                                <input type="text" className="form-control" name="lastName" value={form.lastName} readOnly />
+                                <input 
+                                    type="text" 
+                                    className="form-control" 
+                                    name="lastName" 
+                                    value={form.lastName} 
+                                    readOnly 
+                                    placeholder="Auto-filled from profile"
+                                />
                             </div>
                             <div className="form-group">
                                 <label><Phone size={16} /> Phone</label>
-                                <input type="text" className="form-control" name="phone" value={form.phone} readOnly />
+                                <input 
+                                    type="text" 
+                                    className="form-control" 
+                                    name="phone" 
+                                    value={form.phone} 
+                                    readOnly 
+                                    placeholder="Auto-filled from profile"
+                                />
                             </div>
                             <div className="form-group">
                                 <label><MapPin size={16} /> Address</label>
-                                <input type="text" className="form-control" name="address" value={form.address} readOnly />
+                                <input 
+                                    type="text" 
+                                    className="form-control" 
+                                    name="address" 
+                                    value={form.address} 
+                                    readOnly 
+                                    placeholder="Auto-filled from profile"
+                                />
                             </div>
                         </div>
                     </div>

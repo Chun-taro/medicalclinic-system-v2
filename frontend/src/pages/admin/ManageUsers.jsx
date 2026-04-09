@@ -37,7 +37,11 @@ const ManageUsers = () => {
 
         // Filter by tab
         if (activeTab !== 'all') {
-            result = result.filter(u => u.role === activeTab);
+            if (activeTab === 'admin') {
+                result = result.filter(u => u.role === 'admin' || u.role === 'doctor');
+            } else {
+                result = result.filter(u => u.role === activeTab);
+            }
         }
 
         // Filter by search
@@ -100,13 +104,13 @@ const ManageUsers = () => {
                 </div>
 
                 <div className="tabs">
-                    {['all', 'patient', 'doctor', 'admin', 'superadmin'].map(role => (
+                    {['all', 'patient', 'admin', 'superadmin'].map(role => (
                         <button
                             key={role}
                             className={`tab-btn ${activeTab === role ? 'active' : ''}`}
                             onClick={() => setActiveTab(role)}
                         >
-                            {role.charAt(0).toUpperCase() + role.slice(1)}s
+                            {role === 'admin' ? 'Admins' : role === 'superadmin' ? 'Superadmins' : role.charAt(0).toUpperCase() + role.slice(1) + 's'}
                         </button>
                     ))}
                 </div>
@@ -147,14 +151,14 @@ const ManageUsers = () => {
                                             </div>
                                             <div>
                                                 <div className="user-name">{user.firstName} {user.lastName}</div>
-                                                <div className="user-sub">{user.role}</div>
+                                                <div className="user-sub">{user.role === 'doctor' ? 'admin' : user.role}</div>
                                             </div>
                                         </div>
                                     </td>
                                     <td>
                                         <div className="role-badge-container">
                                             {getRoleIcon(user.role)}
-                                            <span className={`role-text role-${user.role}`}>{user.role}</span>
+                                            <span className={`role-text role-${user.role}`}>{user.role === 'doctor' ? 'admin' : user.role}</span>
                                         </div>
                                     </td>
                                     <td>
@@ -176,8 +180,8 @@ const ManageUsers = () => {
                                             disabled={user._id === currentUser.userId} // Prevent changing own role easily
                                         >
                                             <option value="patient">Patient</option>
-                                            <option value="doctor">Doctor</option>
-                                            <option value="admin">Admin</option>
+                                            <option value="doctor">Admin (Doctor)</option>
+                                            <option value="admin">Admin (Staff)</option>
                                             <option value="superadmin">Super Admin</option>
                                         </select>
                                     </td>

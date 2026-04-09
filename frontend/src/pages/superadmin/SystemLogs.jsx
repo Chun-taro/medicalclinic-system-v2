@@ -101,7 +101,8 @@ const SystemLogs = () => {
 
         switch (action) {
             case 'user_login':
-                return `Successfully logged in via ${details?.provider || 'local email'}${friendlyTarget}.`;
+                const displayName = details?.userName || friendlyTarget || 'A user';
+                return `${displayName} successfully logged in via ${details?.provider || 'local email'}.`;
             case 'user_signup':
             case 'user_signup_pending':
                 return `New account registered${friendlyTarget}.`;
