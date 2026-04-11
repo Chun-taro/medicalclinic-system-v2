@@ -107,7 +107,7 @@ const getDoctorFeedback = async (req, res) => {
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(parseInt(limit))
-      .populate('patientId', 'firstName lastName')
+      .populate('patientId', 'firstName lastName avatar')
       .populate('appointmentId', 'appointmentDate purpose');
 
     const total = await Feedback.countDocuments({ $or: [{ recipientId: doctorId }, { doctorId: doctorId }] });
@@ -193,9 +193,9 @@ const getAppointmentFeedback = async (req, res) => {
     const { appointmentId } = req.params;
 
     const feedback = await Feedback.findOne({ appointmentId })
-      .populate('patientId', 'firstName lastName')
-      .populate('recipientId', 'firstName lastName role')
-      .populate('doctorId', 'firstName lastName specialization');
+      .populate('patientId', 'firstName lastName avatar')
+      .populate('recipientId', 'firstName lastName role avatar')
+      .populate('doctorId', 'firstName lastName specialization avatar');
 
     if (!feedback) {
       return res.status(404).json({ error: 'No feedback found for this appointment' });
@@ -373,9 +373,9 @@ const getAllFeedback = async (req, res) => {
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(parseInt(limit))
-      .populate('patientId', 'firstName lastName')
+      .populate('patientId', 'firstName lastName avatar')
       .populate('appointmentId', 'appointmentDate purpose')
-      .populate('recipientId', 'firstName lastName role');
+      .populate('recipientId', 'firstName lastName role avatar');
 
     const total = await Feedback.countDocuments();
 

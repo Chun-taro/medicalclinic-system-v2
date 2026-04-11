@@ -176,6 +176,7 @@
     justify-content: center;
     font-weight: 600;
     font-size: 0.9rem;
+    overflow: hidden;
 }
 
 .user-name {

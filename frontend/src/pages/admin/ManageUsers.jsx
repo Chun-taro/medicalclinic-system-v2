@@ -139,14 +139,16 @@ const ManageUsers = () => {
                                     <td>
                                         <div className="user-cell">
                                             <div className="user-avatar-sm">
-                                                {user.profilePicture ? (
+                                                {user.avatar ? (
                                                     <img
-                                                        src={getImageUrl(user.profilePicture)}
+                                                        src={getImageUrl(user.avatar)}
                                                         alt="Profile"
                                                         style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }}
                                                     />
                                                 ) : (
-                                                    user.firstName ? user.firstName[0].toUpperCase() : 'U'
+                                                    <span style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                        {user.firstName ? user.firstName[0].toUpperCase() : 'U'}
+                                                    </span>
                                                 )}
                                             </div>
                                             <div>

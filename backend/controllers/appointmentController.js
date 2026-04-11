@@ -80,8 +80,8 @@ const getMyAppointments = async (req, res) => {
     const limit = parseInt(req.query.limit, 10) || 10;
 
     const appointments = await Appointment.find({ patientId: req.user.userId })
-      .populate('patientId', 'firstName lastName email contactNumber')
-      .populate('doctorId', 'firstName lastName role profilePicture')
+      .populate('patientId', 'firstName lastName email contactNumber avatar')
+      .populate('doctorId', 'firstName lastName role avatar')
       .sort({ appointmentDate: -1 })
       .skip(page * limit)
       .limit(limit)
@@ -135,7 +135,7 @@ const getAllAppointments = async (req, res) => {
     const limit = parseInt(req.query.limit, 10) || 20;
 
     const appointments = await Appointment.find()
-      .populate('patientId', 'firstName lastName email contactNumber role patientType course department college profilePicture')
+      .populate('patientId', 'firstName lastName email contactNumber role patientType course department college avatar')
       .populate('doctorId', 'firstName lastName')
       .select('appointmentDate status purpose typeOfVisit patientId doctorId version additionalNotes')
       .sort({ appointmentDate: -1 })

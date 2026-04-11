@@ -245,15 +245,17 @@ const AllAppointments = () => {
                                 <tr key={apt._id}>
                                     <td>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                            <div style={{ width: '36px', height: '36px', borderRadius: '50%', backgroundColor: 'var(--primary-color, #2563eb)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', overflow: 'hidden', flexShrink: 0 }}>
-                                                {apt.patientId?.profilePicture ? (
+                                            <div style={{ width: '36px', height: '36px', borderRadius: '50%', backgroundColor: 'var(--primary)', color: 'white', display: 'flex', alignItems: 'center', justifyCenter: 'center', fontWeight: 'bold', overflow: 'hidden', flexShrink: 0, fontSize: '0.9rem' }}>
+                                                {apt.patientId?.avatar ? (
                                                     <img
-                                                        src={getImageUrl(apt.patientId.profilePicture)}
+                                                        src={getImageUrl(apt.patientId.avatar)}
                                                         alt="Profile"
                                                         style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                                                     />
                                                 ) : (
-                                                    (apt.patientId?.firstName?.[0] || apt.firstName?.[0] || 'U').toUpperCase()
+                                                    <span style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                        {(apt.patientId?.firstName?.[0] || apt.firstName?.[0] || 'U').toUpperCase()}
+                                                    </span>
                                                 )}
                                             </div>
                                             <div className="patient-info">
@@ -335,13 +337,11 @@ const AllAppointments = () => {
                 <div className="modal-overlay">
                     <div className="modal-card">
                         <div className="modal-header" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                            <div style={{ width: '40px', height: '40px', borderRadius: '50%', overflow: 'hidden', flexShrink: 0 }}>
-                                {editingApt?.patientId?.profilePicture ? (
-                                    <img src={getImageUrl(editingApt.patientId.profilePicture)} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                            <div style={{ width: '40px', height: '40px', borderRadius: '50%', overflow: 'hidden', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--primary)', color: 'white', fontWeight: 'bold' }}>
+                                {editingApt?.patientId?.avatar ? (
+                                    <img src={getImageUrl(editingApt.patientId.avatar)} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                                 ) : (
-                                    <div style={{ width: '100%', height: '100%', background: 'var(--primary)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>
-                                        {(editingApt?.patientId?.firstName?.[0] || 'U').toUpperCase()}
-                                    </div>
+                                    (editingApt?.patientId?.firstName?.[0] || 'U').toUpperCase()
                                 )}
                             </div>
                             <h3 style={{ margin: 0 }}>Reschedule Appointment</h3>
@@ -381,13 +381,11 @@ const AllAppointments = () => {
                 <div className="modal-overlay">
                     <div className="modal-card">
                         <div className="modal-header" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                            <div style={{ width: '40px', height: '40px', borderRadius: '50%', overflow: 'hidden', flexShrink: 0 }}>
-                                {filteredAppointments.find(a => a.additionalNotes === selectedNotes)?.patientId?.profilePicture ? (
-                                    <img src={getImageUrl(filteredAppointments.find(a => a.additionalNotes === selectedNotes).patientId.profilePicture)} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                            <div style={{ width: '40px', height: '40px', borderRadius: '50%', overflow: 'hidden', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--primary)', color: 'white', fontWeight: 'bold' }}>
+                                {filteredAppointments.find(a => a.additionalNotes === selectedNotes)?.patientId?.avatar ? (
+                                    <img src={getImageUrl(filteredAppointments.find(a => a.additionalNotes === selectedNotes).patientId.avatar)} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                                 ) : (
-                                    <div style={{ width: '100%', height: '100%', background: 'var(--primary)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>
-                                        ?
-                                    </div>
+                                    '?'
                                 )}
                             </div>
                             <h3 style={{ margin: 0 }}>Appointment Notes</h3>

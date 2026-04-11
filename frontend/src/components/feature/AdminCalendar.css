@@ -1,14 +1,14 @@
 .admin-calendar {
     background: var(--bg-card);
     border-radius: var(--radius-lg);
-    padding: 1rem;
+    padding: 0.75rem;
 }
 
 .calendar-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 1rem;
+    margin-bottom: 0.75rem;
 }
 
 .month-display {
@@ -21,7 +21,7 @@
     display: grid;
     grid-template-columns: repeat(7, 1fr);
     text-align: center;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.25rem;
 }
 
 .weekday-label {
@@ -53,13 +53,15 @@
 }
 
 .calendar-day-cell.selected {
-    background-color: var(--primary);
-    color: white;
+    background-color: var(--primary-light);
+    color: var(--primary);
+    font-weight: 600;
 }
 
 .calendar-day-cell.today {
     border: 1px solid var(--primary);
     color: var(--primary);
+    background-color: var(--bg-body);
 }
 
 .calendar-day-cell.today.selected {
@@ -67,8 +69,8 @@
 }
 
 .day-text {
-    font-size: 0.9rem;
-    font-weight: 500;
+    font-size: 1.15rem;
+    font-weight: 600;
 }
 
 .apt-badge {

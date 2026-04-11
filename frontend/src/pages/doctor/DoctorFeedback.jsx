@@ -102,11 +102,15 @@ const DoctorFeedback = () => {
                     feedbacks.map(fb => (
                         <div key={fb._id} className="feedback-card">
                             <div className="feedback-header">
-                                <div className="patient-info">
+                                <div className="patient-info-stack">
                                     <div className="avatar-circle">
-                                        <User size={20} />
+                                        {fb.patientId?.avatar ? (
+                                            <img src={api.defaults.baseURL.replace('/api', '') + fb.patientId.avatar} alt="" className="avatar-img" />
+                                        ) : (
+                                            <User size={20} />
+                                        )}
                                     </div>
-                                    <div>
+                                    <div className="text-stack">
                                         <span className="patient-name">{fb.patientName || (fb.patientId?.firstName + ' ' + fb.patientId?.lastName) || 'Anonymous'}</span>
                                         <div className="feedback-date">
                                             <Calendar size={12} />

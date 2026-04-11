@@ -62,7 +62,6 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
             <div className="sidebar-header">
                 <div className="logo-container">
                     <img src={logo} alt="Logo" className="sidebar-logo" />
-                    <span className="logo-text">MediClinic</span>
                 </div>
             </div>
 

@@ -6,6 +6,7 @@ import { useChat } from '../../context/ChatContext';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../../context/ThemeContext';
 import ChatDropdown from '../chat/ChatDropdown';
+import logo from '../../assets/logo.png';
 
 const Header = ({ toggleSidebar }) => {
     const { user, role, logout } = useAuth();
@@ -96,6 +97,7 @@ const Header = ({ toggleSidebar }) => {
                 <button className="menu-toggle" onClick={toggleSidebar}>
                     <Menu size={24} />
                 </button>
+                <img src={logo} alt="Logo" className="header-logo" />
                 <h2 className="page-title">
                     {role ? role.charAt(0).toUpperCase() + role.slice(1) : 'Dashboard'}
                 </h2>

@@ -3,6 +3,14 @@
     margin: 0 auto;
 }
 
+.text-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    align-items: flex-start !important;
+    text-align: left !important;
+}
+
 .queue-list {
     display: flex;
     flex-direction: column;
@@ -30,6 +38,20 @@
     display: flex;
     gap: 1rem;
     align-items: center;
+    text-align: left !important;
+}
+
+.patient-info h3 {
+    margin: 0;
+    font-size: 1.1rem;
+    color: var(--text-main);
+    text-align: left !important;
+}
+
+.patient-info .purpose {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    text-align: left !important;
 }
 
 .avatar {

@@ -168,8 +168,8 @@ const ConsultationPage = () => {
                                 <div key={app._id} className="queue-card">
                                     <div className="patient-info">
                                         <div className="avatar">
-                                            {app.patientId?.profilePicture ? (
-                                                <img src={getImageUrl(app.patientId.profilePicture)} alt="" className="avatar-img" />
+                                            {app.patientId?.avatar ? (
+                                                <img src={getImageUrl(app.patientId.avatar)} alt="" className="avatar-img" />
                                             ) : (
                                                 app.patientId?.firstName ? app.patientId.firstName[0] : 'P'
                                             )}
@@ -217,8 +217,8 @@ const ConsultationPage = () => {
                         <button className="btn-secondary" onClick={() => setSelectedApp(null)}>Cancel</button>
                         <div className="header-patient-info" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                             <div className="avatar" style={{ width: '40px', height: '40px', fontSize: '1rem' }}>
-                                {selectedApp.patientId?.profilePicture ? (
-                                    <img src={getImageUrl(selectedApp.patientId.profilePicture)} alt="" className="avatar-img" />
+                                {selectedApp.patientId?.avatar ? (
+                                    <img src={getImageUrl(selectedApp.patientId.avatar)} alt="" className="avatar-img" />
                                 ) : (
                                     selectedApp.patientId?.firstName ? selectedApp.patientId.firstName[0] : 'P'
                                 )}
@@ -231,8 +231,8 @@ const ConsultationPage = () => {
                         <div className="certificate-view">
                             <div className="cert-preview">
                                 <div className="avatar" style={{ width: '80px', height: '80px', fontSize: '2rem', marginBottom: '1rem' }}>
-                                    {selectedApp.patientId?.profilePicture ? (
-                                        <img src={getImageUrl(selectedApp.patientId.profilePicture)} alt="" className="avatar-img" />
+                                    {selectedApp.patientId?.avatar ? (
+                                        <img src={getImageUrl(selectedApp.patientId.avatar)} alt="" className="avatar-img" />
                                     ) : (
                                         selectedApp.patientId?.firstName ? selectedApp.patientId.firstName[0] : 'P'
                                     )}
@@ -391,8 +391,8 @@ const ConsultationPage = () => {
                             <div className="modal-body">
                                 <div className="mrf-profile-header" style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', marginBottom: '1.5rem', paddingBottom: '1.5rem', borderBottom: '1px solid var(--border)' }}>
                                     <div className="avatar" style={{ width: '80px', height: '80px', fontSize: '2rem' }}>
-                                        {patientProfile.profilePicture ? (
-                                            <img src={getImageUrl(patientProfile.profilePicture)} alt="" className="avatar-img" />
+                                        {patientProfile.avatar ? (
+                                            <img src={getImageUrl(patientProfile.avatar)} alt="" className="avatar-img" />
                                         ) : (
                                             patientProfile.firstName ? patientProfile.firstName[0] : 'P'
                                         )}

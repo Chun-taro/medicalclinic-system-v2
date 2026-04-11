@@ -112,8 +112,8 @@ const AdminDashboard = () => {
                 position: 'right',
                 labels: {
                     color: isDarkMode ? '#e2e8f0' : '#475569',
-                    font: { size: 12 },
-                    padding: 20
+                    font: { size: 11 },
+                    padding: 10
                 }
             },
             tooltip: {
@@ -170,36 +170,41 @@ const AdminDashboard = () => {
 
     return (
         <div className="admin-dashboard">
-            <div className="dashboard-header">
-                <h1>Admin Dashboard</h1>
-                <p>Overview of clinic activities and statistics</p>
-            </div>
+            <div className="dashboard-top-section">
+                <div className="dashboard-header">
+                    <h1>Admin Dashboard</h1>
+                    <p>Overview of clinic activities and statistics</p>
+                </div>
 
-            {/* Stats Cards */}
-            <div className="stats-row">
-                <div className="stat-card blue">
-                    <div className="stat-icon blue"><Calendar size={24} /></div>
-                    <div className="stat-info">
-                        <h3>{stats.totalAppointments}</h3>
-                        <p>Total Appointments</p>
+                {/* Stats Cards moved into top section */}
+                <div className="stats-row">
+                    <div className="stat-card blue">
+                        <div className="stat-icon blue"><Calendar size={20} /></div>
+                        <div className="stat-info">
+                            <h3>{stats.totalAppointments}</h3>
+                            <p>Total</p>
+                        </div>
                     </div>
-                </div>
-                <div className="stat-card green"><div className="stat-icon green"><Users size={24} /></div>
-                    <div className="stat-info">
-                        <h3>{stats.totalUsers}</h3>
-                        <p>Total Users</p>
+                    <div className="stat-card green">
+                        <div className="stat-icon green"><Users size={20} /></div>
+                        <div className="stat-info">
+                            <h3>{stats.totalUsers}</h3>
+                            <p>Users</p>
+                        </div>
                     </div>
-                </div>
-                <div className="stat-card orange"><div className="stat-icon orange"><BarChart2 size={24} /></div>
-                    <div className="stat-info">
-                        <h3>{stats.todayAppointments}</h3>
-                        <p>Appointments Today</p>
+                    <div className="stat-card orange">
+                        <div className="stat-icon orange"><BarChart2 size={20} /></div>
+                        <div className="stat-info">
+                            <h3>{stats.todayAppointments}</h3>
+                            <p>Today</p>
+                        </div>
                     </div>
-                </div>
-                <div className="stat-card purple"><div className="stat-icon purple"><Sun size={24} /></div>
-                    <div className="stat-info">
-                        <h3>{weather ? `${Math.round(weather.main.temp)}°C` : '--'}</h3>
-                        <p>{weather ? weather.weather[0].description : 'Weather'}</p>
+                    <div className="stat-card purple">
+                        <div className="stat-icon purple"><Sun size={20} /></div>
+                        <div className="stat-info">
+                            <h3>{weather ? `${Math.round(weather.main.temp)}°C` : '--'}</h3>
+                            <p>{weather ? weather.weather[0].main : 'Weather'}</p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -228,7 +233,7 @@ const AdminDashboard = () => {
 
                     <div className="card mt-4">
                         <h3>Appointments per Course</h3>
-                        <div className="chart-container" style={{ height: '300px', position: 'relative' }}>
+                        <div className="chart-container" style={{ height: '240px', position: 'relative' }}>
                             <Doughnut data={courseChartData} options={doughnutOptions} />
                             <div style={{
                                 position: 'absolute',
@@ -238,8 +243,8 @@ const AdminDashboard = () => {
                                 textAlign: 'center',
                                 pointerEvents: 'none'
                             }}>
-                                <div style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>Total</div>
-                                <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'var(--text-main)' }}>
+                                <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Total</div>
+                                <div style={{ fontSize: '1.25rem', fontWeight: 'bold', color: 'var(--text-main)' }}>
                                     {Object.values(stats.courseStats).reduce((a, b) => a + b, 0)}
                                 </div>
                             </div>
