@@ -14,6 +14,7 @@ const AdminReports = () => {
     // Filters
     const [searchQuery, setSearchQuery] = useState('');
     const [dateRange, setDateRange] = useState({ start: '', end: '' });
+    const [showExportConfirm, setShowExportConfirm] = useState(false);
 
     useEffect(() => {
         fetchData();
@@ -91,9 +92,24 @@ const AdminReports = () => {
         }
     };
 
-    const handleExportSummary = async () => {
+    const handleExportSummary = async (force = false) => {
+        // Explicitly check for boolean true to avoid event objects bypassing the check
+        const isForced = force === true;
+
+        // Confirmation if no date range is selected and not forced
+        if (!isForced && !dateRange.start && !dateRange.end) {
+            setShowExportConfirm(true);
+            return;
+        }
+
+        setShowExportConfirm(false);
+
         try {
-            const res = await api.get('/appointments/export/summary', { responseType: 'blob' });
+            const params = new URLSearchParams();
+            if (dateRange.start) params.append('startDate', dateRange.start);
+            if (dateRange.end) params.append('endDate', dateRange.end);
+
+            const res = await api.get(`/appointments/export/summary?${params.toString()}`, { responseType: 'blob' });
             const url = window.URL.createObjectURL(new Blob([res.data]));
             const link = document.createElement('a');
             link.href = url;
@@ -121,9 +137,6 @@ const AdminReports = () => {
                     <h1>Reports Dashboard</h1>
                     <p>View patient consultations and medical certificates.</p>
                 </div>
-                <button className="btn-export" onClick={handleExportSummary}>
-                    <Download size={18} /> Export Summary
-                </button>
             </div>
 
             <div className="reports-tabs">
@@ -160,6 +173,9 @@ const AdminReports = () => {
                         <span className="label">To</span>
                         <input type="date" value={dateRange.end} onChange={e => setDateRange({ ...dateRange, end: e.target.value })} />
                     </div>
+                    <button className="btn-export-summary" onClick={handleExportSummary}>
+                        <Download size={18} /> Export Summary
+                    </button>
                 </div>
             </div>
 
@@ -266,6 +282,27 @@ const AdminReports = () => {
                     ))
                 )}
             </div>
+            {/* Export Confirmation Modal */}
+            {showExportConfirm && (
+                <div className="modal-overlay">
+                    <div className="modal-card">
+                        <div className="modal-header">
+                            <h3>Export All History?</h3>
+                            <button className="close-btn" onClick={() => setShowExportConfirm(false)}>×</button>
+                        </div>
+                        <div className="modal-body">
+                            <div className="warning-content">
+                                <p>You haven't selected a date range. This will export <strong>every appointment</strong> in the system history, which may result in a large file.</p>
+                                <p>Are you sure you want to proceed with the full export?</p>
+                            </div>
+                        </div>
+                        <div className="modal-footer">
+                            <button className="btn-secondary" style={{ marginRight: '1rem' }} onClick={() => setShowExportConfirm(false)}>Cancel</button>
+                            <button className="btn-primary" onClick={() => handleExportSummary(true)}>Export All History</button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

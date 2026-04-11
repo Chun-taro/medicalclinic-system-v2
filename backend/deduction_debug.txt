@@ -1,0 +1,6 @@
+
+[2026-04-09T03:47:00.435Z] /deduct called with body: {"prescribed":[{"medicineId":"68f9b011d637ca25d0a32a0d","name":"PARACETAMOL","quantity":100,"max":247,"appointmentId":"69d720d299ce0f82834c5738"}]}
+[START] userId: 68f792a65ddc561d9eba0696, items: 1
+[PROCESS] MedicineId: 68f9b011d637ca25d0a32a0d, Qty: 100, Patient: Patient Patient
+[UPDATE SUCCESS] New stock: 147
+[SUCCESS] Returning results

@@ -1098,11 +1098,29 @@ const exportMedicalCertificatePDF = async (req, res) => {
 // Export Appointment Summary to PDF
 const exportAppointmentSummaryPDF = async (req, res) => {
   try {
-    const appointments = await Appointment.find()
-      .populate('patientId', 'college')
+    const { startDate, endDate } = req.query;
+    let query = {};
+
+    if (startDate || endDate) {
+      query.appointmentDate = {};
+      if (startDate) query.appointmentDate.$gte = new Date(startDate);
+      if (endDate) {
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999);
+        query.appointmentDate.$lte = end;
+      }
+    }
+
+    const appointments = await Appointment.find(query)
+      .populate('patientId', 'firstName lastName college')
+      .sort({ appointmentDate: 1 }) // Chronological order for summary
       .lean();
     
-    const { doc, buffers, helpers } = createBaseDoc('Clinic Appointment Summary', `Report Period: All Time`);
+    const periodText = (startDate && endDate) 
+      ? `Period: ${new Date(startDate).toLocaleDateString()} - ${new Date(endDate).toLocaleDateString()}`
+      : (startDate ? `From: ${new Date(startDate).toLocaleDateString()}` : (endDate ? `To: ${new Date(endDate).toLocaleDateString()}` : 'Period: All Time'));
+
+    const { doc, buffers, helpers } = createBaseDoc('Clinic Appointment Summary', periodText);
 
     doc.on('end', () => {
       res.setHeader('Content-Type', 'application/pdf');
@@ -1132,26 +1150,43 @@ const exportAppointmentSummaryPDF = async (req, res) => {
     helpers.drawField('Scheduled Visits', stats.scheduled.toString(), 300, y - 30);
 
     y += 40;
-    y = helpers.drawSectionHeader('Recent Activity', y);
+    y = helpers.drawSectionHeader('Detailed Activity', y);
     
-    // Draw a simple list of last 10 appointments
-    const recent = appointments.slice(-10).reverse();
-    recent.forEach(app => {
-      if (y > doc.page.height - 100) {
+    // Draw all appointments for the period (or last 50 if all time)
+    const list = (startDate || endDate) ? appointments.reverse() : appointments.slice(-50).reverse();
+    
+    if (list.length === 0) {
+      doc.fontSize(10).fillColor('#64748b').text('No appointments found for this period.', 40, y);
+    }
+
+    list.forEach(app => {
+      if (y > doc.page.height - 80) {
         doc.addPage();
         y = 40;
       }
-      const name = `${app.firstName || ''} ${app.lastName || ''}`.trim() || 'Unknown';
+      
+      // Fix: Resolve name from patientId (populated) or fallback to walk-in fields
+      const p = app.patientId;
+      const name = p ? `${p.firstName} ${p.lastName}` : `${app.firstName || ''} ${app.lastName || ''}`.trim() || 'Unknown';
+      
       doc.fontSize(9).fillColor('#1e293b').text(
-        `${new Date(app.appointmentDate).toLocaleDateString()} - ${name} (${app.purpose || 'Check-up'}) - [${app.status.toUpperCase()}]`,
+        `${new Date(app.appointmentDate).toLocaleDateString()} - ${name} (${app.purpose || 'Check-up'})`,
         40, y
       );
-      y += 15;
+      
+      const statusColor = app.status === 'completed' ? '#10b981' : (app.status === 'pending' ? '#f59e0b' : '#3b82f6');
+      doc.fontSize(8).fillColor(statusColor).text(
+        `[${app.status.toUpperCase()}]`,
+        450, y, { align: 'right', width: 100 }
+      );
+      
+      y += 18;
     });
 
     helpers.drawFooter(1, 1);
     doc.end();
   } catch (err) {
+    console.error('Export Summary Error:', err.message);
     res.status(500).json({ error: 'Failed to generate summary PDF' });
   }
 };

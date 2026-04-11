@@ -131,18 +131,54 @@ const Inventory = () => {
         return { label: 'In Stock', class: 'status-success' };
     };
 
+    // Metrics for the top section
+    const metrics = {
+        total: medicines.length,
+        lowStock: medicines.filter(m => m.quantityInStock > 0 && m.quantityInStock < 10).length,
+        expired: medicines.filter(m => m.expiryDate && new Date(m.expiryDate) < new Date()).length,
+        outOfStock: medicines.filter(m => m.quantityInStock <= 0).length
+    };
+
     if (loading) return <div className="loading-spinner-container"><div className="loading-spinner"></div></div>;
 
     return (
         <div className="inventory-page">
-            <div className="page-header">
-                <h1>Inventory Management</h1>
-                <p>Track medicine stock and dispensing.</p>
+            <div className="dashboard-top-section">
+                <div className="page-header">
+                    <div className="header-info">
+                        <h1>Inventory</h1>
+                        <p>Stock & Dispensing</p>
+                    </div>
+                </div>
+
+                <div className="metrics-row">
+                    <div className="metric-card minimal">
+                        <div className="metric-info">
+                            <span className="label">Total Items</span>
+                            <span className="value">{metrics.total}</span>
+                        </div>
+                        <Package className="metric-icon blue" size={20} />
+                    </div>
+                    <div className="metric-card minimal">
+                        <div className="metric-info">
+                            <span className="label">Low Stock</span>
+                            <span className="value warning">{metrics.lowStock}</span>
+                        </div>
+                        <AlertTriangle className="metric-icon orange" size={20} />
+                    </div>
+                    <div className="metric-card minimal">
+                        <div className="metric-info">
+                            <span className="label">Expired</span>
+                            <span className="value danger">{metrics.expired}</span>
+                        </div>
+                        <Trash2 className="metric-icon red" size={20} />
+                    </div>
+                </div>
             </div>
 
-            <div className="controls-panel">
+            <div className="controls-panel compact">
                 <div className="search-group">
-                    <Search className="icon" size={20} />
+                    <Search className="icon" size={18} />
                     <input
                         type="text"
                         placeholder="Search medicines..."
@@ -151,48 +187,38 @@ const Inventory = () => {
                     />
                 </div>
                 <div className="actions-group">
-                    <button className="btn-secondary" onClick={fetchHistory}>
-                        <History size={18} /> History
+                    <button className="btn-secondary sm" onClick={fetchHistory}>
+                        <History size={16} /> History
                     </button>
-                    <button className="btn-secondary" onClick={() => setShowDispenseModal(true)}>
-                        <Package size={18} /> Dispense
+                    <button className="btn-secondary sm" onClick={() => setShowDispenseModal(true)}>
+                        <Package size={16} /> Dispense
                     </button>
-                    <button className="btn-primary" onClick={() => setShowAddModal(true)}>
-                        <Plus size={18} /> Add Medicine
+                    <button className="btn-primary sm" onClick={() => setShowAddModal(true)}>
+                        <Plus size={16} /> Add Medicine
                     </button>
                 </div>
             </div>
 
-            <div className="inventory-grid">
+            <div className="inventory-grid compact">
                 {filteredMedicines.map(med => {
                     const status = getStatusParams(med);
                     return (
-                        <div key={med._id} className="medicine-card">
+                        <div key={med._id} className="medicine-card compact">
                             <div className="card-header">
-                                <h3>{med.name}</h3>
-                                <span className={`status-badge ${status.class}`}>{status.label}</span>
+                                <h3 title={med.name}>{med.name}</h3>
+                                <span className={`status-badge sm ${status.class}`}>{status.label}</span>
                             </div>
                             <div className="card-body">
                                 <div className="info-row">
-                                    <span className="label">Stock:</span>
-                                    <span className="value">{med.quantityInStock} {med.unit}</span>
+                                    <span className="label">Stock</span>
+                                    <span className="value">{med.quantityInStock} <small>{med.unit}</small></span>
                                 </div>
                                 <div className="info-row">
-                                    <span className="label">Expiry:</span>
-                                    <span className="value">{med.expiryDate ? new Date(med.expiryDate).toLocaleDateString() : '—'}</span>
+                                    <span className="label">Expiry</span>
+                                    <span className={`value ${status.label === 'Expired' ? 'danger' : ''}`}>
+                                        {med.expiryDate ? new Date(med.expiryDate).toLocaleDateString() : '—'}
+                                    </span>
                                 </div>
-                            </div>
-                            <div className="card-footer">
-                                {med.quantityInStock <= 0 && (
-                                    <button 
-                                        className="btn-icon danger" 
-                                        style={{ width: '100%', justifyContent: 'center' }}
-                                        onClick={() => handleDelete(med._id)}
-                                        title="Delete Medicine"
-                                    >
-                                        <Trash2 size={16} /> Delete Out of Stock
-                                    </button>
-                                )}
                             </div>
                         </div>
                     );
