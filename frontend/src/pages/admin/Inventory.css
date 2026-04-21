@@ -381,3 +381,33 @@
         transform: translateY(0);
     }
 }
+@media (max-width: 1024px) {
+    .dashboard-top-section {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .metrics-row {
+        width: 100%;
+        justify-content: flex-start;
+        flex-wrap: wrap;
+    }
+    
+    .controls-panel.compact {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .search-group {
+        max-width: 100%;
+    }
+    
+    .actions-group {
+        width: 100%;
+        justify-content: space-between;
+    }
+    
+    .history-table-container {
+        overflow-x: auto;
+    }
+}

@@ -1,6 +1,8 @@
 import React from 'react';
 import logo from '../../assets/logo.png';
+import logoDark from '../../assets/Medical_Logo_dark.png';
 import { NavLink } from 'react-router-dom';
+import { useTheme } from '../../context/ThemeContext';
 import {
     LayoutDashboard,
     CalendarDays,
@@ -17,8 +19,9 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
-const Sidebar = ({ isOpen, toggleSidebar }) => {
+const Sidebar = ({ isOpen, isCollapsed, toggleSidebar }) => {
     const { role, logout } = useAuth();
+    const { isDarkMode } = useTheme();
 
     const menuItems = {
         patient: [
@@ -58,10 +61,10 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
     }
 
     return (
-        <aside className={`sidebar ${isOpen ? 'open' : ''}`}>
+        <aside className={`sidebar ${isOpen ? 'open' : ''} ${isCollapsed ? 'collapsed' : ''}`}>
             <div className="sidebar-header">
                 <div className="logo-container">
-                    <img src={logo} alt="Logo" className="sidebar-logo" />
+                    <img src={isDarkMode ? logoDark : logo} alt="Logo" className="sidebar-logo" />
                 </div>
             </div>
 
@@ -82,12 +85,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                 </ul>
             </nav>
 
-            <div className="sidebar-footer">
-                <button onClick={logout} className="logout-btn">
-                    <LogOut size={20} />
-                    <span>Logout</span>
-                </button>
-            </div>
+            {/* Logout button removed from sidebar as requested */}
         </aside>
     );
 };

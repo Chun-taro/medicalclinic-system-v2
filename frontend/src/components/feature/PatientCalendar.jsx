@@ -4,6 +4,7 @@ import './PatientCalendar.css';
 
 const PatientCalendar = ({ appointments = [] }) => {
     const [currentDate, setCurrentDate] = useState(new Date());
+    const [selectedDate, setSelectedDate] = useState(new Date());
 
     const getDaysInMonth = (date) => {
         return new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
@@ -13,15 +14,22 @@ const PatientCalendar = ({ appointments = [] }) => {
         return new Date(date.getFullYear(), date.getMonth(), 1).getDay();
     };
 
-    const getAppointmentCount = (day) => {
-        return appointments.filter((apt) => {
+    const getDayStats = (day) => {
+        const dayApts = appointments.filter((apt) => {
             const aptDate = new Date(apt.appointmentDate);
             return (
                 aptDate.getDate() === day &&
                 aptDate.getMonth() === currentDate.getMonth() &&
                 aptDate.getFullYear() === currentDate.getFullYear()
             );
-        }).length;
+        });
+
+        return {
+            total: dayApts.length,
+            pending: dayApts.filter(a => a.status === 'pending').length,
+            approved: dayApts.filter(a => a.status === 'approved').length,
+            completed: dayApts.filter(a => a.status === 'completed').length
+        };
     };
 
     const isToday = (day) => {
@@ -31,6 +39,18 @@ const PatientCalendar = ({ appointments = [] }) => {
             currentDate.getMonth() === today.getMonth() &&
             currentDate.getFullYear() === today.getFullYear()
         );
+    };
+
+    const isSelected = (day) => {
+        return (
+            day === selectedDate.getDate() &&
+            currentDate.getMonth() === selectedDate.getMonth() &&
+            currentDate.getFullYear() === selectedDate.getFullYear()
+        );
+    };
+
+    const handleDayClick = (day) => {
+        setSelectedDate(new Date(currentDate.getFullYear(), currentDate.getMonth(), day));
     };
 
     const handlePrevMonth = () => {
@@ -73,14 +93,29 @@ const PatientCalendar = ({ appointments = [] }) => {
                 {calendarDays.map((day, index) => (
                     <div
                         key={index}
-                        className={`day ${day === null ? 'empty' : ''} ${day && isToday(day) ? 'today' : ''}`}
+                        className={`day ${day === null ? 'empty' : ''} ${day && isToday(day) ? 'today' : ''} ${day && isSelected(day) ? 'selected' : ''}`}
+                        onClick={() => day && handleDayClick(day)}
                     >
                         {day && (
                             <>
                                 <span className="day-number">{day}</span>
-                                {getAppointmentCount(day) > 0 && (
-                                    <div className="appointment-dot"></div>
-                                )}
+                                <div className="day-indicators">
+                                    {getDayStats(day).approved > 0 && (
+                                        <div className="indicator approved" title={`${getDayStats(day).approved} Approved`}>
+                                            {getDayStats(day).approved}
+                                        </div>
+                                    )}
+                                    {getDayStats(day).pending > 0 && (
+                                        <div className="indicator pending" title={`${getDayStats(day).pending} Pending`}>
+                                            {getDayStats(day).pending}
+                                        </div>
+                                    )}
+                                    {getDayStats(day).completed > 0 && (
+                                        <div className="indicator completed" title={`${getDayStats(day).completed} Completed`}>
+                                            {getDayStats(day).completed}
+                                        </div>
+                                    )}
+                                </div>
                             </>
                         )}
                     </div>

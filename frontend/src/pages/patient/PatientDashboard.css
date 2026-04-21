@@ -206,3 +206,21 @@
     font-size: 0.9rem;
     opacity: 0.9;
 }
+@media (max-width: 768px) {
+    .dashboard-header h1 {
+        font-size: 1.5rem;
+    }
+    
+    .dashboard-section {
+        padding: 1rem;
+    }
+    
+    .apt-date-box {
+        width: 50px;
+        height: 50px;
+    }
+    
+    .apt-day {
+        font-size: 1.25rem;
+    }
+}

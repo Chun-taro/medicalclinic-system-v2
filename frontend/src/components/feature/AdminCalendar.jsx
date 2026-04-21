@@ -99,13 +99,13 @@ const AdminCalendar = ({ appointments = [], selectedDate, onDateChange }) => {
                                     <span className="day-text">{day}</span>
                                     <div className="day-indicators">
                                         {stats.approved > 0 && (
-                                            <div className="indicator approved" title={`${stats.approved} Approved`}></div>
+                                            <div className="indicator approved" title={`${stats.approved} Approved`}>{stats.approved}</div>
                                         )}
                                         {stats.pending > 0 && (
-                                            <div className="indicator pending" title={`${stats.pending} Pending`}></div>
+                                            <div className="indicator pending" title={`${stats.pending} Pending`}>{stats.pending}</div>
                                         )}
                                         {stats.completed > 0 && (
-                                            <div className="indicator completed" title={`${stats.completed} Completed`}></div>
+                                            <div className="indicator completed" title={`${stats.completed} Completed`}>{stats.completed}</div>
                                         )}
                                     </div>
                                     {stats.total > 0 && (

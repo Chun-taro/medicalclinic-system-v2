@@ -9,14 +9,23 @@ import './Layout.css'; // We'll create this CSS next
 const DashboardLayout = () => {
     const { activeChats } = useChat();
     const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth > 1024);
+    const [isCollapsed, setIsCollapsed] = useState(false);
 
-    const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
+    const toggleSidebar = () => {
+        if (window.innerWidth <= 1024) {
+            setSidebarOpen(!sidebarOpen);
+            setIsCollapsed(false); // Ensure it's not collapsed on mobile
+        } else {
+            setIsCollapsed(!isCollapsed);
+            setSidebarOpen(true); // Ensure it's open (but collapsed)
+        }
+    };
 
     return (
         <div className="dashboard-layout">
-            <Sidebar isOpen={sidebarOpen} toggleSidebar={toggleSidebar} />
+            <Sidebar isOpen={sidebarOpen} isCollapsed={isCollapsed} toggleSidebar={toggleSidebar} />
 
-            <div className={`main-wrapper ${sidebarOpen ? 'sidebar-open' : ''}`}>
+            <div className={`main-wrapper ${sidebarOpen ? 'sidebar-open' : ''} ${isCollapsed ? 'collapsed' : ''}`}>
                 <Header toggleSidebar={toggleSidebar} />
                 <main className="content-area">
                     <Outlet />
@@ -30,8 +39,8 @@ const DashboardLayout = () => {
                 ))}
             </div>
 
-            {/* Overlay for mobile */}
-            {sidebarOpen && (
+            {/* Overlay for mobile (only show if screen is small) */}
+            {sidebarOpen && window.innerWidth <= 1024 && (
                 <div className="sidebar-overlay" onClick={() => setSidebarOpen(false)}></div>
             )}
         </div>
