@@ -31,6 +31,9 @@ const Home = () => {
                             Access Patient Portal
                             <ArrowRight size={20} className="icon-right" />
                         </Link>
+                        <a href="/app.html" className="btn-secondary" style={{ marginLeft: '12px' }}>
+                            Get Mobile App
+                        </a>
                         <a href="#features" className="btn-secondary">
                             Learn More
                             <ArrowDown size={20} className="icon-right" />
@@ -100,6 +103,33 @@ const Home = () => {
                 </div>
             </section>
 
+            {/* Mobile App Section */}
+            <section className="mobile-app-section">
+                <div className="mobile-app-content">
+                    <div className="mobile-app-text">
+                        <div className="badge">Now on Mobile</div>
+                        <h2>BukSU Clinic is now in your pocket</h2>
+                        <p>Download our mobile application to get real-time notifications, manage appointments on the go, and access your health records anywhere.</p>
+                        <div className="mobile-app-actions">
+                            <a href="/downloads/BukSU-Medical-Clinic-App.apk" className="btn-primary" download>
+                                Download for Android (APK)
+                            </a>
+                            <Link to="/app.html" className="btn-secondary">
+                                Learn More
+                            </Link>
+                        </div>
+                    </div>
+                    <div className="mobile-app-preview">
+                        <div className="phone-mockup">
+                            <div className="phone-screen">
+                                <Heart color="white" size={48} />
+                                <h3 style={{ color: 'white', marginTop: '1rem' }}>BukSU Medical Clinic App</h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
             {/* Trust/Footer Section */}
             <footer className="home-footer">
                 <div className="footer-content">
@@ -109,6 +139,7 @@ const Home = () => {
                     </div>
                     <div className="footer-links">
                         <Link to="/login" className="footer-link">Login to Dashboard</Link>
+                        <a href="/app.html" className="footer-link">Download Mobile App</a>
                     </div>
                 </div>
                 <div className="footer-bottom">
