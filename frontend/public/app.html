@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Download BukSU Medical Clinic App</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #2563EB;
+            --primary-dark: #1E40AF;
+            --accent: #10B981;
+            --text-main: #0F172A;
+            --text-muted: #64748B;
+            --bg-body: #F8FAFC;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        /* Header */
+        header {
+            padding: 32dp 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 100px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 800;
+            font-size: 24px;
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        .logo img {
+            height: 40px;
+        }
+
+        /* Hero Section */
+        .hero {
+            padding: 80px 0 120px;
+            display: flex;
+            align-items: center;
+            gap: 60px;
+            position: relative;
+        }
+
+        .hero-content {
+            flex: 1;
+            z-index: 2;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 8px 16px;
+            background: rgba(37, 99, 235, 0.1);
+            color: var(--primary);
+            border-radius: 99px;
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 24px;
+        }
+
+        h1 {
+            font-size: 64px;
+            line-height: 1.1;
+            font-weight: 800;
+            margin-bottom: 24px;
+            letter-spacing: -0.04em;
+        }
+
+        h1 span {
+            color: var(--primary);
+        }
+
+        .description {
+            font-size: 20px;
+            color: var(--text-muted);
+            margin-bottom: 40px;
+            line-height: 1.6;
+            max-width: 500px;
+        }
+
+        .cta-group {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            padding: 18px 32px;
+            border-radius: 16px;
+            font-weight: 700;
+            font-size: 18px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+            box-shadow: 0 10px 25px -5px rgba(37, 99, 235, 0.4);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 20px 30px -10px rgba(37, 99, 235, 0.5);
+            background-color: var(--primary-dark);
+        }
+
+        .hero-image {
+            flex: 1;
+            position: relative;
+            display: flex;
+            justify-content: center;
+        }
+
+        .mockup-container {
+            position: relative;
+            width: 320px;
+            height: 650px;
+            background: #111;
+            border-radius: 40px;
+            padding: 12px;
+            box-shadow: 0 50px 100px -20px rgba(0,0,0,0.3);
+            border: 8px solid #222;
+        }
+
+        .mockup-screen {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #2563EB, #10B981);
+            border-radius: 30px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            text-align: center;
+        }
+
+        .mockup-screen i {
+            font-size: 80px;
+            margin-bottom: 20px;
+        }
+
+        /* Features Section */
+        .features {
+            background-color: white;
+            padding: 100px 0;
+            border-radius: 60px 60px 0 0;
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 80px;
+        }
+
+        .section-header h2 {
+            font-size: 40px;
+            font-weight: 800;
+            margin-bottom: 16px;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 32px;
+        }
+
+        .feature-card {
+            padding: 40px;
+            border-radius: 24px;
+            background: var(--bg-body);
+            transition: all 0.3s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.05);
+        }
+
+        .feature-icon {
+            width: 60px;
+            height: 60px;
+            background: white;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: var(--primary);
+            margin-bottom: 24px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+        }
+
+        .feature-card h3 {
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+
+        .feature-card p {
+            color: var(--text-muted);
+            line-height: 1.6;
+        }
+
+        /* Footer */
+        footer {
+            padding: 60px 0;
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        @media (max-width: 968px) {
+            .hero {
+                flex-direction: column;
+                text-align: center;
+                padding: 40px 0;
+            }
+            .description {
+                margin-left: auto;
+                margin-right: auto;
+            }
+            .cta-group {
+                justify-content: center;
+            }
+            h1 {
+                font-size: 48px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <header class="container">
+        <a href="/" class="logo">
+            <i class="fas fa-hospital-user"></i>
+            BukSU Clinic
+        </a>
+    </header>
+
+    <section class="hero container">
+        <div class="hero-content">
+            <span class="badge">New Mobile App v1.2</span>
+            <h1>Your Health, <span>Simplified.</span></h1>
+            <p class="description">
+                Experience healthcare at your fingertips. Book appointments, manage medical records, and consult with professionals seamlessly using the BukSU Medical Clinic mobile application.
+            </p>
+            <div class="cta-group">
+                <a href="/downloads/medical-clinic-app.apk" class="btn btn-primary" download>
+                    <i class="fab fa-android"></i>
+                    Download APK
+                </a>
+                <span style="color: var(--text-muted); font-size: 14px; display: flex; align-items: center;">
+                    <i class="fas fa-shield-alt" style="margin-right: 8px;"></i>
+                    Secure & Verified
+                </span>
+            </div>
+        </div>
+        <div class="hero-image">
+            <div class="mockup-container">
+                <div class="mockup-screen">
+                    <i class="fas fa-user-md"></i>
+                    <h2 style="font-size: 24px; font-weight: 800;">BukSU Clinic</h2>
+                    <p style="font-size: 14px; opacity: 0.8; margin-top: 8px;">Connecting you to care</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="features">
+        <div class="container">
+            <div class="section-header">
+                <h2>App Features</h2>
+                <p style="color: var(--text-muted);">Designed for modern healthcare management</p>
+            </div>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="fas fa-calendar-check"></i></div>
+                    <h3>Smart Booking</h3>
+                    <p>Schedule your clinic visits in seconds with real-time availability and automatic reminders.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="fas fa-file-medical"></i></div>
+                    <h3>Medical Records</h3>
+                    <p>Access your medical history, prescriptions, and test results securely from anywhere.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="fas fa-comments"></i></div>
+                    <h3>Instant Chat</h3>
+                    <p>Communicate directly with clinic staff for inquiries and quick medical advice.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2026 BukSU Medical Clinic. Built with passion for patient care.</p>
+        </div>
+    </footer>
+
+</body>
+</html>
