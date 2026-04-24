@@ -9,6 +9,7 @@ import './Auth.css';
 import buildingImg from '../../assets/building.png';
 import googleLogo from '../../assets/google-logo.png';
 import logo from '../../assets/logo.png';
+import { ArrowLeft } from 'lucide-react';
 
 const Login = () => {
     const [email, setEmail] = useState('');
@@ -109,6 +110,14 @@ const Login = () => {
 
             {/* Right Side - Form */}
             <div className="auth-content">
+                <div 
+                    className="back-button" 
+                    onClick={() => navigate('/')}
+                    title="Back to Landing Page"
+                >
+                    <ArrowLeft size={20} />
+                    <span>Back to Home</span>
+                </div>
                 <div className="auth-card">
                     <div className="auth-header">
                         <img

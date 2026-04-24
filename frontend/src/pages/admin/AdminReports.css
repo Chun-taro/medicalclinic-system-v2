@@ -423,3 +423,134 @@
     background: var(--primary-dark);
 }
 
+
+/* Premium Detailed Report Styling */
+.report-details-premium {
+    padding: 2rem;
+    background: var(--bg-body);
+    border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+    border-top: 1px solid var(--border);
+    animation: fadeIn 0.3s ease;
+}
+
+.report-header-quick {
+    display: flex;
+    gap: 2rem;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px dashed var(--border);
+}
+
+.quick-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+.quick-item b {
+    color: var(--text-main);
+    margin-right: 2px;
+}
+
+.vitals-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.vital-mini-card {
+    background: var(--bg-card);
+    padding: 1rem;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    box-shadow: var(--shadow-sm);
+}
+
+.vital-info label {
+    display: block;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    font-weight: 600;
+}
+
+.vital-info p {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text-main);
+}
+
+.clinical-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+}
+
+.clinical-section.full-width {
+    grid-column: span 2;
+}
+
+.clinical-section h4 {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+    color: var(--primary);
+    margin-bottom: 0.75rem;
+}
+
+.content-box {
+    background: var(--bg-card);
+    padding: 1.25rem;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border);
+    font-size: 0.95rem;
+    line-height: 1.6;
+    color: var(--text-main);
+    min-height: 50px;
+}
+
+.content-box.bg-muted { background: var(--bg-body); border-color: var(--border); }
+.content-box.bg-primary-light { background: var(--primary-light); border-color: var(--primary); opacity: 0.9; }
+.content-box.bg-secondary-light { background: rgba(16, 185, 129, 0.1); border-color: var(--success); }
+
+.meds-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+.med-tag {
+    background: var(--primary);
+    color: white;
+    padding: 0.4rem 0.8rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 768px) {
+    .clinical-grid {
+        grid-template-columns: 1fr;
+    }
+    .clinical-section.full-width {
+        grid-column: span 1;
+    }
+    .report-header-quick {
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+}

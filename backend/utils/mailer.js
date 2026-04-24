@@ -1,45 +1,32 @@
-const axios = require('axios');
+const nodemailer = require('nodemailer');
 
 /**
- * Send email via Resend API (HTTP) to bypass Render's SMTP restrictions.
+ * Send email via Nodemailer (Gmail) as requested to stop using Resend API.
  * @param {Object} options - { to, subject, html }
  */
 const sendEmail = async ({ to, subject, html }) => {
-  const apiKey = process.env.RESEND_API_KEY;
-  
-  if (!apiKey) {
-    console.error('RESEND_API_KEY missing in .env');
-    return;
-  }
+  const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASS
+    }
+  });
 
-  console.log(`Attempting to send email via Resend to: ${to} with subject: ${subject}`);
+  const mailOptions = {
+    from: `"BukSU Medical Clinic" <${process.env.EMAIL_USER}>`,
+    to: Array.isArray(to) ? to.join(', ') : to,
+    subject: subject,
+    html: html
+  };
 
   try {
-    const response = await axios.post(
-      'https://api.resend.com/emails',
-      {
-        from: 'Buksu Medical Clinic <onboarding@resend.dev>',
-        to: Array.isArray(to) ? to : [to],
-        subject: subject,
-        html: html,
-      },
-      {
-        headers: {
-          'Authorization': `Bearer ${apiKey}`,
-          'Content-Type': 'application/json',
-        },
-      }
-    );
-
-    console.log('Email sent successfully via Resend:', response.data);
-    return response.data;
+    console.log(`Attempting to send email via Gmail to: ${to}`);
+    const info = await transporter.sendMail(mailOptions);
+    console.log('Email sent successfully via Gmail:', info.messageId);
+    return info;
   } catch (err) {
-    console.error('Email send failed via Resend. Error details:', err.response?.data || err.message);
-    if (err.response?.status === 401) {
-      console.error('Unauthorized: Please check if your RESEND_API_KEY is correct.');
-    } else if (err.response?.status === 422) {
-      console.error('Validation Error: Usually happens if the recipient list or from address is invalid.');
-    }
+    console.error('Email send failed via Gmail:', err.message);
   }
 };
 

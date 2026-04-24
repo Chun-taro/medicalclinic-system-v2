@@ -22,6 +22,9 @@ const Inventory = () => {
     const [history, setHistory] = useState([]);
     const [printFilters, setPrintFilters] = useState({ startDate: '', endDate: '' });
 
+    // New state for grouping
+    const [selectedGroup, setSelectedGroup] = useState(null);
+
     useEffect(() => {
         fetchInventory();
     }, []);
@@ -51,6 +54,30 @@ const Inventory = () => {
         setFilteredMedicines(medicines.filter(m => m.name.toLowerCase().includes(q)));
     };
 
+    // Group medicines by name for the main view
+    const groupedMedicines = React.useMemo(() => {
+        const groups = {};
+        filteredMedicines.forEach(med => {
+            if (!groups[med.name]) {
+                groups[med.name] = {
+                    name: med.name,
+                    totalStock: 0,
+                    batches: [],
+                    soonestExpiry: null,
+                    units: new Set()
+                };
+            }
+            groups[med.name].totalStock += med.quantityInStock;
+            groups[med.name].batches.push(med);
+            groups[med.name].units.add(med.unit);
+            
+            if (med.expiryDate && (!groups[med.name].soonestExpiry || new Date(med.expiryDate) < new Date(groups[med.name].soonestExpiry))) {
+                groups[med.name].soonestExpiry = med.expiryDate;
+            }
+        });
+        return Object.values(groups);
+    }, [filteredMedicines]);
+
     const handleAddSubmit = async (e) => {
         e.preventDefault();
         try {
@@ -65,11 +92,16 @@ const Inventory = () => {
     };
 
     const handleDelete = async (id) => {
-        if (!window.confirm('Delete this medicine?')) return;
+        if (!window.confirm('Delete this batch?')) return;
         try {
             await api.delete(`/medicines/${id}`);
-            toast.success('Medicine deleted');
+            toast.success('Batch deleted');
             fetchInventory();
+            // If deleting from batch modal, refresh selectedGroup if needed
+            if (selectedGroup) {
+                const updated = medicines.filter(m => m._id !== id && m.name === selectedGroup.name);
+                if (updated.length === 0) setSelectedGroup(null);
+            }
         } catch (err) {
             toast.error('Failed to delete medicine');
         }
@@ -124,10 +156,10 @@ const Inventory = () => {
         }
     };
 
-    const getStatusParams = (med) => {
-        if (med.quantityInStock <= 0) return { label: 'Out of Stock', class: 'status-danger' };
-        if (med.quantityInStock < 10) return { label: 'Low Stock', class: 'status-warning' };
-        if (med.expiryDate && new Date(med.expiryDate) < new Date()) return { label: 'Expired', class: 'status-danger' };
+    const getStatusParams = (quantity, expiry) => {
+        if (quantity <= 0) return { label: 'Out of Stock', class: 'status-danger' };
+        if (quantity < 10) return { label: 'Low Stock', class: 'status-warning' };
+        if (expiry && new Date(expiry) < new Date()) return { label: 'Expired', class: 'status-danger' };
         return { label: 'In Stock', class: 'status-success' };
     };
 
@@ -147,31 +179,31 @@ const Inventory = () => {
                 <div className="page-header">
                     <div className="header-info">
                         <h1>Inventory</h1>
-                        <p>Stock & Dispensing</p>
+                        <p>Stock & Batch Management</p>
                     </div>
                 </div>
 
                 <div className="metrics-row">
                     <div className="metric-card minimal">
                         <div className="metric-info">
-                            <span className="label">Total Items</span>
-                            <span className="value">{metrics.total}</span>
+                            <span className="label">Total Varieties</span>
+                            <span className="value">{groupedMedicines.length}</span>
                         </div>
                         <Package className="metric-icon blue" size={20} />
                     </div>
                     <div className="metric-card minimal">
                         <div className="metric-info">
-                            <span className="label">Low Stock</span>
-                            <span className="value warning">{metrics.lowStock}</span>
+                            <span className="label">Total Batches</span>
+                            <span className="value">{medicines.length}</span>
                         </div>
-                        <AlertTriangle className="metric-icon orange" size={20} />
+                        <Check className="metric-icon green" size={20} />
                     </div>
                     <div className="metric-card minimal">
                         <div className="metric-info">
-                            <span className="label">Expired</span>
-                            <span className="value danger">{metrics.expired}</span>
+                            <span className="label">Low Stock Items</span>
+                            <span className="value warning">{metrics.lowStock}</span>
                         </div>
-                        <Trash2 className="metric-icon red" size={20} />
+                        <AlertTriangle className="metric-icon orange" size={20} />
                     </div>
                 </div>
             </div>
@@ -200,23 +232,27 @@ const Inventory = () => {
             </div>
 
             <div className="inventory-grid compact">
-                {filteredMedicines.map(med => {
-                    const status = getStatusParams(med);
+                {groupedMedicines.map(group => {
+                    const status = getStatusParams(group.totalStock, group.soonestExpiry);
                     return (
-                        <div key={med._id} className="medicine-card compact">
+                        <div key={group.name} className="medicine-card compact clickable" onClick={() => setSelectedGroup(group)}>
                             <div className="card-header">
-                                <h3 title={med.name}>{med.name}</h3>
+                                <h3 title={group.name}>{group.name}</h3>
                                 <span className={`status-badge sm ${status.class}`}>{status.label}</span>
                             </div>
                             <div className="card-body">
                                 <div className="info-row">
-                                    <span className="label">Stock</span>
-                                    <span className="value">{med.quantityInStock} <small>{med.unit}</small></span>
+                                    <span className="label">Total Stock</span>
+                                    <span className="value">{group.totalStock} <small>{Array.from(group.units).join('/')}</small></span>
                                 </div>
                                 <div className="info-row">
-                                    <span className="label">Expiry</span>
+                                    <span className="label">Batches</span>
+                                    <span className="value">{group.batches.length} groups</span>
+                                </div>
+                                <div className="info-row">
+                                    <span className="label">Soonest Expiry</span>
                                     <span className={`value ${status.label === 'Expired' ? 'danger' : ''}`}>
-                                        {med.expiryDate ? new Date(med.expiryDate).toLocaleDateString() : '—'}
+                                        {group.soonestExpiry ? new Date(group.soonestExpiry).toLocaleDateString() : '—'}
                                     </span>
                                 </div>
                             </div>
@@ -225,24 +261,111 @@ const Inventory = () => {
                 })}
             </div>
 
+            {/* Batch Details Modal */}
+            {selectedGroup && (
+                <div className="modal-overlay">
+                    <div className="modal-card wide batch-modal">
+                        <div className="modal-header">
+                            <div>
+                                <h3>{selectedGroup.name}</h3>
+                                <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>Detailed batch listing and management</p>
+                            </div>
+                            <button className="close-btn" onClick={() => setSelectedGroup(null)}><X size={24} /></button>
+                        </div>
+                        <div className="modal-body">
+                            <div className="batch-table-container">
+                                <table className="history-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Unit</th>
+                                            <th>Stock</th>
+                                            <th>Expiry Date</th>
+                                            <th>Status</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {selectedGroup.batches.sort((a,b) => new Date(a.expiryDate) - new Date(b.expiryDate)).map(batch => {
+                                            const status = getStatusParams(batch.quantityInStock, batch.expiryDate);
+                                            return (
+                                                <tr key={batch._id}>
+                                                    <td>{batch.unit}</td>
+                                                    <td><strong>{batch.quantityInStock}</strong></td>
+                                                    <td>{batch.expiryDate ? new Date(batch.expiryDate).toLocaleDateString() : '—'}</td>
+                                                    <td><span className={`status-badge sm ${status.class}`}>{status.label}</span></td>
+                                                    <td className="actions-cell">
+                                                        <button 
+                                                            className="action-icon dispense" 
+                                                            title="Dispense from this batch"
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                setDispenseForm({ ...dispenseForm, medId: batch._id });
+                                                                setShowDispenseModal(true);
+                                                            }}
+                                                        >
+                                                            <Package size={14} />
+                                                        </button>
+                                                        <button 
+                                                            className="action-icon delete" 
+                                                            title="Remove batch"
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                handleDelete(batch._id);
+                                                            }}
+                                                        >
+                                                            <Trash2 size={14} />
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div className="modal-footer">
+                            <button className="btn-secondary" onClick={() => setSelectedGroup(null)}>Close Management</button>
+                            <button className="btn-primary" onClick={() => {
+                                setAddForm({ ...addForm, name: selectedGroup.name });
+                                setSelectedGroup(null);
+                                setShowAddModal(true);
+                            }}>
+                                <Plus size={16} /> Add Batch
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* Add Modal */}
             {showAddModal && (
                 <div className="modal-overlay">
                     <div className="modal-card">
                         <div className="modal-header">
-                            <h3>Add Medicine</h3>
+                            <h3>Add Medicine Batch</h3>
                             <button className="close-btn" onClick={() => setShowAddModal(false)}><X size={24} /></button>
                         </div>
                         <form onSubmit={handleAddSubmit}>
                             <div className="modal-body">
-                                <input placeholder="Medicine Name" required value={addForm.name} onChange={e => setAddForm({ ...addForm, name: e.target.value })} />
-                                <input type="number" placeholder="Quantity" required value={addForm.quantityInStock} onChange={e => setAddForm({ ...addForm, quantityInStock: e.target.value })} />
-                                <input placeholder="Unit (e.g. tablet, bottle)" required value={addForm.unit} onChange={e => setAddForm({ ...addForm, unit: e.target.value })} />
-                                <label>Expiry Date</label>
-                                <input type="date" value={addForm.expiryDate} onChange={e => setAddForm({ ...addForm, expiryDate: e.target.value })} />
+                                <div className="form-group">
+                                    <label>Medicine Name</label>
+                                    <input placeholder="Medicine Name" required value={addForm.name} onChange={e => setAddForm({ ...addForm, name: e.target.value })} />
+                                </div>
+                                <div className="form-group">
+                                    <label>Quantity</label>
+                                    <input type="number" placeholder="Quantity" required value={addForm.quantityInStock} onChange={e => setAddForm({ ...addForm, quantityInStock: e.target.value })} />
+                                </div>
+                                <div className="form-group">
+                                    <label>Unit</label>
+                                    <input placeholder="Unit (e.g. tablet, bottle)" required value={addForm.unit} onChange={e => setAddForm({ ...addForm, unit: e.target.value })} />
+                                </div>
+                                <div className="form-group">
+                                    <label>Expiry Date</label>
+                                    <input type="date" value={addForm.expiryDate} onChange={e => setAddForm({ ...addForm, expiryDate: e.target.value })} />
+                                </div>
                             </div>
                             <div className="modal-footer">
-                                <button type="submit" className="btn-primary">Add Medicine</button>
+                                <button type="submit" className="btn-primary">Keep in Inventory</button>
                             </div>
                         </form>
                     </div>
@@ -259,17 +382,26 @@ const Inventory = () => {
                         </div>
                         <form onSubmit={handleDispenseSubmit}>
                             <div className="modal-body">
-                                <select required value={dispenseForm.medId} onChange={e => setDispenseForm({ ...dispenseForm, medId: e.target.value })}>
-                                    <option value="">Select Medicine</option>
-                                    {medicines.map(m => (
-                                        <option key={m._id} value={m._id}>{m.name} ({m.quantityInStock} left)</option>
-                                    ))}
-                                </select>
-                                <input type="number" placeholder="Quantity" required min="1" value={dispenseForm.quantity} onChange={e => setDispenseForm({ ...dispenseForm, quantity: e.target.value })} />
-                                <input type="text" placeholder="Recipient Name (Patient)" required value={dispenseForm.recipientName} onChange={e => setDispenseForm({ ...dispenseForm, recipientName: e.target.value })} />
+                                <div className="form-group">
+                                    <label>Select Medicine/Batch</label>
+                                    <select required value={dispenseForm.medId} onChange={e => setDispenseForm({ ...dispenseForm, medId: e.target.value })}>
+                                        <option value="">Select Medicine</option>
+                                        {medicines.map(m => (
+                                            <option key={m._id} value={m._id}>{m.name} ({m.unit}) - {m.quantityInStock} left [Exp: {m.expiryDate ? new Date(m.expiryDate).toLocaleDateString() : 'None'}]</option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div className="form-group">
+                                    <label>Quantity to Dispense</label>
+                                    <input type="number" placeholder="Quantity" required min="1" value={dispenseForm.quantity} onChange={e => setDispenseForm({ ...dispenseForm, quantity: e.target.value })} />
+                                </div>
+                                <div className="form-group">
+                                    <label>Recipient Name</label>
+                                    <input type="text" placeholder="Recipient Name (Patient)" required value={dispenseForm.recipientName} onChange={e => setDispenseForm({ ...dispenseForm, recipientName: e.target.value })} />
+                                </div>
                             </div>
                             <div className="modal-footer">
-                                <button type="submit" className="btn-primary">Dispense</button>
+                                <button type="submit" className="btn-primary">Process Dispensing</button>
                             </div>
                         </form>
                     </div>
@@ -312,11 +444,6 @@ const Inventory = () => {
                             >
                                 <Printer size={18} /> Print Report
                             </button>
-                            {(!printFilters.startDate || !printFilters.endDate) && (
-                                <p style={{ color: 'var(--error)', fontSize: '0.8rem', margin: '0', flexBasis: '100%', marginTop: '0.5rem' }}>
-                                    ⚠️ Please select a date range to enable printing.
-                                </p>
-                            )}
                         </div>
                         <div className="modal-body history-list">
                             {history.length === 0 ? <p>No history found.</p> : (

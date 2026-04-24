@@ -411,3 +411,70 @@
         overflow-x: auto;
     }
 }
+
+.medicine-card.compact.clickable {
+    cursor: pointer;
+    border-left: 4px solid var(--primary);
+}
+
+.medicine-card.compact.clickable:active {
+    transform: scale(0.98);
+}
+
+.batch-table-container {
+    margin-top: 1rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+}
+
+.actions-cell {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.action-icon {
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: var(--bg-body);
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.action-icon:hover {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+}
+
+.action-icon.delete:hover {
+    background: var(--error);
+    border-color: var(--error);
+}
+
+.action-icon.dispense:hover {
+    background: var(--success);
+    border-color: var(--success);
+}
+
+.form-group {
+    margin-bottom: 1.25rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.form-group input, .form-group select {
+    margin-bottom: 0 !important;
+}

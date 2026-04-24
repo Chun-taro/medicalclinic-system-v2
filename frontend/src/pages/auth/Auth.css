@@ -59,6 +59,29 @@
     justify-content: center;
     padding: 2rem;
     background-color: var(--bg-body);
+    position: relative;
+}
+
+.back-button {
+    position: absolute;
+    top: 2rem;
+    left: 2rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    font-weight: 500;
+    z-index: 100;
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius-md);
+}
+
+.back-button:hover {
+    color: var(--primary);
+    background-color: var(--primary-light);
+    transform: translateX(-4px);
 }
 
 .auth-card {

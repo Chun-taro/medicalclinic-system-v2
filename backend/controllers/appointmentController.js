@@ -113,7 +113,8 @@ const getPatientAppointments = async (req, res) => {
     // Include management and medicinesPrescribed so the patient view shows consultation details
     const appointments = await Appointment.find({ patientId: requestedPatientId })
       .populate('doctorId', 'firstName lastName')
-      .select('appointmentDate status purpose reasonForVisit typeOfVisit diagnosis management medicinesPrescribed consultationCompletedAt rescheduleReason doctorId')
+      .populate('patientId', 'firstName lastName email contactNumber age sex homeAddress')
+      .select('appointmentDate status purpose reasonForVisit typeOfVisit diagnosis management externalPrescription p_age p_sex p_address medicinesPrescribed consultationCompletedAt rescheduleReason doctorId')
       .sort({ appointmentDate: -1 })
       .lean();
 
@@ -135,7 +136,7 @@ const getAllAppointments = async (req, res) => {
     const limit = parseInt(req.query.limit, 10) || 20;
 
     const appointments = await Appointment.find()
-      .populate('patientId', 'firstName lastName email contactNumber role patientType course department college avatar')
+      .populate('patientId', 'firstName lastName email contactNumber role patientType course department college avatar age sex homeAddress')
       .populate('doctorId', 'firstName lastName')
       .select('appointmentDate status purpose typeOfVisit patientId doctorId version additionalNotes')
       .sort({ appointmentDate: -1 })
@@ -488,6 +489,7 @@ const saveConsultation = async (req, res) => {
     const {
       diagnosis,
       management,
+      remarks,
       medicinesPrescribed,
       bloodPressure,
       temperature,
@@ -495,11 +497,25 @@ const saveConsultation = async (req, res) => {
       heartRate,
       bmi,
       bmiIntervention,
+      height,
+      weight,
+      pulseRate,
+      respiratoryRate,
+      lmp,
+      visualAcuityOS,
+      visualAcuityOD,
       referredToPhysician,
       physicianName,
       firstAidDone,
       firstAidWithin30Mins,
-      consultationCompletedAt
+      consultationCompletedAt,
+      externalPrescription,
+      p_age, p_sex, p_address, p_course, p_civilStatus,
+      issuedFor,
+      isFit,
+      validForAY,
+      validForSemester,
+      certificateType
     } = req.body;
 
     const appointment = await Appointment.findById(id).populate('patientId');
@@ -508,6 +524,7 @@ const saveConsultation = async (req, res) => {
     // Update all consultation fields
     appointment.diagnosis = diagnosis;
     appointment.management = management;
+    appointment.remarks = remarks;
     appointment.medicinesPrescribed = medicinesPrescribed;
     appointment.bloodPressure = bloodPressure;
     appointment.temperature = temperature;
@@ -515,10 +532,28 @@ const saveConsultation = async (req, res) => {
     appointment.heartRate = heartRate;
     appointment.bmi = bmi;
     appointment.bmiIntervention = bmiIntervention;
+    appointment.height = height;
+    appointment.weight = weight;
+    appointment.pulseRate = pulseRate;
+    appointment.respiratoryRate = respiratoryRate;
+    appointment.lmp = lmp;
+    appointment.visualAcuityOS = visualAcuityOS;
+    appointment.visualAcuityOD = visualAcuityOD;
     appointment.referredToPhysician = referredToPhysician;
     appointment.physicianName = physicianName;
     appointment.firstAidDone = firstAidDone;
     appointment.firstAidWithin30Mins = firstAidWithin30Mins;
+    appointment.externalPrescription = externalPrescription;
+    appointment.p_age = p_age;
+    appointment.p_sex = p_sex;
+    appointment.p_address = p_address;
+    appointment.p_course = p_course;
+    appointment.p_civilStatus = p_civilStatus;
+    appointment.issuedFor = issuedFor;
+    appointment.isFit = isFit;
+    appointment.validForAY = validForAY;
+    appointment.validForSemester = validForSemester;
+    appointment.certificateType = certificateType;
     appointment.status = 'completed';
     // Allow manual assignment if provided in req.body, otherwise default to current user
     appointment.doctorId = req.body.doctorId || req.user.userId;
@@ -582,8 +617,8 @@ const saveConsultation = async (req, res) => {
 
     res.json({ message: 'Consultation saved', appointment });
   } catch (err) {
-    console.error('Save consultation error:', err.message);
-    res.status(500).json({ error: 'Failed to save consultation' });
+    console.error('Save consultation error:', err);
+    res.status(500).json({ error: 'Failed to save consultation', details: err.message });
   }
 };
 
@@ -693,10 +728,10 @@ const getConsultations = async (req, res) => {
     const consultations = await Appointment.find({
       diagnosis: { $ne: null }
     })
-      .populate('patientId', 'firstName lastName email contactNumber')
+      .populate('patientId', 'firstName lastName email contactNumber age sex homeAddress')
       .populate('doctorId', 'firstName lastName')
       .select(
-        'patientId doctorId firstName lastName appointmentDate consultationCompletedAt chiefComplaint additionalNotes diagnosis management bloodPressure temperature heartRate oxygenSaturation bmi bmiIntervention medicinesPrescribed referredToPhysician physicianName firstAidDone firstAidWithin30Mins purpose'
+        'patientId doctorId firstName lastName appointmentDate consultationCompletedAt chiefComplaint additionalNotes diagnosis management externalPrescription p_age p_sex p_address bloodPressure temperature heartRate oxygenSaturation bmi bmiIntervention medicinesPrescribed referredToPhysician physicianName firstAidDone firstAidWithin30Mins purpose'
       )
       .sort({ consultationCompletedAt: -1 })
       .lean();
@@ -716,7 +751,7 @@ const getMedicalCertificates = async (req, res) => {
       purpose: 'Medical Certificate',
       status: 'completed'
     })
-      .populate('patientId', 'firstName lastName email contactNumber')
+      .populate('patientId', 'firstName lastName email contactNumber age sex homeAddress')
       .populate('doctorId', 'firstName lastName')
       .select(
         'patientId doctorId firstName lastName appointmentDate consultationCompletedAt purpose status diagnosis fitToWork fitToWorkFrom fitToWorkTo restDays remarks'
@@ -871,31 +906,62 @@ const updateAppointment = async (req, res) => {
 
 const prescribeMedicines = async (req, res) => {
   const { id: consultationId } = req.params;
-  const { prescribed } = req.body;
+  const { prescribed, source = 'reports prescribe medicine' } = req.body;
 
   if (!Array.isArray(prescribed) || prescribed.length === 0) {
     return res.status(400).json({ error: 'No medicines prescribed' });
   }
 
   try {
-    for (const item of prescribed) {
-      const med = await Medicine.findById(item.medicineId);
-      if (!med || med.quantityInStock < item.quantity) continue;
-
-      med.quantityInStock -= item.quantity;
-      med.available = med.quantityInStock > 0;
-
-      med.dispenseHistory.push({
-        appointmentId: consultationId,
-        quantity: item.quantity,
-        dispensedBy: req.user.id,
-        dispensedAt: new Date()
-      });
-
-      await med.save();
+    const appointment = await Appointment.findById(consultationId).populate('patientId');
+    if (!appointment) {
+      return res.status(404).json({ error: 'Appointment not found' });
     }
 
-    res.json({ message: 'Prescription processed' });
+    const patientName = appointment.patientId 
+      ? `${appointment.patientId.firstName} ${appointment.patientId.lastName}`.trim()
+      : `${appointment.firstName || ''} ${appointment.lastName || ''}`.trim();
+
+    const results = [];
+    for (const item of prescribed) {
+      const qty = parseInt(item.quantity);
+      if (!qty || qty <= 0) continue;
+
+      // 1. Deduct from Medicine inventory with Atomic update
+      const updatedMed = await Medicine.findOneAndUpdate(
+        { 
+          _id: item.medicineId, 
+          quantityInStock: { $gte: qty } 
+        },
+        { 
+          $inc: { quantityInStock: -qty },
+          $push: { 
+            dispenseHistory: {
+              appointmentId: consultationId,
+              quantity: qty,
+              dispensedBy: req.user.userId,
+              dispensedAt: new Date(),
+              source: source,
+              recipientName: patientName || 'Unknown Patient'
+            }
+          }
+        },
+        { new: true }
+      );
+
+      if (updatedMed) {
+        // 2. Add to Appointment records for history consistency
+        appointment.medicinesPrescribed.push({
+            name: updatedMed.name,
+            quantity: qty
+        });
+        
+        results.push({ name: updatedMed.name, newStock: updatedMed.quantityInStock });
+      }
+    }
+
+    await appointment.save();
+    res.json({ message: 'Prescription processed and inventory updated', results });
   } catch (err) {
     console.error('Prescription error:', err.message);
     res.status(500).json({ error: 'Failed to process prescription' });
@@ -1008,8 +1074,8 @@ const exportConsultationPDF = async (req, res) => {
     y += 20;
     y = helpers.drawSectionHeader('Clinical Assessment', y);
     y = helpers.drawField('Chief Complaint', consultation.additionalNotes || consultation.chiefComplaint, 40, y, 500);
-    y = helpers.drawField('Diagnosis', consultation.diagnosis, 40, y, 500);
-    y = helpers.drawField('Management', consultation.management, 40, y, 500);
+    y = helpers.drawField('Doctor\'s Note', consultation.diagnosis, 40, y, 500);
+    y = helpers.drawField('Home Instructions', consultation.management, 40, y, 500);
 
     y += 20;
     y = helpers.drawSectionHeader('Vitals', y);
@@ -1065,7 +1131,7 @@ const exportMedicalCertificatePDF = async (req, res) => {
     });
 
     doc.fontSize(12).leading(20).text(
-      `This is to certify that ${patientName}, had been physically examined and/or treated at this clinic on ${dateStr} with the following diagnosis:`,
+      `This is to certify that ${patientName}, had been physically examined and/or treated at this clinic on ${dateStr} with the following doctor's note/assessment:`,
       { align: 'justify' }
     );
 

@@ -3,8 +3,9 @@ import api, { getImageUrl } from '../../services/api';
 import { toast } from 'react-toastify';
 import {
     Search, Calendar, Filter, CheckCircle, XCircle, Edit, Trash2,
-    Lock, AlertTriangle, Clock, RefreshCw
+    Lock, AlertTriangle, Clock, RefreshCw, FileText
 } from 'lucide-react';
+import { printMedicalCertificate } from '../../utils/printCertificate';
 import './AllAppointments.css';
 
 const AllAppointments = () => {
@@ -28,6 +29,10 @@ const AllAppointments = () => {
     // Loading States
     const [rowLoading, setRowLoading] = useState(null);
     const [lockConflict, setLockConflict] = useState(null);
+
+    // Certificate Selection
+    const [showCertModal, setShowCertModal] = useState(false);
+    const [selectedAptForCert, setSelectedAptForCert] = useState(null);
 
     useEffect(() => {
         fetchAppointments();
@@ -320,6 +325,19 @@ const AllAppointments = () => {
                                                     <button className="btn-icon primary" onClick={() => openEditModal(apt)} title="Edit">
                                                         <Edit size={18} />
                                                     </button>
+                                                    {(apt.status === 'completed' || apt.status === 'approved') && (
+                                                        <button 
+                                                            className="btn-icon secondary" 
+                                                            onClick={() => {
+                                                                setSelectedAptForCert(apt);
+                                                                setShowCertModal(true);
+                                                            }} 
+                                                            title="Medical Certificate"
+                                                            style={{ color: 'var(--primary)' }}
+                                                        >
+                                                            <FileText size={18} />
+                                                        </button>
+                                                    )}
                                                     {/* Delete button removed per request */}
                                                 </>
                                             )}
@@ -331,6 +349,80 @@ const AllAppointments = () => {
                     </tbody>
                 </table>
             </div>
+
+            {/* Certificate Selection Modal */}
+            {showCertModal && (
+                <div className="modal-overlay">
+                    <div className="modal-card">
+                        <div className="modal-header">
+                            <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                <FileText size={20} /> Select Certificate Type
+                            </h3>
+                            <button className="close-btn" onClick={() => setShowCertModal(false)}><XCircle size={24} /></button>
+                        </div>
+                        <div className="modal-body" style={{ padding: '2rem 1rem' }}>
+                            <p style={{ textAlign: 'center', marginBottom: '2rem', color: 'var(--text-muted)' }}>
+                                Choose the type of medical certificate for <strong>{selectedAptForCert?.patientId?.firstName} {selectedAptForCert?.patientId?.lastName}</strong>.
+                            </p>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                                <button 
+                                    className="cert-choice-card" 
+                                    onClick={() => {
+                                        printMedicalCertificate(selectedAptForCert, 'normal');
+                                        setShowCertModal(false);
+                                    }}
+                                    style={{
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        alignItems: 'center',
+                                        gap: '1rem',
+                                        padding: '2rem 1rem',
+                                        borderRadius: 'var(--radius-md)',
+                                        border: '2px solid var(--border)',
+                                        background: 'var(--bg-card)',
+                                        cursor: 'pointer',
+                                        transition: 'all 0.2s ease'
+                                    }}
+                                >
+                                    <FileText size={40} style={{ color: 'var(--primary)' }} />
+                                    <div style={{ textAlign: 'center' }}>
+                                        <strong style={{ display: 'block', marginBottom: '0.25rem' }}>Normal</strong>
+                                        <small style={{ color: 'var(--text-muted)' }}>MC-F-001A (Fitness)</small>
+                                    </div>
+                                </button>
+                                <button 
+                                    className="cert-choice-card" 
+                                    onClick={() => {
+                                        printMedicalCertificate(selectedAptForCert, 'pathologic');
+                                        setShowCertModal(false);
+                                    }}
+                                    style={{
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        alignItems: 'center',
+                                        gap: '1rem',
+                                        padding: '2rem 1rem',
+                                        borderRadius: 'var(--radius-md)',
+                                        border: '2px solid var(--border)',
+                                        background: 'var(--bg-card)',
+                                        cursor: 'pointer',
+                                        transition: 'all 0.2s ease'
+                                    }}
+                                >
+                                    <AlertTriangle size={40} style={{ color: '#e67e22' }} />
+                                    <div style={{ textAlign: 'center' }}>
+                                        <strong style={{ display: 'block', marginBottom: '0.25rem' }}>Pathologic</strong>
+                                        <small style={{ color: 'var(--text-muted)' }}>MC-F-001B (Clinical)</small>
+                                    </div>
+                                </button>
+                            </div>
+                        </div>
+                        <div className="modal-footer">
+                            <button className="btn-secondary" onClick={() => setShowCertModal(false)}>Cancel</button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Edit Modal */}
             {showEditModal && (

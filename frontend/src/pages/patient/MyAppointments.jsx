@@ -115,8 +115,8 @@ const MyAppointments = () => {
                                             }</p>
                                         </div>
                                         <div className="detail-item full-width">
-                                            <label>Notes/Management</label>
-                                            <p>{apt.management || 'No notes available yet.'}</p>
+                                            <label>Home Instructions</label>
+                                            <p>{apt.management || 'No instructions available yet.'}</p>
                                         </div>
                                     </div>
 

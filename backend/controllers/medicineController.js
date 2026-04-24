@@ -310,12 +310,10 @@ const getAllDispenseHistory = async (req, res) => {
 
     medicines.forEach(med => {
       med.dispenseHistory.forEach(record => {
-        const sourceLabel =
-          record.source === 'consultation'
-            ? 'consultation dispence'
-            : record.source === 'manual'
-              ? 'manual dispence'
-              : 'Unknown';
+        let sourceLabel = 'Unknown';
+        if (record.source === 'consultation') sourceLabel = 'consultation dispence';
+        else if (record.source === 'manual') sourceLabel = 'manual dispence';
+        else if (record.source === 'reports prescribe medicine') sourceLabel = 'reports prescribe medicine';
 
         const dispensedByName = record.dispensedBy
           ? `${record.dispensedBy.firstName} ${record.dispensedBy.lastName}`

@@ -71,10 +71,34 @@ const appointmentSchema = new mongoose.Schema({
   heartRate: String,
   bmi: String,
   bmiIntervention: String,
+  height: String,
+  weight: String,
+  pulseRate: String,
+  respiratoryRate: String,
+  lmp: String,
+
+  // Visual Acuity
+  visualAcuityOS: String,
+  visualAcuityOD: String,
 
   //  Diagnosis and management
   diagnosis: String,
   management: String,
+  remarks: String,
+  externalPrescription: String,
+  p_age: String,
+  p_sex: String,
+  p_address: String,
+  p_course: String,
+  p_civilStatus: String,
+
+  // Certificate Specifics
+  issuedFor: String,
+  isFit: { type: Boolean, default: true },
+  validForAY: String,
+  validForSemester: String,
+  certificateType: { type: String, enum: ['normal', 'pathologic'], default: 'normal' },
+
   medicinesPrescribed: [
     {
       name: String,
