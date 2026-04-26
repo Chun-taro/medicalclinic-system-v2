@@ -24,13 +24,7 @@ const userSchema = new mongoose.Schema({
     type: String,
     unique: true,
     sparse: true, // Allows multiple null values
-    trim: true,
-    validate: {
-      validator: function(v) {
-        return !v || /^20\d{2}-\d{5}$/.test(v);
-      },
-      message: props => `${props.value} is not a valid ID number! Format should be 20XX-XXXXX.`
-    }
+    trim: true
   },
 
   //  Demographics
@@ -94,7 +88,8 @@ const userSchema = new mongoose.Schema({
     tuberculosis: { type: Boolean, default: false },
     chickenpox: { type: Boolean, default: false },
     measles: { type: Boolean, default: false },
-    germanMeasles: { type: Boolean, default: false }
+    germanMeasles: { type: Boolean, default: false },
+    other: { type: Boolean, default: false }
   },
 
   // Previous Admissions and Operations
@@ -112,7 +107,8 @@ const userSchema = new mongoose.Schema({
     MMR: { type: Boolean, default: false },
     Chickenpox: { type: Boolean, default: false },
     AntiRabies: { type: Boolean, default: false },
-    TetanusBooster: { type: Boolean, default: false }
+    TetanusBooster: { type: Boolean, default: false },
+    other: { type: Boolean, default: false }
   },
   lastAdmissionDate: { type: Date },
   lastAdmissionTypeLocation: { type: String, trim: true },

@@ -90,6 +90,55 @@ const PatientProfile = () => {
         // Allow numbers, spaces, plus signs, hyphens, and parentheses in phone numbers
         const phoneRegex = /^[0-9\s\+\-\(\)]+$/;
 
+        // Basic Required Fields
+        if (!formData.firstName?.trim()) {
+            toast.error('First name is required');
+            return false;
+        }
+        if (!formData.lastName?.trim()) {
+            toast.error('Last name is required');
+            return false;
+        }
+        if (!formData.birthday) {
+            toast.error('Birthday is required');
+            return false;
+        }
+        if (!formData.sex) {
+            toast.error('Sex is required');
+            return false;
+        }
+        if (!formData.civilStatus) {
+            toast.error('Civil status is required');
+            return false;
+        }
+        if (!formData.contactNumber?.trim()) {
+            toast.error('Contact number is required');
+            return false;
+        }
+        if (!formData.homeAddress?.trim()) {
+            toast.error('Home address is required');
+            return false;
+        }
+
+        // Conditional Required Fields based on Patient Type
+        if (formData.patientType === 'student' || formData.patientType === 'faculty') {
+            if (!formData.idNumber?.trim()) {
+                toast.error('ID Number is required');
+                return false;
+            }
+        }
+
+        if (formData.patientType === 'student' && !formData.course?.trim()) {
+            toast.error('Course is required for students');
+            return false;
+        }
+
+        if (formData.patientType === 'faculty' && !formData.department?.trim()) {
+            toast.error('Department is required for faculty');
+            return false;
+        }
+
+        // Format validations for character integrity
         if (formData.firstName && !nameRegex.test(formData.firstName.trim())) {
             toast.error('First name contains invalid characters');
             return false;
@@ -102,6 +151,7 @@ const PatientProfile = () => {
             toast.error('Phone number contains invalid characters');
             return false;
         }
+
         return true;
     };
 
@@ -223,7 +273,7 @@ const PatientProfile = () => {
                                     <option value="faculty">Faculty</option>
                                     <option value="personnel">Personnel</option>
                                 </select>
-                            ) : <p className="read-only">{profile.patientType || 'student'}</p>}
+                            ) : <p className="read-only">{profile.patientType ? profile.patientType.charAt(0).toUpperCase() + profile.patientType.slice(1) : 'Student'}</p>}
                         </div>
                         <div className="form-group">
                             <label>ID Number</label>
@@ -362,7 +412,7 @@ const PatientProfile = () => {
                 </div>
                 <div className="section-body">
                     <div className="checkbox-grid">
-                        {['asthma', 'heartProblems', 'seizures', 'pneumonia', 'typhoid', 'tuberculosis', 'chickenpox', 'measles', 'germanMeasles'].map(condition => (
+                        {['asthma', 'heartProblems', 'seizures', 'pneumonia', 'typhoid', 'tuberculosis', 'chickenpox', 'measles', 'germanMeasles', 'other'].map(condition => (
                             <label key={condition} className="checkbox-label">
                                 <input
                                     type="checkbox"
@@ -384,7 +434,7 @@ const PatientProfile = () => {
                 </div>
                 <div className="section-body">
                     <div className="checkbox-grid">
-                        {['BCG', 'HepatitisB', 'Polio', 'DPT', 'MMR', 'Chickenpox', 'AntiRabies', 'TetanusBooster'].map(vaccine => (
+                        {['BCG', 'HepatitisB', 'Polio', 'DPT', 'MMR', 'Chickenpox', 'AntiRabies', 'TetanusBooster', 'other'].map(vaccine => (
                             <label key={vaccine} className="checkbox-label">
                                 <input
                                     type="checkbox"
