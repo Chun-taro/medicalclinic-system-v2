@@ -123,7 +123,7 @@ const Home = () => {
             </section>
 
             {/* Mobile App Section */}
-            <section className="mobile-app-section">
+            <section id="mobile-app" className="mobile-app-section">
                 <div className="mobile-app-content">
                     <div className="mobile-app-text">
                         <div className="badge">Now on Mobile</div>
