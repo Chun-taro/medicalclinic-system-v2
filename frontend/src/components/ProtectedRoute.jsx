@@ -16,20 +16,13 @@ const ProtectedRoute = ({ children, requiredRole }) => {
         return <Navigate to="/login" state={{ from: location }} replace />;
     }
 
-    // Role hierarchy or specific checks
+    // Role hierarchy: Superadmin can access all staff-level routes
     if (requiredRole && role !== requiredRole) {
-        // Basic hierarchy logic from old code
         const isSuperAdmin = role === 'superadmin';
-        const isAdmin = role === 'admin';
-
-        // Example: Superadmin can access admin routes
-        if (requiredRole === 'admin' && isSuperAdmin) {
+        
+        // Allow superadmin to access admin and doctor routes
+        if (isSuperAdmin && (requiredRole === 'admin' || requiredRole === 'doctor')) {
             return children;
-        }
-
-        // Redirect logic from old ProtectedRoute.js
-        if (role === 'doctor' && requiredRole === 'patient') {
-            return <Navigate to="/admin-dashboard" replace />;
         }
 
         return <Navigate to="/unauthorized" replace />;

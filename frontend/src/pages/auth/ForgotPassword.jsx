@@ -116,6 +116,8 @@ const ForgotPassword = () => {
                             <div className="form-group">
                                 <input
                                     type="email"
+                                    id="email"
+                                    name="email"
                                     className="form-control"
                                     placeholder="Enter your email"
                                     value={email}
@@ -129,6 +131,8 @@ const ForgotPassword = () => {
                             <div className="form-group">
                                 <input
                                     type="text"
+                                    id="token"
+                                    name="token"
                                     className="form-control"
                                     placeholder="Verification Code"
                                     value={token}
@@ -142,6 +146,8 @@ const ForgotPassword = () => {
                             <div className="form-group">
                                 <input
                                     type="password"
+                                    id="newPassword"
+                                    name="newPassword"
                                     className="form-control"
                                     placeholder="New Password"
                                     value={newPassword}

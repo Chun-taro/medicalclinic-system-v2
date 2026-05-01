@@ -41,8 +41,12 @@ const Sidebar = ({ isOpen, isCollapsed, toggleSidebar }) => {
         ],
         superadmin: [
             { path: '/superadmin-dashboard', label: 'Dashboard', icon: LayoutDashboard },
-            { path: '/superadmin-messages', label: 'Messages', icon: MessageSquare },
+            { path: '/superadmin-messages', label: 'Admin Messages', icon: MessageSquare },
+            { path: '/admin-appointments', label: 'All Appointments', icon: CalendarDays },
             { path: '/superadmin-users', label: 'Manage Users', icon: Users },
+            { path: '/admin-reports', label: 'System Reports', icon: FileText },
+            { path: '/admin-inventory', label: 'Clinic Inventory', icon: ClipboardList },
+            { path: '/admin-consultation', label: 'Consultations', icon: Stethoscope },
             { path: '/superadmin-doctor-feedback', label: 'Doctor Feedback', icon: MessageSquare },
             { path: '/superadmin-logs', label: 'System Logs', icon: History },
         ],

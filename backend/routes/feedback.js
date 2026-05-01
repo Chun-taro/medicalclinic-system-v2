@@ -8,13 +8,15 @@ const {
   getAppointmentFeedback,
   updateFeedback,
   getFeedbackAnalytics,
-  getAllFeedback
+  getAllFeedback,
+  logFeedbackLinkClick
 } = require('../controllers/feedbackController');
 
 const { auth } = require('../middleware/auth');
 
 // Patient routes
 router.post('/', auth, submitFeedback);
+router.post('/log-click', auth, logFeedbackLinkClick);
 router.get('/appointment/:appointmentId', auth, getAppointmentFeedback);
 router.put('/:feedbackId', auth, updateFeedback);
 

@@ -22,6 +22,11 @@ export default defineConfig({
         ws: true,
         secure: false,
       },
+      '/uploads': {
+        target: 'https://localhost:5000',
+        changeOrigin: true,
+        secure: false,
+      },
     },
   },
   build: {

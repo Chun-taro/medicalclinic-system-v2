@@ -8,7 +8,7 @@ const ChatContext = createContext();
 export const useChat = () => useContext(ChatContext);
 
 export const ChatProvider = ({ children }) => {
-    const { user } = useAuth();
+    const { user, role } = useAuth();
     const [conversations, setConversations] = useState([]);
     const [activeChats, setActiveChats] = useState([]); 
     const [streamClient, setStreamClient] = useState(null);
@@ -62,11 +62,23 @@ export const ChatProvider = ({ children }) => {
 
     const fetchConversations = useCallback(async () => {
         if (!streamClient) return;
+        
         try {
-            const isStaff = user?.role === 'admin' || user?.role === 'superadmin';
+            // Use the role from AuthContext directly if available, fallback to user object
+            const currentRole = role || user?.role;
+            const isStaff = currentRole === 'admin' || currentRole === 'superadmin';
+            
+            // Get current user ID, ensuring it's a string
+            const currentUserId = streamClient.userID || (user?.userId || user?._id)?.toString();
+            
+            if (!currentUserId && !isStaff) {
+                console.warn('ChatContext: No valid user ID found for non-staff query');
+                return;
+            }
+
             const filters = isStaff 
                 ? { type: 'messaging' }
-                : { members: { $in: [streamClient.userID] } };
+                : { members: { $in: [currentUserId] } };
             
             const sort = { last_message_at: -1 };
             const channels = await streamClient.queryChannels(filters, sort, {
@@ -77,7 +89,7 @@ export const ChatProvider = ({ children }) => {
         } catch (err) {
             console.error('Failed to fetch Stream channels', err);
         }
-    }, [streamClient, user]);
+    }, [streamClient, user, role]);
 
     useEffect(() => {
         if (streamClient) {

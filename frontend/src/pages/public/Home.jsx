@@ -17,25 +17,25 @@ const Home = () => {
             {/* Hero Section */}
             <section className="hero-section">
                 <div className="hero-content">
-                    <div className="badge">Welcome to BukSU Clinic</div>
+                    <div className="badge">BukSU Medical Clinic</div>
                     <h1 className="hero-title">
-                        Exceptional Care,<br />
-                        <span className="text-gradient">Right on Campus.</span>
+                        Advanced Healthcare<br />
+                        <span className="text-gradient">For our University.</span>
                     </h1>
                     <p className="hero-subtitle">
-                        Experience a modern, hassle-free approach to your healthcare needs.
-                        Book appointments, access records, and get expert consultation all in one secure platform.
+                        A dedicated platform for Bukidnon State University students and faculty. 
+                        Manage appointments, view medical history, and access health services with ease.
                     </p>
                     <div className="hero-actions">
                         <Link to="/login" className="btn-primary">
-                            Access Patient Portal
+                            Access Portal
                             <ArrowRight size={20} className="icon-right" />
                         </Link>
                         <a href="/app.html" className="btn-secondary" style={{ marginLeft: '12px' }}>
-                            Get Mobile App
+                            Mobile App
                         </a>
                         <a href="#features" className="btn-secondary">
-                            Learn More
+                            Explore Features
                             <ArrowDown size={20} className="icon-right" />
                         </a>
                     </div>
@@ -65,8 +65,8 @@ const Home = () => {
                     <div className="glass-card float-card">
                         <Heart className="float-icon" size={24} />
                         <div className="float-content">
-                            <p className="float-title">Active Health</p>
-                            <p className="float-sub">Status: Optimal</p>
+                            <p className="float-title">University Health</p>
+                            <p className="float-sub">Status: Connected</p>
                         </div>
                     </div>
                 </div>
@@ -75,30 +75,30 @@ const Home = () => {
             {/* Features Section */}
             <section id="features" className="features-section">
                 <div className="section-header">
-                    <h2>Why Choose the BukSU Clinic Portal?</h2>
-                    <p>We've digitized your healthcare journey to provide faster, safer, and completely secure services.</p>
+                    <h2>Clinic Management Simplified</h2>
+                    <p>Designed specifically for the Bukidnon State University community, providing seamless access to campus medical services.</p>
                 </div>
                 <div className="features-grid">
                     <div className="feature-card">
                         <div className="feature-icon-wrapper blue">
                             <Clock size={28} />
                         </div>
-                        <h3>Streamlined Booking</h3>
-                        <p>Schedule consultations with university doctors instantly. Skip the long lines and wait times.</p>
+                        <h3>Smart Scheduling</h3>
+                        <p>Book medical consultations instantly. View doctor availability in real-time and skip the physical queues.</p>
                     </div>
                     <div className="feature-card">
                         <div className="feature-icon-wrapper green">
                             <Shield size={28} />
                         </div>
-                        <h3>Secure Records</h3>
-                        <p>Your medical history is encrypted and stored safely, easily accessible whenever you need it.</p>
+                        <h3>Digital Health Records</h3>
+                        <p>Your medical history is unified and secure. Access prescriptions and lab results anytime, anywhere.</p>
                     </div>
                     <div className="feature-card">
                         <div className="feature-icon-wrapper purple">
                             <Heart size={28} />
                         </div>
-                        <h3>Holistic Care</h3>
-                        <p>From routine checkups to specialized guidance, get comprehensive care designed for you.</p>
+                        <h3>Campus Wellness</h3>
+                        <p>Receive localized health guidance and weather-integrated wellness tips tailored for the Malaybalay campus.</p>
                     </div>
                 </div>
             </section>
@@ -114,9 +114,9 @@ const Home = () => {
                             <a href="/downloads/BukSU-Medical-Clinic-App.apk" className="btn-primary" download>
                                 Download for Android (APK)
                             </a>
-                            <Link to="/app.html" className="btn-secondary">
+                            <a href="/app.html" className="btn-secondary">
                                 Learn More
-                            </Link>
+                            </a>
                         </div>
                     </div>
                     <div className="mobile-app-preview">
@@ -143,7 +143,7 @@ const Home = () => {
                     </div>
                 </div>
                 <div className="footer-bottom">
-                    <p>&copy; {new Date().getFullYear()} BukSU Medical Clinic System. All rights reserved.</p>
+                    <p>&copy; {new Date().getFullYear()} BukSU Medical Clinic. All rights reserved.</p>
                 </div>
             </footer>
         </div>

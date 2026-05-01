@@ -83,6 +83,8 @@ const ResetPassword = () => {
                         <div className="form-group">
                             <input
                                 type="password"
+                                id="newPassword"
+                                name="newPassword"
                                 className="form-control"
                                 placeholder="New Password"
                                 value={newPassword}
@@ -94,6 +96,8 @@ const ResetPassword = () => {
                         <div className="form-group">
                             <input
                                 type="password"
+                                id="confirmPassword"
+                                name="confirmPassword"
                                 className="form-control"
                                 placeholder="Confirm New Password"
                                 value={confirmPassword}

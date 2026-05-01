@@ -95,49 +95,112 @@
 /* When a channel is active, it will naturally cover or be shown by Stream components */
 /* Actually, Stream handles empty state better if we use active channel */
 
-.admin-chat-search {
+/* Search Bar Styles */
+.search-bar {
     margin-top: 1rem;
     position: relative;
+    display: flex;
+    align-items: center;
 }
 
-.admin-chat-search input {
+.search-icon {
+    position: absolute;
+    left: 12px;
+    color: var(--text-muted);
+    pointer-events: none;
+}
+
+.search-bar input {
     width: 100%;
-    padding: 0.5rem 0.75rem;
+    padding: 0.6rem 1rem 0.6rem 2.5rem;
     border: 1px solid var(--border);
     border-radius: var(--radius-md);
     background: var(--bg-body);
-    font-size: 0.85rem;
+    font-size: 0.9rem;
+    color: var(--text-main);
+    transition: border-color 0.2s, box-shadow 0.2s;
 }
 
-.admin-search-results {
-    position: absolute;
-    top: 100%;
-    left: 0;
-    right: 0;
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-md);
-    box-shadow: var(--shadow-md);
-    z-index: 10;
-    max-height: 200px;
+.search-bar input:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px var(--primary-light);
+}
+
+.sidebar-scroll-area {
+    flex: 1;
     overflow-y: auto;
-    margin-top: 0.25rem;
+}
+
+/* Search Results Overlay */
+.search-results-overlay {
+    padding: 1rem;
+}
+
+.section-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.75rem;
+}
+
+.loading-text, .no-results {
+    text-align: center;
+    padding: 2rem 1rem;
+    color: var(--text-muted);
+    font-size: 0.875rem;
 }
 
 .search-result-item {
-    padding: 0.75rem 1rem;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0.75rem;
+    border-radius: var(--radius-md);
     cursor: pointer;
-    font-size: 0.85rem;
-    border-bottom: 1px solid var(--border);
-}
-
-.search-result-item:last-child {
-    border-bottom: none;
+    transition: background-color 0.2s;
 }
 
 .search-result-item:hover {
+    background-color: var(--bg-body);
+}
+
+.result-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
     background-color: var(--primary-light);
     color: var(--primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.result-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.result-info {
+    min-width: 0;
+}
+
+.result-name {
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: var(--text-main);
+}
+
+.result-role {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    text-transform: capitalize;
 }
 
 /* Custom Header & Preview Styles */

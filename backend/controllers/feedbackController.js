@@ -325,31 +325,16 @@ const getFeedbackAnalytics = async (req, res) => {
       }
     ]);
 
-    // Process rating distribution
-    let distribution = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
-    if (ratingStats.length > 0) {
-      ratingStats[0].ratingDistribution.forEach((rating) => {
-        distribution[rating]++;
-      });
-    }
-
-    // Format top recipients response
-    const formattedTopRecipients = topRecipients.map(item => ({
-      recipientId: item._id,
-      count: item.count,
-      avgRating: Math.round(item.avgRating * 10) / 10,
-      name: item.recipientInfo.length > 0
-        ? `${item.recipientInfo[0].firstName} ${item.recipientInfo[0].lastName}`
-        : 'Unknown'
-    }));
+    // Calculate pending feedback (completed appointments without feedback)
+    const totalCompletedAppointments = await Appointment.countDocuments({ status: 'completed' });
+    const pendingFeedback = Math.max(0, totalCompletedAppointments - totalFeedback);
 
     res.status(200).json({
       message: 'Feedback analytics retrieved successfully',
       analytics: {
         totalFeedback,
-        averageRating: ratingStats.length > 0 ? Math.round(ratingStats[0].averageRating * 10) / 10 : 0,
-        ratingDistribution: distribution,
-        topRecipients: formattedTopRecipients,
+        pendingFeedback,
+        totalCompletedAppointments,
         feedbackTrend,
         roleDistribution
       }
@@ -395,6 +380,57 @@ const getAllFeedback = async (req, res) => {
   }
 };
 
+const logFeedbackLinkClick = async (req, res) => {
+  try {
+    const { appointmentId } = req.body;
+    if (!appointmentId) return res.status(400).json({ error: 'appointmentId is required' });
+
+    // Verify appointment exists
+    const appointment = await Appointment.findById(appointmentId);
+    if (!appointment) return res.status(404).json({ error: 'Appointment not found' });
+
+    // Check if feedback already exists for this appointment
+    const existingFeedback = await Feedback.findOne({ appointmentId });
+    if (existingFeedback) {
+      return res.status(200).json({ message: 'Click already logged', feedback: existingFeedback });
+    }
+
+    // Create a log entry as a feedback record
+    const feedback = new Feedback({
+      appointmentId,
+      patientId: req.user.userId,
+      doctorId: appointment.doctorId,
+      rating: 5, // Default rating for the click log
+      comment: 'Patient clicked the external Google Form feedback link.'
+    });
+
+    await feedback.save();
+
+    // Log the activity
+    await logActivity({
+      userId: req.user.userId,
+      userName: `${req.user.firstName || ''} ${req.user.lastName || ''}`.trim(),
+      userRole: req.user.role,
+      action: 'feedback_link_click',
+      entityType: 'feedback',
+      entityId: feedback._id,
+      details: {
+        appointmentId,
+        patientName: `${req.user.firstName || ''} ${req.user.lastName || ''}`.trim(),
+        googleFormLink: 'https://docs.google.com/forms/d/1vS0BbvO-L5Pce9FD2aTis1GSOJz5Xm2AMtI4dhXFlHY/viewform'
+      }
+    });
+
+    res.status(201).json({
+      message: 'Click logged successfully',
+      feedback
+    });
+  } catch (err) {
+    console.error('Log click error:', err.message);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
 module.exports = {
   submitFeedback,
   getDoctorFeedback,
@@ -402,5 +438,6 @@ module.exports = {
   getAppointmentFeedback,
   updateFeedback,
   getFeedbackAnalytics,
-  getAllFeedback
+  getAllFeedback,
+  logFeedbackLinkClick
 };

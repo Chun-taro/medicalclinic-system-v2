@@ -154,27 +154,59 @@
         .mockup-screen {
             width: 100%;
             height: 100%;
-            background: linear-gradient(135deg, #2563EB, #10B981);
+            background: #fff;
             border-radius: 30px;
             overflow: hidden;
             display: flex;
             flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            color: white;
-            text-align: center;
+            position: relative;
         }
 
-        .mockup-screen i {
-            font-size: 80px;
-            margin-bottom: 20px;
+        .mockup-screen img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* App Showcase Section */
+        .app-showcase {
+            padding: 100px 0;
+            background-color: var(--bg-body);
+        }
+
+        .showcase-grid {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            flex-wrap: wrap;
+        }
+
+        .showcase-item {
+            width: 280px;
+            border-radius: 32px;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            border: 6px solid #fff;
+            transition: transform 0.3s ease;
+        }
+
+        .showcase-item:hover {
+            transform: scale(1.05);
+        }
+
+        .showcase-item img {
+            width: 100%;
+            display: block;
         }
 
         /* Features Section */
         .features {
             background-color: white;
             padding: 100px 0;
-            border-radius: 60px 60px 0 0;
+            border-radius: 60px 60px 60px 60px;
+            margin-top: -40px;
+            position: relative;
+            z-index: 10;
         }
 
         .section-header {
@@ -378,6 +410,12 @@
                 width: 100%;
                 max-width: 240px;
             }
+            .showcase-grid {
+                gap: 20px;
+            }
+            .showcase-item {
+                width: 200px;
+            }
         }
     </style>
 </head>
@@ -411,9 +449,24 @@
         <div class="hero-image">
             <div class="mockup-container">
                 <div class="mockup-screen">
-                    <i class="fas fa-user-md"></i>
-                    <h2 style="font-size: 24px; font-weight: 800;">BukSU Medical Clinic App</h2>
-                    <p style="font-size: 14px; opacity: 0.8; margin-top: 8px;">Connecting you to care</p>
+                    <img src="/downloads/c58b54ae-cfa4-4da9-94b1-5671e25211bb.jpg" alt="App Dashboard">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="app-showcase">
+        <div class="container">
+            <div class="section-header">
+                <h2>App Interface</h2>
+                <p style="color: var(--text-muted);">Modern, intuitive, and easy to use</p>
+            </div>
+            <div class="showcase-grid">
+                <div class="showcase-item">
+                    <img src="/downloads/6bbe9e4a-5633-4915-be20-b90c5bf1d810.jpg" alt="Login Screen">
+                </div>
+                <div class="showcase-item">
+                    <img src="/downloads/c58b54ae-cfa4-4da9-94b1-5671e25211bb.jpg" alt="Dashboard">
                 </div>
             </div>
         </div>
@@ -422,7 +475,7 @@
     <section class="features">
         <div class="container">
             <div class="section-header">
-                <h2>App Features</h2>
+                <h2>Key Features</h2>
                 <p style="color: var(--text-muted);">Designed for modern healthcare management</p>
             </div>
             <div class="features-grid">

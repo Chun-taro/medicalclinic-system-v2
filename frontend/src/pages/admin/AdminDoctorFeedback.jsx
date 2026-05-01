@@ -12,9 +12,8 @@ const AdminDoctorFeedback = () => {
     // Analytics
     const [analytics, setAnalytics] = useState({
         totalFeedback: 0,
-        averageRating: 0,
-        ratingDistribution: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
-        topRecipients: []
+        pendingFeedback: 0,
+        totalCompletedAppointments: 0
     });
 
     useEffect(() => {
@@ -50,88 +49,64 @@ const AdminDoctorFeedback = () => {
         }
     };
 
-
-    const renderStars = (rating) => {
-        return [...Array(5)].map((_, i) => (
-            <Star
-                key={i}
-                size={14}
-                className={i < rating ? "star-filled" : "star-empty"}
-                fill={i < rating ? "#eab308" : "none"}
-            />
-        ));
-    };
-
     if (loading) return <div className="loading-spinner-container"><div className="loading-spinner"></div></div>;
 
     return (
         <div className="admin-feedback-page">
             <div className="page-header">
                 <h1>Feedback Management</h1>
-                <p>Monitor staff performance and patient reviews.</p>
+                <p>Track patient participation for official feedback.</p>
             </div>
 
             {/* Analytics Dashboard */}
-            <div className="analytics-grid">
+            <div className="analytics-grid feedback-participation">
                 <div className="metric-card">
-                    <div className="metric-icon primary"><MessageSquare size={24} /></div>
+                    <div className="metric-icon success"><TrendingUp size={24} /></div>
                     <div className="metric-info">
                         <h3>{analytics.totalFeedback}</h3>
-                        <p>Total Reviews</p>
+                        <p>Completed (Clicked)</p>
                     </div>
                 </div>
                 <div className="metric-card">
-                    <div className="metric-icon success"><Star size={24} /></div>
+                    <div className="metric-icon warning"><RefreshCw size={24} /></div>
                     <div className="metric-info">
-                        <h3>{analytics.averageRating}</h3>
-                        <p>Global Average</p>
+                        <h3>{analytics.pendingFeedback}</h3>
+                        <p>Pending / Ignored</p>
                     </div>
                 </div>
-                <div className="metric-card distribution-card">
-                    <h4>Rating Distribution</h4>
-                    <div className="distribution-bars">
-                        {[5, 4, 3, 2, 1].map(star => {
-                            const count = analytics.ratingDistribution[star] || 0;
-                            const max = Math.max(...Object.values(analytics.ratingDistribution), 1);
-                            const percent = (count / max) * 100;
-                            return (
-                                <div key={star} className="dist-row">
-                                    <span className="star-label">{star} <Star size={10} fill="currentColor" /></span>
-                                    <div className="bar-track">
-                                        <div className="bar-fill" style={{ width: `${percent}%` }}></div>
-                                    </div>
-                                    <span className="count-label">{count}</span>
-                                </div>
-                            );
-                        })}
+                <div className="metric-card">
+                    <div className="metric-icon primary"><Users size={24} /></div>
+                    <div className="metric-info">
+                        <h3>{analytics.totalCompletedAppointments}</h3>
+                        <p>Eligible Appointments</p>
                     </div>
                 </div>
             </div>
 
             <div className="staff-selector-section">
                 <div className="selector-header">
-                    <h3><Users size={20} /> Latest System Feedback</h3>
+                    <h3><MessageSquare size={20} /> Latest Participation Logs</h3>
                 </div>
                 {feedbackLoading ? (
-                    <div className="loading-skeleton">Loading feedback...</div>
+                    <div className="loading-skeleton">Loading logs...</div>
                 ) : feedbacks.length === 0 ? (
-                    <div className="no-data-msg">No feedback found.</div>
+                    <div className="no-data-msg">No participation logs found.</div>
                 ) : (
                     <div className="reviews-list">
                         {feedbacks.map(fb => (
-                            <div key={fb._id} className="review-card">
+                            <div key={fb._id} className="review-card feedback-log-item">
                                 <div className="review-header">
                                     <div className="reviewer-info">
-                                        <div className="avatar">{fb.patientId?.firstName ? fb.patientId.firstName[0] : 'A'}</div>
-                                        <div>
+                                        <div className="avatar">{fb.patientId?.firstName ? fb.patientId.firstName[0] : 'P'}</div>
+                                        <div className="log-detail">
                                             <span className="name">
-                                                {fb.patientId ? `${fb.patientId.firstName} ${fb.patientId.lastName}` : 'Anonymous'}
+                                                {fb.patientId ? `${fb.patientId.firstName} ${fb.patientId.lastName}` : 'Anonymous Patient'}
                                             </span>
-                                            <span className="date">{new Date(fb.createdAt).toLocaleDateString()}</span>
+                                            <span className="date">Clicked on {new Date(fb.createdAt).toLocaleDateString()}</span>
                                         </div>
                                     </div>
-                                    <div className="rating">
-                                        {renderStars(fb.rating)}
+                                    <div className="status-label">
+                                        Confirmed Click
                                     </div>
                                 </div>
                                 <p className="review-text">"{fb.comment}"</p>

@@ -43,7 +43,14 @@ const requireRole = (...roles) => {
       return res.status(403).json({ error: 'Access denied. No role specified.' });
     }
 
-    if (!roles.includes(req.user.role)) {
+    const userRole = req.user.role;
+
+    // Superadmin hierarchy: automatically allow staff-level access
+    if (userRole === 'superadmin' && (roles.includes('admin') || roles.includes('doctor'))) {
+      return next();
+    }
+
+    if (!roles.includes(userRole)) {
       return res.status(403).json({ error: 'Access denied. Insufficient permissions.' });
     }
 

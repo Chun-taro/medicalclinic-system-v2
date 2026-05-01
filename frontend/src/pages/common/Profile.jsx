@@ -129,23 +129,29 @@ const Profile = () => {
                     <form onSubmit={handleUpdate} className="edit-form">
                         <div className="form-grid">
                             <div className="form-group">
-                                <label>First Name</label>
+                                <label htmlFor="firstName">First Name</label>
                                 <input
+                                    id="firstName"
+                                    name="firstName"
                                     value={formData.firstName}
                                     onChange={e => setFormData({ ...formData, firstName: e.target.value })}
                                     required
                                 />
                             </div>
                             <div className="form-group">
-                                <label>Middle Name</label>
+                                <label htmlFor="middleName">Middle Name</label>
                                 <input
+                                    id="middleName"
+                                    name="middleName"
                                     value={formData.middleName}
                                     onChange={e => setFormData({ ...formData, middleName: e.target.value })}
                                 />
                             </div>
                             <div className="form-group">
-                                <label>Last Name</label>
+                                <label htmlFor="lastName">Last Name</label>
                                 <input
+                                    id="lastName"
+                                    name="lastName"
                                     value={formData.lastName}
                                     onChange={e => setFormData({ ...formData, lastName: e.target.value })}
                                     required

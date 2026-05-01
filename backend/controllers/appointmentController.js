@@ -576,6 +576,7 @@ const saveConsultation = async (req, res) => {
           entityId: appointment._id,
           details: {
             patientName: `${patient?.firstName || appointment.firstName || ''} ${patient?.lastName || appointment.lastName || ''}`.trim(),
+            doctorName: req.user.name || `${req.user.firstName || ''} ${req.user.lastName || ''}`.trim(),
             diagnosis: diagnosis,
             medicinesCount: medicinesPrescribed?.length || 0
           }

@@ -144,6 +144,8 @@ const Login = () => {
                         <div className="form-group">
                             <input
                                 type="text"
+                                id="email"
+                                name="email"
                                 className="form-control"
                                 placeholder="Email or phone number"
                                 value={email}
@@ -155,6 +157,8 @@ const Login = () => {
                         <div className="form-group">
                             <input
                                 type="password"
+                                id="password"
+                                name="password"
                                 className="form-control"
                                 placeholder="Password"
                                 value={password}

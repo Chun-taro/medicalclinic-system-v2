@@ -109,7 +109,8 @@ const SystemLogs = () => {
             case 'email_verified':
                 return `Email address verified${friendlyTarget}.`;
             case 'approve_appointment':
-                return `Approved an appointment for ${details?.patientName || 'a patient'} with Dr. ${details?.doctorName || 'doctor'} on ${new Date(details?.appointmentDate || Date.now()).toLocaleDateString()}.`;
+                const doctorInfo = details?.doctorName ? ` with Dr. ${details.doctorName}` : '';
+                return `Approved an appointment for ${details?.patientName || 'a patient'}${doctorInfo} on ${new Date(details?.appointmentDate || Date.now()).toLocaleDateString()}.`;
             case 'delete_appointment':
             case 'cancel_appointment':
                 return `Cancelled or deleted an appointment${friendlyTarget}.`;

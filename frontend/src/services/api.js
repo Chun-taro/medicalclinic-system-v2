@@ -40,16 +40,9 @@ export const getImageUrl = (path) => {
     if (!path) return '';
     if (path.startsWith('http')) return path;
 
-    // In development with Vite proxy, we might need the full backend URL for images
-    // if the proxy doesn't handle /uploads or /images correctly.
-    // However, if VITE_API_URL is /api, we can assume same origin or handled by proxy.
+    // In development with Vite proxy, we use the relative path so the proxy can handle it.
     const baseUrl = import.meta.env.VITE_API_URL || '';
     const serverUrl = baseUrl.replace('/api', '');
-
-    // For local development where frontend is 5173 and backend is 5000
-    if (window.location.hostname === 'localhost' && !serverUrl.startsWith('http')) {
-        return `http://localhost:5000${path}`;
-    }
 
     return `${serverUrl}${path}`;
 };

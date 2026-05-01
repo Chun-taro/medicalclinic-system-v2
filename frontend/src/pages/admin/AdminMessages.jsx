@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
     Chat, 
     Channel, 
@@ -9,9 +9,11 @@ import {
     MessageInput, 
     Thread 
 } from 'stream-chat-react';
+import { Search } from 'lucide-react';
 import { useChat } from '../../context/ChatContext';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
+import chatService from '../../services/chatService';
 import 'stream-chat-react/dist/css/v2/index.css';
 import './AdminMessages.css';
 import { useChatContext } from 'stream-chat-react';
@@ -84,7 +86,33 @@ const CustomChannelPreview = (props) => {
 const AdminMessagesContent = () => {
     const { channel: activeChannel, setActiveChannel, client } = useChatContext();
     const { user: currentUser } = useAuth();
+    const { startChatWithUser, conversations } = useChat();
     const isStationAdmin = currentUser?.role === 'admin' || currentUser?.role === 'superadmin';
+
+    const [searchQuery, setSearchQuery] = useState('');
+    const [searchResults, setSearchResults] = useState([]);
+    const [isSearching, setIsSearching] = useState(false);
+
+    // Search logic
+    useEffect(() => {
+        const delayDebounceFn = setTimeout(async () => {
+            if (searchQuery.length >= 2) {
+                setIsSearching(true);
+                try {
+                    const results = await chatService.searchUsers(searchQuery);
+                    setSearchResults(results);
+                } catch (err) {
+                    console.error('Search failed', err);
+                } finally {
+                    setIsSearching(false);
+                }
+            } else {
+                setSearchResults([]);
+            }
+        }, 300);
+
+        return () => clearTimeout(delayDebounceFn);
+    }, [searchQuery]);
 
     // Broaden filters for admins to see all messaging channels
     const filters = isStationAdmin 
@@ -96,28 +124,70 @@ const AdminMessagesContent = () => {
             <div className="messages-sidebar">
                 <div className="sidebar-header">
                     <h2>Messages</h2>
+                    <div className="search-bar">
+                        <Search size={18} className="search-icon" />
+                        <input 
+                            type="text" 
+                            placeholder="Search patients..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                        />
+                    </div>
                 </div>
-                <ChannelList 
-                    filters={filters} 
-                    sort={{ last_message_at: -1 }}
-                    options={{ state: true, presence: true, limit: 10 }}
-                    Preview={CustomChannelPreview}
-                    onSelect={async (channel) => {
-                        console.log('AdminMessages: onSelect', channel.id);
-                        
-                        // If admin is not a member, add them so they can "jump in"
-                        if (isStationAdmin && !channel.state.members[client.userID]) {
-                            try {
-                                console.log('Admin joining channel:', channel.id);
-                                await channel.addMembers([client.userID]);
-                            } catch (err) {
-                                console.error('Failed to join channel:', err);
-                            }
-                        }
-                        
-                        setActiveChannel(channel);
-                    }}
-                />
+
+                <div className="sidebar-scroll-area">
+                    {searchQuery.length >= 2 ? (
+                        <div className="search-results-overlay">
+                            <p className="section-label">Search Results</p>
+                            {isSearching ? (
+                                <p className="loading-text">Searching...</p>
+                            ) : searchResults.length === 0 ? (
+                                <p className="no-results">No patients found</p>
+                            ) : (
+                                searchResults.map(user => (
+                                    <div 
+                                        key={user._id || user.id} 
+                                        className="search-result-item"
+                                        onClick={() => {
+                                            startChatWithUser(user);
+                                            setSearchQuery('');
+                                        }}
+                                    >
+                                        <div className="result-avatar">
+                                            {user.avatar ? <img src={user.avatar} alt="" /> : (user.firstName?.[0] || 'P')}
+                                        </div>
+                                        <div className="result-info">
+                                            <div className="result-name">{user.firstName} {user.lastName}</div>
+                                            <div className="result-role">{user.role}</div>
+                                        </div>
+                                    </div>
+                                ))
+                            )}
+                        </div>
+                    ) : (
+                        <ChannelList 
+                            filters={filters} 
+                            sort={{ last_message_at: -1 }}
+                            options={{ state: true, presence: true, limit: 10 }}
+                            Preview={CustomChannelPreview}
+                            onSelect={async (channel) => {
+                                console.log('AdminMessages: onSelect', channel.id);
+                                
+                                // If admin is not a member, add them so they can "jump in"
+                                if (isStationAdmin && !channel.state.members[client.userID]) {
+                                    try {
+                                        console.log('Admin joining channel:', channel.id);
+                                        await channel.addMembers([client.userID]);
+                                    } catch (err) {
+                                        console.error('Failed to join channel:', err);
+                                    }
+                                }
+                                
+                                setActiveChannel(channel);
+                            }}
+                        />
+                    )}
+                </div>
             </div>
             <div className="messages-content">
                 <Channel>
