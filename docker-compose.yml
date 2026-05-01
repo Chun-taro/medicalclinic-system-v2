@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "5000:5000"
+    env_file:
+      - ./backend/.env
+    restart: always
+    # You can also define environment variables directly here if needed
+    # environment:
+    #   - MONGO_URI=${MONGO_URI}
+    #   - PORT=5000
+    #   - NODE_ENV=production
