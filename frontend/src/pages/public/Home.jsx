@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useTheme } from '../../context/ThemeContext';
+import logo from '../../assets/logo.png';
 import { Shield, Clock, Heart, ArrowRight, ArrowDown } from 'lucide-react';
 import './Home.css';
 
@@ -14,6 +15,24 @@ const Home = () => {
 
     return (
         <div className="home-container">
+            {/* Navigation Header */}
+            <header className="home-header">
+                <nav className="nav-content">
+                    <Link to="/" className="nav-brand">
+                        <img src={logo} alt="BukSU Clinic Logo" className="nav-logo" />
+                        <span>BukSU Medical Clinic</span>
+                    </Link>
+                    
+                    <div className="nav-links">
+                        <a href="#features" className="nav-link">Features</a>
+                        <a href="#mobile-app" className="nav-link">Mobile App</a>
+                        <Link to="/login" className="nav-portal-btn">
+                            Login to Portal
+                        </Link>
+                    </div>
+                </nav>
+            </header>
+
             {/* Hero Section */}
             <section className="hero-section">
                 <div className="hero-content">
