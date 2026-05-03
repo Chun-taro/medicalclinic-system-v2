@@ -58,20 +58,15 @@ const createMedicine = async (req, res) => {
     await newMedicine.save();
 
     // Log the activity
-    await logActivity(
-      req.user.userId,
-      `${req.user.firstName} ${req.user.lastName}`,
-      req.user.role,
-      'create_medicine',
-      'medicine',
-      newMedicine._id,
-      {
-        medicineName: name,
-        quantity: quantityInStock,
-        unit,
-        expiryDate
-      }
-    );
+    await logActivity({
+      userId: req.user.userId,
+      userName: `${req.user.firstName} ${req.user.lastName}`,
+      userRole: req.user.role,
+      action: 'create_medicine',
+      entityType: 'medicine',
+      entityId: newMedicine._id,
+      details: { medicineName: name, quantity: quantityInStock, unit, expiryDate }
+    });
 
     res.status(201).json(newMedicine);
   } catch (err) {
@@ -134,20 +129,15 @@ const dispenseCapsules = async (req, res) => {
     await updatedMed.save();
 
     // Log the activity
-    await logActivity(
-      req.user?.userId || req.user?.id,
-      req.user?.name || `${req.user?.firstName || ''} ${req.user?.lastName || ''}`.trim() || 'Admin',
-      req.user?.role || 'admin',
-      'dispense_medicine',
-      'medicine',
-      updatedMed._id,
-      {
-        medicineName: updatedMed.name,
-        quantity,
-        appointmentId,
-        recipientName
-      }
-    );
+    await logActivity({
+      userId: req.user?.userId || req.user?.id,
+      userName: req.user?.name || `${req.user?.firstName || ''} ${req.user?.lastName || ''}`.trim() || 'Admin',
+      userRole: req.user?.role || 'admin',
+      action: 'dispense_medicine',
+      entityType: 'medicine',
+      entityId: updatedMed._id,
+      details: { medicineName: updatedMed.name, quantity, appointmentId, recipientName }
+    });
 
     res.json({ message: 'Medicine dispensed', medicine: updatedMed, version: updatedMed.version });
   } catch (err) {
@@ -165,8 +155,6 @@ const deductMedicines = async (req, res) => {
 
     const Appointment = mongoose.model('Appointment');
     const userId = req.user?.userId || req.user?.id || req.body.userId;
-    
-    console.log(`[Deduction] User ${userId} starting deduction for ${prescribed.length} items`);
 
     const results = [];
 
@@ -189,7 +177,6 @@ const deductMedicines = async (req, res) => {
         }
       }
 
-      console.log(`[Deduction] Processing: ${item.name || item.medicineId}, Qty: ${qty}, Patient: ${patientName}`);
 
       // 2. Atomic update: Deduct stock and Push history in ONE operation
       try {
@@ -224,20 +211,15 @@ const deductMedicines = async (req, res) => {
         }
 
         // 4. Log Activity (Fire and forget)
-        logActivity(
+        logActivity({
           userId,
-          req.user?.name || 'Admin',
-          req.user?.role || 'admin',
-          'dispense_medicine',
-          'medicine',
-          updatedMed._id,
-          {
-            medicineName: updatedMed.name,
-            quantity: qty,
-            source: 'consultation',
-            patientName
-          }
-        ).catch(e => console.error('[Deduction] LogActivity error:', e.message));
+          userName: req.user?.name || `${req.user?.firstName || ''} ${req.user?.lastName || ''}`.trim() || 'Admin',
+          userRole: req.user?.role || 'admin',
+          action: 'dispense_medicine',
+          entityType: 'medicine',
+          entityId: updatedMed._id,
+          details: { medicineName: updatedMed.name, quantity: qty, source: 'consultation', patientName }
+        }).catch(e => console.error('[Deduction] LogActivity error:', e.message));
 
         results.push({ medicineId: item.medicineId, newStock: updatedMed.quantityInStock });
       } catch (dbErr) {

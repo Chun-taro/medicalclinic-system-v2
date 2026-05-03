@@ -45,7 +45,7 @@ const Header = ({ toggleSidebar }) => {
     const [unreadCount, setUnreadCount] = useState(0);
     const [loading, setLoading] = useState(false);
 
-    // Fetch notifications
+    // Fetch notifications from REST (initial load + periodic fallback)
     const fetchNotifications = async () => {
         try {
             setLoading(true);
@@ -60,10 +60,21 @@ const Header = ({ toggleSidebar }) => {
     };
 
     useEffect(() => {
-        if (user) {
-            fetchNotifications();
-            // Optional: Set up polling or socket here
-            const interval = setInterval(fetchNotifications, 30000); // Poll every 30s
+        if (!user) return;
+
+        fetchNotifications();
+
+        // Real-time push via Socket.IO
+        if (window.socket) {
+            const handleNewNotification = (notif) => {
+                setNotifications(prev => [notif, ...prev]);
+                setUnreadCount(prev => prev + 1);
+            };
+            window.socket.on('new_notification', handleNewNotification);
+            return () => window.socket.off('new_notification', handleNewNotification);
+        } else {
+            // Fallback: poll every 5 minutes if socket not available
+            const interval = setInterval(fetchNotifications, 5 * 60 * 1000);
             return () => clearInterval(interval);
         }
     }, [user]);

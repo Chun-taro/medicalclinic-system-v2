@@ -6,6 +6,7 @@ import {
     Lock, AlertTriangle, Clock, RefreshCw, FileText
 } from 'lucide-react';
 import { printMedicalCertificate } from '../../utils/printCertificate';
+import showConfirm from '../../utils/showConfirm';
 import './AllAppointments.css';
 
 const AllAppointments = () => {
@@ -112,7 +113,12 @@ const AllAppointments = () => {
     };
 
     const handleDelete = async (id) => {
-        if (!window.confirm('Are you sure you want to delete this appointment?')) return;
+        const confirmed = await showConfirm('Delete this appointment permanently?', {
+            confirmText: 'Delete',
+            cancelText: 'Cancel',
+            type: 'danger'
+        });
+        if (!confirmed) return;
         try {
             await api.delete(`/appointments/${id}`);
             setAppointments(prev => prev.filter(a => a._id !== id));

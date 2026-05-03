@@ -8,6 +8,9 @@
     "build-frontend": "cd frontend && npm run build",
     "build": "npm run install-backend && npm run install-frontend && npm run build-frontend",
     "start": "cd backend && npm start",
-    "dev": "npm run dev --prefix backend & npm run dev --prefix frontend"
+    "dev": "concurrently \"npm run dev --prefix backend\" \"npm run dev --prefix frontend\""
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1"
   }
 }

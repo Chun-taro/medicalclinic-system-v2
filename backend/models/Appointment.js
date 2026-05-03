@@ -145,4 +145,11 @@ const appointmentSchema = new mongoose.Schema({
   editedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
 }, { timestamps: true });
 
+
+// Indexes for common query patterns
+appointmentSchema.index({ patientId: 1, status: 1 });
+appointmentSchema.index({ appointmentDate: -1 });
+appointmentSchema.index({ status: 1, appointmentDate: -1 });
+appointmentSchema.index({ doctorId: 1, status: 1 });
+
 module.exports = mongoose.model('Appointment', appointmentSchema);

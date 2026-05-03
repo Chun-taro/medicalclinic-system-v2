@@ -475,8 +475,6 @@ const completeConsultation = async (req, res) => {
     })();
 
     res.json(appointment);
-    // Debug: log updated appointment to verify stored fields
-    console.log('Appointment marked completed:', appointment);
   } catch (err) {
     console.error(' Completion error:', err.message);
     res.status(500).json({ error: 'Internal server error' });
@@ -613,9 +611,6 @@ const saveConsultation = async (req, res) => {
       }
     })();
 
-    // Debug: log saved consultation to verify fields
-    console.log('Consultation saved with vitals:', appointment);
-
     res.json({ message: 'Consultation saved', appointment });
   } catch (err) {
     console.error('Save consultation error:', err);
@@ -677,44 +672,113 @@ const deleteAppointment = async (req, res) => {
   }
 };
 
-//  Generate reports
+//  Generate reports — uses aggregation pipeline (no full collection scan)
 const generateReports = async (req, res) => {
   try {
-    const appointments = await Appointment.find().populate('patientId', 'course department').lean();
+    const { startDate, endDate } = req.query;
 
-    const totalAppointments = appointments.length;
-    const approved = appointments.filter(app => app.status === 'approved').length;
-    const rejected = appointments.filter(app => app.status === 'rejected').length;
-    const completed = appointments.filter(app => app.status === 'completed').length;
+    // Build optional date range filter
+    const dateMatch = {};
+    if (startDate || endDate) {
+      dateMatch.appointmentDate = {};
+      if (startDate) dateMatch.appointmentDate.$gte = new Date(startDate);
+      if (endDate) {
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999);
+        dateMatch.appointmentDate.$lte = end;
+      }
+    }
 
-    const scheduled = appointments.filter(app => app.typeOfVisit === 'scheduled').length;
-    const walkIn = appointments.filter(app => app.typeOfVisit === 'walk-in').length;
+    const [result] = await Appointment.aggregate([
+      { $match: dateMatch },
+      {
+        $facet: {
+          // Status counts
+          statusCounts: [
+            { $group: { _id: '$status', count: { $sum: 1 } } }
+          ],
+          // Visit type counts
+          visitTypeCounts: [
+            { $group: { _id: '$typeOfVisit', count: { $sum: 1 } } }
+          ],
+          // Total
+          total: [{ $count: 'count' }],
+          // Referral count
+          referrals: [
+            { $match: { referredToPhysician: true } },
+            { $count: 'count' }
+          ],
+          // Top diagnoses (top 5)
+          topDiagnoses: [
+            { $match: { diagnosis: { $ne: null, $ne: '' } } },
+            { $group: { _id: '$diagnosis', count: { $sum: 1 } } },
+            { $sort: { count: -1 } },
+            { $limit: 5 }
+          ],
+          // Top complaints/purposes (top 5)
+          topComplaints: [
+            { $match: { purpose: { $ne: null, $ne: '' } } },
+            { $group: { _id: '$purpose', count: { $sum: 1 } } },
+            { $sort: { count: -1 } },
+            { $limit: 5 }
+          ]
+        }
+      }
+    ]);
 
-    const topDiagnosis = findMostCommon(appointments.map(app => app.diagnosis));
-    const topComplaint = findMostCommon(appointments.map(app => app.purpose));
-    const referralRate = Math.round(
-      (appointments.filter(app => app.referredToPhysician).length / (totalAppointments || 1)) * 100
-    );
+    // Course/department stats — needs a lookup join, run separately with lean
+    const courseAgg = await Appointment.aggregate([
+      { $match: dateMatch },
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'patientId',
+          foreignField: '_id',
+          as: 'patient'
+        }
+      },
+      { $unwind: { path: '$patient', preserveNullAndEmptyArrays: true } },
+      {
+        $group: {
+          _id: { $ifNull: ['$patient.course', { $ifNull: ['$patient.department', 'Other'] }] },
+          count: { $sum: 1 }
+        }
+      },
+      { $sort: { count: -1 } },
+      { $limit: 20 }
+    ]);
 
-    // Group by course/department
+    // Parse aggregation results
+    const totalAppointments = result.total[0]?.count || 0;
+    const referralCount = result.referrals[0]?.count || 0;
+    const referralRate = Math.round((referralCount / (totalAppointments || 1)) * 100);
+
+    const statusMap = {};
+    result.statusCounts.forEach(s => { statusMap[s._id] = s.count; });
+
+    const visitMap = {};
+    result.visitTypeCounts.forEach(v => { visitMap[v._id] = v.count; });
+
     const courseStats = {};
-    appointments.forEach(app => {
-      let classification = app.patientId?.course || app.patientId?.department || 'Other';
-      // Sometimes courses are long, you could trim them if necessary, but this keeps full name
-      courseStats[classification] = (courseStats[classification] || 0) + 1;
-    });
+    courseAgg.forEach(c => { courseStats[c._id || 'Other'] = c.count; });
 
     res.json({
       totalAppointments,
-      approved,
-      rejected,
-      completed,
-      scheduled,
-      walkIn,
-      topDiagnosis,
-      topComplaint,
+      approved: statusMap['approved'] || 0,
+      rejected: statusMap['rejected'] || 0,
+      completed: statusMap['completed'] || 0,
+      pending: statusMap['pending'] || 0,
+      inConsultation: statusMap['in-consultation'] || 0,
+      scheduled: visitMap['scheduled'] || 0,
+      walkIn: visitMap['walk-in'] || 0,
+      topDiagnosis: result.topDiagnoses[0]?._id || 'N/A',
+      topDiagnoses: result.topDiagnoses.map(d => ({ name: d._id, count: d.count })),
+      topComplaint: result.topComplaints[0]?._id || 'N/A',
+      topComplaints: result.topComplaints.map(c => ({ name: c._id, count: c.count })),
       referralRate,
-      courseStats
+      courseStats,
+      // Date range applied
+      filter: { startDate: startDate || null, endDate: endDate || null }
     });
   } catch (err) {
     console.error(' Report error:', err.message);

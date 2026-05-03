@@ -5,6 +5,7 @@ import {
     Package, Plus, Trash2, Search, Filter, History, Printer,
     AlertTriangle, Check, X, FileText
 } from 'lucide-react';
+import showConfirm from '../../utils/showConfirm';
 import './Inventory.css';
 
 const Inventory = () => {
@@ -92,12 +93,16 @@ const Inventory = () => {
     };
 
     const handleDelete = async (id) => {
-        if (!window.confirm('Delete this batch?')) return;
+        const confirmed = await showConfirm('Delete this medicine batch? This cannot be undone.', {
+            confirmText: 'Delete batch',
+            cancelText: 'Keep it',
+            type: 'danger'
+        });
+        if (!confirmed) return;
         try {
             await api.delete(`/medicines/${id}`);
             toast.success('Batch deleted');
             fetchInventory();
-            // If deleting from batch modal, refresh selectedGroup if needed
             if (selectedGroup) {
                 const updated = medicines.filter(m => m._id !== id && m.name === selectedGroup.name);
                 if (updated.length === 0) setSelectedGroup(null);

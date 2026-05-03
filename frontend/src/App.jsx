@@ -57,9 +57,9 @@ function App() {
                 <Route path="/oauth/google-signup" element={<GoogleSignup />} />
               </Route>
 
-              {/* Protected Routes */}
+              {/* Patient Routes */}
               <Route element={
-                <ProtectedRoute>
+                <ProtectedRoute requiredRole="patient">
                   <DashboardLayout />
                 </ProtectedRoute>
               }>
@@ -67,6 +67,16 @@ function App() {
                 <Route path="/patient-appointments" element={<MyAppointments />} />
                 <Route path="/patient-book" element={<BookAppointment />} />
                 <Route path="/patient-profile" element={<PatientProfile />} />
+                <Route path="/patient-notifications" element={<Notifications />} />
+                <Route path="/patient-calendar" element={<GoogleCalendarPage />} />
+              </Route>
+
+              {/* Admin Routes */}
+              <Route element={
+                <ProtectedRoute requiredRole="admin">
+                  <DashboardLayout />
+                </ProtectedRoute>
+              }>
                 <Route path="/admin-dashboard" element={<AdminDashboard />} />
                 <Route path="/admin-users" element={<ManageUsers />} />
                 <Route path="/admin-appointments" element={<AllAppointments />} />
@@ -74,9 +84,16 @@ function App() {
                 <Route path="/admin-messages" element={<AdminMessages />} />
                 <Route path="/admin-inventory" element={<Inventory />} />
                 <Route path="/admin-consultation" element={<ConsultationPage />} />
+                <Route path="/admin-doctor-feedback" element={<AdminDoctorFeedback />} />
                 <Route path="/admin-profile" element={<Profile />} />
+              </Route>
 
-                {/* Superadmin Routes */}
+              {/* Superadmin Routes */}
+              <Route element={
+                <ProtectedRoute requiredRole="superadmin">
+                  <DashboardLayout />
+                </ProtectedRoute>
+              }>
                 <Route path="/superadmin-dashboard" element={<AdminDashboard />} />
                 <Route path="/superadmin-logs" element={<SystemLogs />} />
                 <Route path="/superadmin-users" element={<ManageUsers />} />
@@ -87,11 +104,16 @@ function App() {
                 <Route path="/superadmin-inventory" element={<Inventory />} />
                 <Route path="/superadmin-consultation" element={<ConsultationPage />} />
                 <Route path="/superadmin-profile" element={<Profile />} />
+              </Route>
 
-                {/* Doctor Routes */}
+              {/* Doctor Routes */}
+              <Route element={
+                <ProtectedRoute requiredRole="doctor">
+                  <DashboardLayout />
+                </ProtectedRoute>
+              }>
                 <Route path="/doctor-feedback" element={<DoctorFeedback />} />
                 <Route path="/doctor-profile" element={<Profile />} />
-                <Route path="/admin-doctor-feedback" element={<AdminDoctorFeedback />} />
               </Route>
 
               <Route path="*" element={<MainLayout><NotFound /></MainLayout>} />

@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { auth, requireRole } = require('../middleware/auth');
+const { validateUpdateRole } = require('../middleware/validators');
 
 const {
   getAllUsers,
@@ -17,7 +18,7 @@ const {
 
 // Admin/superadmin only routes
 router.get('/', auth, requireRole('superadmin', 'admin'), getAllUsers);
-router.put('/:id/role', auth, requireRole('superadmin', 'admin'), updateUserRole);
+router.put('/:id/role', auth, requireRole('superadmin', 'admin'), validateUpdateRole, updateUserRole);
 router.put('/:id/deactivate', auth, requireRole('superadmin', 'admin'), deactivateUser);
 router.put('/:id/reactivate', auth, requireRole('superadmin', 'admin'), reactivateUser);
 router.get('/:id/login-history', auth, requireRole('superadmin', 'admin'), getUserLoginHistory);

@@ -29,4 +29,8 @@ coverage/
 # Temporary files
 tmp/
 
-
+# Debug scripts & output files
+*_debug.txt
+test-*.js
+debug-*.js
+*.debug.txt

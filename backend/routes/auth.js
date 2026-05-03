@@ -17,11 +17,26 @@ const {
 const { auth } = require('../middleware/auth');
 const passport = require('passport');
 const jwt = require('jsonwebtoken');
+const { rateLimit, ipKeyGenerator } = require('express-rate-limit');
+const { validateSignup, validateLogin } = require('../middleware/validators');
+
+// Brute-force protection for auth endpoints
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20, // Increased slightly to support valid retries
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many attempts. Please wait 15 minutes before trying again.' },
+  keyGenerator: (req, res) => {
+    // Limit by IP + Email (if provided) to avoid blocking the whole IP when multiple users share a device/network
+    return ipKeyGenerator(req, res) + '_' + (req.body?.email || '');
+  }
+});
 
 //  Local Authentication
-router.post('/signup', signup);
-router.post('/superadmin-login', superadminLogin);
-router.post('/login', login);
+router.post('/signup', authLimiter, validateSignup, signup);
+router.post('/superadmin-login', authLimiter, validateLogin, superadminLogin);
+router.post('/login', authLimiter, validateLogin, login);
 router.post('/google-signup', googleSignup);
 router.get('/verify-email/:token', verifyEmail);
 
@@ -78,7 +93,7 @@ router.get('/google/callback', (req, res, next) => {
 
       try {
         const token = jwt.sign(
-          { userId: user._id, role: user.role },
+          { userId: user._id, role: user.role, firstName: user.firstName, lastName: user.lastName },
           process.env.JWT_SECRET,
           { expiresIn: '1d' }
         );
@@ -98,7 +113,6 @@ router.get('/google/callback', (req, res, next) => {
         let frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
         frontendUrl = frontendUrl.replace(/\/$/, '');
 
-        console.log(`Redirecting user ${user.email} with role ${user.role} to ${frontendUrl}`);
 
         // Set short-lived secure cookie for token exchange
         res.cookie('oauthToken', token, {

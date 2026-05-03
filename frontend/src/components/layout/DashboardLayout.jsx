@@ -4,20 +4,26 @@ import Sidebar from './Sidebar';
 import Header from './Header';
 import ChatWindow from '../chat/ChatWindow';
 import { useChat } from '../../context/ChatContext';
-import './Layout.css'; // We'll create this CSS next
+import useWindowSize from '../../hooks/useWindowSize';
+import './Layout.css';
+
+const MOBILE_BREAKPOINT = 1024;
 
 const DashboardLayout = () => {
     const { activeChats } = useChat();
-    const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth > 1024);
+    const { width } = useWindowSize();
+    const isMobile = width <= MOBILE_BREAKPOINT;
+
+    const [sidebarOpen, setSidebarOpen] = useState(!isMobile);
     const [isCollapsed, setIsCollapsed] = useState(false);
 
     const toggleSidebar = () => {
-        if (window.innerWidth <= 1024) {
-            setSidebarOpen(!sidebarOpen);
-            setIsCollapsed(false); // Ensure it's not collapsed on mobile
+        if (isMobile) {
+            setSidebarOpen(prev => !prev);
+            setIsCollapsed(false); // Never collapse on mobile, just show/hide
         } else {
-            setIsCollapsed(!isCollapsed);
-            setSidebarOpen(true); // Ensure it's open (but collapsed)
+            setIsCollapsed(prev => !prev);
+            setSidebarOpen(true); // Keep open but toggle collapsed state
         }
     };
 
@@ -39,8 +45,8 @@ const DashboardLayout = () => {
                 ))}
             </div>
 
-            {/* Overlay for mobile (only show if screen is small) */}
-            {sidebarOpen && window.innerWidth <= 1024 && (
+            {/* Overlay — only render when mobile sidebar is open */}
+            {isMobile && sidebarOpen && (
                 <div className="sidebar-overlay" onClick={() => setSidebarOpen(false)}></div>
             )}
         </div>

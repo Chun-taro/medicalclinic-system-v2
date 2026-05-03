@@ -54,19 +54,15 @@ const updateUserRole = async (req, res) => {
     ).select('-password');
 
     // Log the activity
-    await logActivity(
-      req.user.userId,
-      `${req.user.firstName} ${req.user.lastName}`,
-      req.user.role,
-      'update_user_role',
-      'user',
-      req.params.id,
-      {
-        oldRole,
-        newRole: role,
-        userName: `${user.firstName} ${user.lastName}`
-      }
-    );
+    await logActivity({
+      userId: req.user.userId,
+      userName: `${req.user.firstName} ${req.user.lastName}`,
+      userRole: req.user.role,
+      action: 'update_user_role',
+      entityType: 'user',
+      entityId: req.params.id,
+      details: { oldRole, newRole: role, userName: `${user.firstName} ${user.lastName}` }
+    });
 
     res.json({ message: 'Role updated successfully', user });
   } catch (err) {
@@ -134,18 +130,15 @@ const updateProfile = async (req, res) => {
     if (!updatedUser) return res.status(404).json({ error: 'User not found' });
 
     // Log profile update
-    await logActivity(
-      req.user.userId,
-      `${updatedUser.firstName} ${updatedUser.lastName}`,
-      req.user.role,
-      'update_user_profile',
-      'user',
-      req.user.userId,
-      {
-        fieldsUpdated: Object.keys(updates),
-        updateTime: new Date()
-      }
-    );
+    await logActivity({
+      userId: req.user.userId,
+      userName: `${updatedUser.firstName} ${updatedUser.lastName}`,
+      userRole: req.user.role,
+      action: 'update_user_profile',
+      entityType: 'user',
+      entityId: req.user.userId,
+      details: { fieldsUpdated: Object.keys(updates), updateTime: new Date() }
+    });
 
     res.json({ message: 'Profile updated successfully', user: updatedUser, version: updatedUser.version });
   } catch (err) {
@@ -163,18 +156,15 @@ const uploadAvatar = async (req, res) => {
     const updatedUser = await User.findByIdAndUpdate(req.user.userId, { avatar: imagePath }, { new: true });
 
     // Log avatar upload
-    await logActivity(
-      req.user.userId,
-      `${updatedUser.firstName} ${updatedUser.lastName}`,
-      req.user.role,
-      'upload_profile_picture',
-      'user',
-      req.user.userId,
-      {
-        fileName: req.file.filename,
-        filePath: imagePath
-      }
-    );
+    await logActivity({
+      userId: req.user.userId,
+      userName: `${updatedUser.firstName} ${updatedUser.lastName}`,
+      userRole: req.user.role,
+      action: 'upload_profile_picture',
+      entityType: 'user',
+      entityId: req.user.userId,
+      details: { fileName: req.file.filename, filePath: imagePath }
+    });
 
     res.json({ message: 'Avatar updated', avatar: imagePath });
   } catch (err) {

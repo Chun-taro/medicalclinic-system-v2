@@ -18,15 +18,11 @@ export const ChatProvider = ({ children }) => {
         let isSubscribed = true;
 
         const initChat = async () => {
-            console.log('ChatContext: initChat starting', { user: !!user });
             if (user) {
                 try {
                     setError(null);
-                    console.log('ChatContext: Fetching stream token...');
                     const { token: streamToken } = await chatService.getStreamToken();
-                    console.log('ChatContext: Stream token received', !!streamToken);
                     if (isSubscribed) {
-                        console.log('ChatContext: Connecting Stream user...');
                         const client = await connectStreamUser(user, streamToken);
                         if (!client) {
                             setError('Failed to connect to Stream server. Check your API keys and internet connection.');
@@ -36,14 +32,12 @@ export const ChatProvider = ({ children }) => {
                         setUnreadTotal(client.user.total_unread_count || 0);
 
                         // Listen for unread count changes
-                        client.on('notification.message_new', (event) => {
+                        client.on('notification.message_new', () => {
                             setUnreadTotal(client.user.total_unread_count || 0);
                         });
-                        client.on('notification.mark_read', (event) => {
+                        client.on('notification.mark_read', () => {
                             setUnreadTotal(client.user.total_unread_count || 0);
                         });
-
-                        console.log('Stream Chat connected');
                     }
                 } catch (err) {
                     console.error('Error initializing Stream Chat:', err);

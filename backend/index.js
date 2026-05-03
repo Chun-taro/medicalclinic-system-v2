@@ -85,15 +85,24 @@ app.use(helmet({
   },
 })); // security headers
 
-// Rate limiting
+// Global rate limiting (all API routes)
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 1000, // Increased for testing (previous: 100)
-  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
-  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+  max: 1000, // Increased to support SPA and multiple users behind NAT
+  standardHeaders: true,
+  legacyHeaders: false,
   message: { error: 'Too many requests from this IP, please try again after 15 minutes' }
 });
 app.use('/api/', limiter);
+
+// Strict rate limiting for authentication & password-reset routes
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many attempts. Please wait 15 minutes before trying again.' }
+});
 
 app.use(cors(CORS_OPTIONS));
 app.use(express.json());

@@ -39,7 +39,6 @@ export const AuthProvider = ({ children }) => {
     }, [logout]);
 
     const login = useCallback(async (token, userRole, userData) => {
-        console.log('AuthContext (V5): login() called', { userRole, hasData: !!userData });
         localStorage.setItem('token', token);
         localStorage.setItem('role', userRole);
         if (userData && userData._id) {
@@ -47,20 +46,17 @@ export const AuthProvider = ({ children }) => {
         }
         setRole(userRole);
         setUser(userData || null);
-        setLoading(false); // CRITICAL: Ensure we stop loading state
+        setLoading(false);
 
-        // Fetch profile in the background if not provided
+        // Fetch full profile in the background if not provided
         if (!userData) {
-            console.log('AuthContext (V5): Starting background profile fetch...');
             api.get('/profile').then(res => {
-                console.log('AuthContext (V5): Background profile fetch SUCCESS');
                 setUser(res.data);
                 if (res.data && res.data._id) {
                     localStorage.setItem('userId', res.data._id);
                 }
             }).catch(err => {
-                console.error("AuthContext (V5): Background profile fetch FAILED", err);
-                // We keep the role/token so the user stays logged in
+                console.error('Background profile fetch failed:', err.message);
             });
         }
     }, []);

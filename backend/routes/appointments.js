@@ -25,9 +25,13 @@ const {
 } = require('../controllers/appointmentController');
 
 const { auth, requireRole } = require('../middleware/auth');
+const {
+  validateBookAppointment,
+  validateSaveConsultation
+} = require('../middleware/validators');
 
 //  Booking and patient routes
-router.post('/book', auth, bookAppointment);
+router.post('/book', auth, validateBookAppointment, bookAppointment);
 router.get('/patient/:patientId', auth, getPatientAppointments);
 router.get('/my', auth, getMyAppointments);
 router.patch('/:id', auth, updateAppointment);
@@ -44,7 +48,7 @@ router.post('/:id/unlock', auth, requireRole('admin', 'doctor', 'superadmin'), u
 //  Consultation routes - require admin or doctor role
 router.patch('/:id/start', auth, requireRole('admin', 'doctor', 'superadmin'), startConsultation);
 router.patch('/:id/complete', auth, requireRole('admin', 'doctor', 'superadmin'), completeConsultation);
-router.patch('/:id/consultation', auth, requireRole('admin', 'doctor', 'superadmin'), saveConsultation);
+router.patch('/:id/consultation', auth, requireRole('admin', 'doctor', 'superadmin'), validateSaveConsultation, saveConsultation);
 router.post('/:id/prescribe', auth, requireRole('admin', 'doctor', 'superadmin'), prescribeMedicines);
 
 //  Reporting and analytics - require admin or doctor role

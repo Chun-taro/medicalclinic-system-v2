@@ -34,7 +34,7 @@ const signup = async (req, res) => {
       patientType,
       course,
       department,
-      isVerified: true, // Auto-verify due to Render email limitations
+      isVerified: false, // Requires email verification before login
       verificationToken
     });
 
@@ -46,32 +46,36 @@ const signup = async (req, res) => {
     try {
       await sendEmail({
         to: newUser.email,
-        subject: 'Welcome to Buksu Medical Clinic',
+        subject: 'Verify your BukSU Medical Clinic account',
         html: `
           <div style="font-family: sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
-            <h2 style="color: #3b82f6;">Welcome to Buksu Medical Clinic!</h2>
+            <h2 style="color: #3b82f6;">Welcome to BukSU Medical Clinic!</h2>
             <p>Hi ${newUser.firstName},</p>
-            <p>Thank you for registering. Your account is active and you can now log in.</p>
-            <p style="font-size: 0.8rem; color: #999;">Note: Email verification is currently disabled.</p>
+            <p>Thank you for registering. Please verify your email address to activate your account:</p>
+            <p style="text-align: center; margin: 24px 0;">
+              <a href="${verificationUrl}" style="background: #3b82f6; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: bold;">Verify Email</a>
+            </p>
+            <p style="font-size: 0.85rem; color: #666;">If you did not register, you can safely ignore this email.</p>
+            <p style="font-size: 0.8rem; color: #999;">This link will expire in 24 hours.</p>
           </div>
         `
       });
     } catch (emailError) {
-      console.warn('Email sending failed (likely due to Render restrictions), but signup proceeded:', emailError.message);
+      console.warn('Verification email could not be sent:', emailError.message);
     }
 
     // Log the user signup
-    await logActivity(
-      newUser._id,
-      `${newUser.firstName} ${newUser.lastName}`,
-      'patient',
-      'user_signup_pending',
-      'auth',
-      newUser._id,
-      { email: newUser.email }
-    );
+    await logActivity({
+      userId: newUser._id,
+      userName: `${newUser.firstName} ${newUser.lastName}`,
+      userRole: 'patient',
+      action: 'user_signup_pending',
+      entityType: 'auth',
+      entityId: newUser._id,
+      details: { email: newUser.email }
+    });
 
-    res.json({ message: 'Signup successful! You can now log in.' });
+    res.json({ message: 'Signup successful! Please check your email to verify your account before logging in.' });
   } catch (err) {
     console.error('Signup error:', err.message);
     res.status(500).json({ error: 'Signup failed' });
@@ -98,21 +102,19 @@ const superadminLogin = async (req, res) => {
     if (!isMatch) return res.status(400).json({ error: 'Invalid credentials' });
 
     const token = jwt.sign(
-      { userId: user._id, role: user.role },
+      { userId: user._id, role: user.role, firstName: user.firstName, lastName: user.lastName },
       process.env.JWT_SECRET,
       { expiresIn: '1d' }
     );
-
-    // Log superadmin login
-    await logActivity(
-      user._id,
-      `${user.firstName} ${user.lastName}`,
-      'superadmin',
-      'user_login',
-      'auth',
-      user._id,
-      { email: user.email, role: 'superadmin', userName: `${user.firstName} ${user.lastName}` }
-    );
+    await logActivity({
+      userId: user._id,
+      userName: `${user.firstName} ${user.lastName}`,
+      userRole: 'superadmin',
+      action: 'user_login',
+      entityType: 'auth',
+      entityId: user._id,
+      details: { email: user.email, role: 'superadmin', userName: `${user.firstName} ${user.lastName}` }
+    });
 
     res.cookie('token', token, {
       httpOnly: true,
@@ -131,8 +133,6 @@ const superadminLogin = async (req, res) => {
 // Local login
 const login = async (req, res) => {
   try {
-    // Log incoming login attempt for debugging (remove in production)
-    console.log('Login attempt body:', req.body);
     const { email, password } = req.body;
 
     // Validate input and provide clearer error messages
@@ -160,21 +160,21 @@ const login = async (req, res) => {
     if (!isMatch) return res.status(400).json({ error: 'Invalid credentials' });
 
     const token = jwt.sign(
-      { userId: user._id, role: user.role },
+      { userId: user._id, role: user.role, firstName: user.firstName, lastName: user.lastName },
       process.env.JWT_SECRET,
       { expiresIn: '1d' }
     );
 
     // Log successful login
-    await logActivity(
-      user._id,
-      `${user.firstName} ${user.lastName}`,
-      user.role,
-      'user_login',
-      'auth',
-      user._id,
-      { email: user.email, userName: `${user.firstName} ${user.lastName}` }
-    );
+    await logActivity({
+      userId: user._id,
+      userName: `${user.firstName} ${user.lastName}`,
+      userRole: user.role,
+      action: 'user_login',
+      entityType: 'auth',
+      entityId: user._id,
+      details: { email: user.email, userName: `${user.firstName} ${user.lastName}` }
+    });
 
     res.cookie('token', token, {
       httpOnly: true,
@@ -243,7 +243,7 @@ const googleSignup = async (req, res) => {
     await newUser.save();
 
     const token = jwt.sign(
-      { userId: newUser._id, role: newUser.role },
+      { userId: newUser._id, role: newUser.role, firstName: newUser.firstName, lastName: newUser.lastName },
       process.env.JWT_SECRET,
       { expiresIn: '1d' }
     );
@@ -337,15 +337,15 @@ const verifyEmail = async (req, res) => {
     await user.save();
 
     // Log verification
-    await logActivity(
-      user._id,
-      `${user.firstName} ${user.lastName}`,
-      user.role,
-      'email_verified',
-      'auth',
-      user._id,
-      { email: user.email }
-    );
+    await logActivity({
+      userId: user._id,
+      userName: `${user.firstName} ${user.lastName}`,
+      userRole: user.role,
+      action: 'email_verified',
+      entityType: 'auth',
+      entityId: user._id,
+      details: { email: user.email }
+    });
 
     res.json({ message: 'Email verified successfully! You can now log in.' });
   } catch (err) {

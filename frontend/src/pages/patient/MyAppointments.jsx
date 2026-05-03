@@ -3,6 +3,7 @@ import api from '../../services/api';
 import { toast } from 'react-toastify';
 import FeedbackForm from '../../components/feature/FeedbackForm';
 import { Calendar, Clock, MapPin, ChevronDown, ChevronUp } from 'lucide-react';
+import showConfirm from '../../utils/showConfirm';
 import './MyAppointments.css';
 
 const MyAppointments = () => {
@@ -38,7 +39,12 @@ const MyAppointments = () => {
     }, [appointments, loading]); // Excluded feedbackApt so it doesn't pop up immediately after closing
 
     const handleCancel = async (id) => {
-        if (!window.confirm('Are you sure you want to cancel this appointment?')) return;
+        const confirmed = await showConfirm('Cancel this appointment?', {
+            confirmText: 'Yes, cancel it',
+            cancelText: 'Keep it',
+            type: 'danger'
+        });
+        if (!confirmed) return;
         try {
             await api.delete(`/appointments/${id}`);
             toast.success('Appointment cancelled');

@@ -2,7 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { useTheme } from '../../context/ThemeContext';
 import logo from '../../assets/logo.png';
-import { Shield, Clock, Heart, ArrowRight, ArrowDown } from 'lucide-react';
+import { Shield, Clock, Heart, ArrowRight, ArrowDown, LogIn, Download } from 'lucide-react';
 import './Home.css';
 
 const Home = () => {
@@ -157,8 +157,14 @@ const Home = () => {
                         <p>Empowering the university community through modern healthcare.</p>
                     </div>
                     <div className="footer-links">
-                        <Link to="/login" className="footer-link">Login to Dashboard</Link>
-                        <a href="/app.html" className="footer-link">Download Mobile App</a>
+                        <Link to="/login" className="footer-link primary">
+                            <LogIn size={16} />
+                            Login to Dashboard
+                        </Link>
+                        <a href="/downloads/BukSU-Medical-Clinic-App.apk" className="footer-link secondary" download>
+                            <Download size={16} />
+                            Download Mobile App
+                        </a>
                     </div>
                 </div>
                 <div className="footer-bottom">
