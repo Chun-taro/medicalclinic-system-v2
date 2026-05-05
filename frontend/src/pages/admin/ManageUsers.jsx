@@ -166,7 +166,7 @@ const ManageUsers = () => {
                                     <td>
                                         {user.role === 'patient' ? (
                                             <div className="classification-cell">
-                                                <div className="type-tag">{user.patientType || 'Student'}</div>
+                                                <div className="type-tag">{(user.patientType || 'Student').charAt(0).toUpperCase() + (user.patientType || 'Student').slice(1)}</div>
                                                 {user.patientType === 'student' && user.course && <div className="detail-tag">{user.course}</div>}
                                                 {user.patientType === 'faculty' && user.department && <div className="detail-tag">{user.department}</div>}
                                             </div>

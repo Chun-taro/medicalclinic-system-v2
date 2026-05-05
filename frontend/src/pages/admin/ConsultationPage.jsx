@@ -1005,6 +1005,7 @@ const ConsultationPage = () => {
                                     <p><strong>Name:</strong> {patientProfile.firstName} {patientProfile.middleName} {patientProfile.lastName}</p>
                                     <p><strong>Email:</strong> {patientProfile.email}</p>
                                     <p><strong>Birthday:</strong> {patientProfile.birthday ? new Date(patientProfile.birthday).toLocaleDateString() : '—'}</p>
+                                    <p><strong>Classification:</strong> {patientProfile.patientType ? patientProfile.patientType.charAt(0).toUpperCase() + patientProfile.patientType.slice(1) : 'Student'}</p>
                                     <p><strong>Sex:</strong> {patientProfile.sex}</p>
                                     {patientProfile.patientType === 'student' && <p><strong>Course:</strong> {patientProfile.course || '—'}</p>}
                                     {patientProfile.patientType === 'faculty' && <p><strong>Department:</strong> {patientProfile.department || '—'}</p>}
