@@ -66,7 +66,8 @@ const userSchema = new mongoose.Schema({
     hypertension: { type: Boolean, default: false },
     heartDisease: { type: Boolean, default: false },
     cancer: { type: Boolean, default: false },
-    other: { type: String, trim: true }
+    other: { type: Boolean, default: false },
+    otherSpecify: { type: String, trim: true }
   },
 
   // Personal-Social History
@@ -89,7 +90,8 @@ const userSchema = new mongoose.Schema({
     chickenpox: { type: Boolean, default: false },
     measles: { type: Boolean, default: false },
     germanMeasles: { type: Boolean, default: false },
-    other: { type: Boolean, default: false }
+    other: { type: Boolean, default: false },
+    otherSpecify: { type: String, trim: true }
   },
 
   // Previous Admissions and Operations
@@ -108,7 +110,8 @@ const userSchema = new mongoose.Schema({
     Chickenpox: { type: Boolean, default: false },
     AntiRabies: { type: Boolean, default: false },
     TetanusBooster: { type: Boolean, default: false },
-    other: { type: Boolean, default: false }
+    other: { type: Boolean, default: false },
+    otherSpecify: { type: String, trim: true }
   },
   lastAdmissionDate: { type: Date },
   lastAdmissionTypeLocation: { type: String, trim: true },

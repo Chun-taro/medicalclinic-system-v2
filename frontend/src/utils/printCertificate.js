@@ -21,10 +21,10 @@ export const printMedicalCertificate = (appointment, type = 'normal') => {
     const doc = iframe.contentWindow.document;
 
     const styles = `
-        @page { size: 8.5in 11in; margin: 0.5in; }
+        @page { size: 8.5in 11in; margin: 0; }
         body { 
             margin: 0; 
-            padding: 0; 
+            padding: 0.5in; 
             font-family: 'Times New Roman', serif; 
             font-size: 12pt;
             line-height: 1.4;

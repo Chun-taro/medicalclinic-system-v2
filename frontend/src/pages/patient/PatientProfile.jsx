@@ -3,6 +3,7 @@ import api, { getImageUrl } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import { toast } from 'react-toastify';
 import { User, Phone, MapPin, Calendar, Heart, Activity, FileText, Edit2, Camera, Save, X } from 'lucide-react';
+import CourseSelect from '../../components/ui/CourseSelect';
 import './PatientProfile.css';
 // import avatarPlaceholder from '../../assets/profile-placeholder.png'; // Removed unused missing asset
 
@@ -282,7 +283,7 @@ const PatientProfile = () => {
                         {(formData.patientType === 'student' || (!isEditing && profile.patientType === 'student')) && (
                             <div className="form-group">
                                 <label>Course</label>
-                                {isEditing ? <input className="form-control" name="course" value={formData.course || ''} onChange={handleChange} /> : <p className="read-only">{profile.course || '—'}</p>}
+                                {isEditing ? <CourseSelect className="form-control" name="course" value={formData.course || ''} onChange={handleChange} /> : <p className="read-only">{profile.course || '—'}</p>}
                             </div>
                         )}
                         {(formData.patientType === 'faculty' || (!isEditing && profile.patientType === 'faculty')) && (
@@ -412,7 +413,7 @@ const PatientProfile = () => {
                 </div>
                 <div className="section-body">
                     <div className="checkbox-grid">
-                        {['asthma', 'heartProblems', 'seizures', 'pneumonia', 'typhoid', 'tuberculosis', 'chickenpox', 'measles', 'germanMeasles', 'other'].map(condition => (
+                        {['asthma', 'heartProblems', 'seizures', 'pneumonia', 'typhoid', 'tuberculosis', 'chickenpox', 'measles', 'germanMeasles'].map(condition => (
                             <label key={condition} className="checkbox-label">
                                 <input
                                     type="checkbox"
@@ -423,6 +424,29 @@ const PatientProfile = () => {
                                 {condition.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
                             </label>
                         ))}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', gridColumn: '1 / -1' }}>
+                            <label className="checkbox-label" style={{ marginBottom: 0 }}>
+                                <input
+                                    type="checkbox"
+                                    disabled={!isEditing}
+                                    checked={formData.pastMedicalHistory?.other || false}
+                                    onChange={(e) => handleCheckboxChange(e, 'pastMedicalHistory', 'other')}
+                                />
+                                Others
+                            </label>
+                            {formData.pastMedicalHistory?.other && (
+                                <input
+                                    type="text"
+                                    className="form-control"
+                                    name="pastMedicalHistory.otherSpecify"
+                                    placeholder="Please specify"
+                                    value={formData.pastMedicalHistory?.otherSpecify || ''}
+                                    onChange={handleChange}
+                                    disabled={!isEditing}
+                                    style={{ flex: 1, padding: '0.25rem 0.5rem', minWidth: '200px' }}
+                                />
+                            )}
+                        </div>
                     </div>
                 </div>
             </div>
@@ -434,7 +458,7 @@ const PatientProfile = () => {
                 </div>
                 <div className="section-body">
                     <div className="checkbox-grid">
-                        {['BCG', 'HepatitisB', 'Polio', 'DPT', 'MMR', 'Chickenpox', 'AntiRabies', 'TetanusBooster', 'other'].map(vaccine => (
+                        {['BCG', 'HepatitisB', 'Polio', 'DPT', 'MMR', 'Chickenpox', 'AntiRabies', 'TetanusBooster'].map(vaccine => (
                             <label key={vaccine} className="checkbox-label">
                                 <input
                                     type="checkbox"
@@ -445,6 +469,29 @@ const PatientProfile = () => {
                                 {vaccine.replace(/([A-Z])/g, ' $1').trim()}
                             </label>
                         ))}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', gridColumn: '1 / -1' }}>
+                            <label className="checkbox-label" style={{ marginBottom: 0 }}>
+                                <input
+                                    type="checkbox"
+                                    disabled={!isEditing}
+                                    checked={formData.immunization?.other || false}
+                                    onChange={(e) => handleCheckboxChange(e, 'immunization', 'other')}
+                                />
+                                Others
+                            </label>
+                            {formData.immunization?.other && (
+                                <input
+                                    type="text"
+                                    className="form-control"
+                                    name="immunization.otherSpecify"
+                                    placeholder="Please specify"
+                                    value={formData.immunization?.otherSpecify || ''}
+                                    onChange={handleChange}
+                                    disabled={!isEditing}
+                                    style={{ flex: 1, padding: '0.25rem 0.5rem', minWidth: '200px' }}
+                                />
+                            )}
+                        </div>
                     </div>
                 </div>
             </div>
@@ -456,7 +503,7 @@ const PatientProfile = () => {
                 </div>
                 <div className="section-body">
                     <div className="checkbox-grid">
-                        {['diabetes', 'hypertension', 'heartDisease', 'cancer', 'other'].map(condition => (
+                        {['diabetes', 'hypertension', 'heartDisease', 'cancer'].map(condition => (
                             <label key={condition} className="checkbox-label">
                                 <input
                                     type="checkbox"
@@ -467,6 +514,29 @@ const PatientProfile = () => {
                                 {condition.charAt(0).toUpperCase() + condition.slice(1).replace(/([A-Z])/g, ' $1')}
                             </label>
                         ))}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', gridColumn: '1 / -1' }}>
+                            <label className="checkbox-label" style={{ marginBottom: 0 }}>
+                                <input
+                                    type="checkbox"
+                                    disabled={!isEditing}
+                                    checked={formData.familyHistory?.other || false}
+                                    onChange={(e) => handleCheckboxChange(e, 'familyHistory', 'other')}
+                                />
+                                Others
+                            </label>
+                            {formData.familyHistory?.other && (
+                                <input
+                                    type="text"
+                                    className="form-control"
+                                    name="familyHistory.otherSpecify"
+                                    placeholder="Please specify"
+                                    value={formData.familyHistory?.otherSpecify || ''}
+                                    onChange={handleChange}
+                                    disabled={!isEditing}
+                                    style={{ flex: 1, padding: '0.25rem 0.5rem', minWidth: '200px' }}
+                                />
+                            )}
+                        </div>
                     </div>
                 </div>
             </div>

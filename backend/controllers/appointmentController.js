@@ -511,9 +511,9 @@ const saveConsultation = async (req, res) => {
       p_age, p_sex, p_address, p_course, p_civilStatus,
       issuedFor,
       isFit,
-      validForAY,
       validForSemester,
-      certificateType
+      certificateType,
+      hasMedicalCertificate
     } = req.body;
 
     const appointment = await Appointment.findById(id).populate('patientId');
@@ -552,6 +552,7 @@ const saveConsultation = async (req, res) => {
     appointment.validForAY = validForAY;
     appointment.validForSemester = validForSemester;
     appointment.certificateType = certificateType;
+    appointment.hasMedicalCertificate = hasMedicalCertificate || appointment.purpose === 'Medical Certificate';
     appointment.status = 'completed';
     // Allow manual assignment if provided in req.body, otherwise default to current user
     appointment.doctorId = req.body.doctorId || req.user.userId;
@@ -796,7 +797,7 @@ const getConsultations = async (req, res) => {
       .populate('patientId', 'firstName lastName email contactNumber age sex homeAddress')
       .populate('doctorId', 'firstName lastName')
       .select(
-        'patientId doctorId firstName lastName appointmentDate consultationCompletedAt chiefComplaint additionalNotes diagnosis management externalPrescription p_age p_sex p_address bloodPressure temperature heartRate oxygenSaturation bmi bmiIntervention medicinesPrescribed referredToPhysician physicianName firstAidDone firstAidWithin30Mins purpose'
+        'patientId doctorId firstName lastName appointmentDate consultationCompletedAt chiefComplaint additionalNotes diagnosis management externalPrescription p_age p_sex p_address bloodPressure temperature heartRate oxygenSaturation bmi bmiIntervention medicinesPrescribed referredToPhysician physicianName firstAidDone firstAidWithin30Mins purpose hasMedicalCertificate'
       )
       .sort({ consultationCompletedAt: -1 })
       .lean();
@@ -813,13 +814,16 @@ const getMedicalCertificates = async (req, res) => {
   try {
     // Populate patient basic info (firstName, lastName) from User when available.
     const medicalCertificates = await Appointment.find({
-      purpose: 'Medical Certificate',
+      $or: [
+        { purpose: 'Medical Certificate' },
+        { hasMedicalCertificate: true }
+      ],
       status: 'completed'
     })
       .populate('patientId', 'firstName lastName email contactNumber age sex homeAddress')
       .populate('doctorId', 'firstName lastName')
       .select(
-        'patientId doctorId firstName lastName appointmentDate consultationCompletedAt purpose status diagnosis fitToWork fitToWorkFrom fitToWorkTo restDays remarks'
+        'patientId doctorId firstName lastName appointmentDate consultationCompletedAt purpose status diagnosis fitToWork fitToWorkFrom fitToWorkTo restDays remarks hasMedicalCertificate'
       )
       .sort({ consultationCompletedAt: -1 })
       .lean();
@@ -1172,7 +1176,7 @@ const exportMedicalCertificatePDF = async (req, res) => {
       .populate('patientId')
       .populate('doctorId', 'firstName lastName')
       .lean();
-    if (!cert || cert.purpose !== 'Medical Certificate') {
+    if (!cert || (cert.purpose !== 'Medical Certificate' && !cert.hasMedicalCertificate)) {
       return res.status(404).json({ error: 'Medical Certificate not found' });
     }
 

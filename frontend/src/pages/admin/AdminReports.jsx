@@ -409,7 +409,7 @@ const AdminReports = () => {
                                     )}
                                     <button 
                                         className="btn-icon" 
-                                        title="Download PDF"
+                                        title={activeTab === 'consultations' ? "Download Consultation PDF" : "Download Certificate PDF"}
                                         onClick={(e) => {
                                             e.stopPropagation();
                                             handleDownload(item._id, activeTab === 'consultations' ? 'consultation' : 'certificate');
@@ -417,6 +417,18 @@ const AdminReports = () => {
                                     >
                                         <Download size={18}/>
                                     </button>
+                                    {activeTab === 'consultations' && item.hasMedicalCertificate && (
+                                        <button 
+                                            className="btn-icon" 
+                                            title="Download Issued Medical Certificate"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleDownload(item._id, 'certificate');
+                                            }}
+                                        >
+                                            <FileBadge size={18} style={{ color: 'var(--primary)' }}/>
+                                        </button>
+                                    )}
                                 </div>
                             </div>
 

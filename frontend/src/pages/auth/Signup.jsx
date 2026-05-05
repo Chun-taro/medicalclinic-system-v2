@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import Recaptcha from '../../components/ui/Recaptcha';
+import CourseSelect from '../../components/ui/CourseSelect';
 import { toast } from 'react-toastify';
 import api from '../../services/api';
 import './Auth.css';
@@ -187,11 +188,9 @@ const Signup = () => {
                         </div>
 
                         {form.patientType === 'student' && (
-                            <input
-                                type="text"
+                            <CourseSelect
                                 name="course"
                                 className="form-control"
-                                placeholder="Course (e.g. BSIT) *"
                                 value={form.course}
                                 onChange={handleChange}
                                 disabled={loading}

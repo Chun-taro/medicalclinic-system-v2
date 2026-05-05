@@ -3,7 +3,8 @@ const Log = require('../models/Log');
 const logActivity = async (adminId, adminName, adminRole, action, entityType, entityId, details = {}) => {
   try {
     // Support being called with an options object: logActivity({ adminId, adminName, adminRole, action, entityType, entityId, details })
-    if (typeof adminId === 'object' && !Array.isArray(adminId) && adminId !== null) {
+    const isObjectId = adminId && typeof adminId === 'object' && (adminId._bsontype === 'ObjectId' || adminId._bsontype === 'ObjectID' || typeof adminId.toHexString === 'function');
+    if (typeof adminId === 'object' && !Array.isArray(adminId) && adminId !== null && !isObjectId) {
       const opts = adminId;
       adminId = opts.adminId || opts.userId || null;
       adminName = opts.adminName || opts.userName || opts.userName || '';

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { toast } from 'react-toastify';
+import CourseSelect from '../../components/ui/CourseSelect';
 import api from '../../services/api';
 import './Auth.css';
 import buildingImg from '../../assets/building.png';
@@ -169,11 +170,9 @@ const GoogleSignup = () => {
                         </div>
 
                         {form.patientType === 'student' && (
-                            <input
-                                type="text"
+                            <CourseSelect
                                 name="course"
                                 className="form-control"
-                                placeholder="Course (e.g. BSIT) *"
                                 value={form.course}
                                 onChange={handleChange}
                                 disabled={loading}

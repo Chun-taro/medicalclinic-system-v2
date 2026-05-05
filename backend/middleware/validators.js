@@ -57,25 +57,25 @@ const validateBookAppointment = [
 const validateSaveConsultation = [
   param('id').isMongoId().withMessage('Invalid appointment ID'),
   body('diagnosis')
-    .optional()
+    .optional({ values: 'falsy' })
     .isLength({ max: 2000 }).withMessage('Diagnosis must be 2000 characters or less'),
   body('management')
-    .optional()
+    .optional({ values: 'falsy' })
     .isLength({ max: 2000 }).withMessage('Management must be 2000 characters or less'),
   body('bloodPressure')
-    .optional()
-    .matches(/^\d{2,3}\/\d{2,3}$/).withMessage('Blood pressure must be in format e.g. 120/80'),
+    .optional({ values: 'falsy' })
+    .isLength({ max: 50 }).withMessage('Blood pressure must be 50 characters or less'),
   body('temperature')
-    .optional()
-    .isFloat({ min: 30, max: 45 }).withMessage('Temperature must be between 30°C and 45°C'),
+    .optional({ values: 'falsy' })
+    .isLength({ max: 50 }).withMessage('Temperature must be 50 characters or less'),
   body('heartRate')
-    .optional()
-    .isInt({ min: 20, max: 300 }).withMessage('Heart rate must be between 20 and 300 bpm'),
+    .optional({ values: 'falsy' })
+    .isLength({ max: 50 }).withMessage('Heart rate must be 50 characters or less'),
   body('oxygenSaturation')
-    .optional()
-    .isFloat({ min: 50, max: 100 }).withMessage('Oxygen saturation must be between 50% and 100%'),
+    .optional({ values: 'falsy' })
+    .isLength({ max: 50 }).withMessage('Oxygen saturation must be 50 characters or less'),
   body('medicinesPrescribed')
-    .optional()
+    .optional({ values: 'falsy' })
     .isArray().withMessage('Medicines prescribed must be an array'),
   validate
 ];

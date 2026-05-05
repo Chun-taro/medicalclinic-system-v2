@@ -98,6 +98,7 @@ const appointmentSchema = new mongoose.Schema({
   validForAY: String,
   validForSemester: String,
   certificateType: { type: String, enum: ['normal', 'pathologic'], default: 'normal' },
+  hasMedicalCertificate: { type: Boolean, default: false },
 
   medicinesPrescribed: [
     {

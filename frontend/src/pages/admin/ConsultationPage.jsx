@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import api, { getImageUrl } from '../../services/api'; // Use api instance and getImageUrl
 import { toast } from 'react-toastify';
+import CourseSelect from '../../components/ui/CourseSelect';
 import {
     Users, Calendar, FileText, CheckCircle, Clock,
     Activity, ChevronRight, Search, X, Stethoscope, Printer, AlertTriangle
@@ -21,6 +22,7 @@ const ConsultationPage = () => {
     const [history, setHistory] = useState([]);
     const [loadingHistory, setLoadingHistory] = useState(false);
     const [showHistoryModal, setShowHistoryModal] = useState(false);
+    const [includeCertificate, setIncludeCertificate] = useState(false);
 
     // Consultation Form
     const [form, setForm] = useState({
@@ -133,6 +135,7 @@ const ConsultationPage = () => {
         });
         setWarnings({});
         setPrescribed([]);
+        setIncludeCertificate(false);
     };
 
     const fetchHistory = async (patientId) => {
@@ -335,6 +338,7 @@ const ConsultationPage = () => {
             await api.patch(`/appointments/${selectedApp._id}/consultation`, {
                 ...form,
                 medicinesPrescribed: prescribed,
+                hasMedicalCertificate: includeCertificate,
                 consultationCompletedAt: new Date()
             });
 
@@ -523,7 +527,7 @@ const ConsultationPage = () => {
                                                 </div>
                                                 <div className={`input-group ${!form.p_course ? 'has-warning' : ''}`}>
                                                     <label>Taking up (Course) {!form.p_course && <span className="warning-text">(Empty)</span>}</label>
-                                                    <input value={form.p_course} onChange={e => setForm({ ...form, p_course: e.target.value })} placeholder="Course" />
+                                                    <CourseSelect name="p_course" value={form.p_course} onChange={e => setForm({ ...form, p_course: e.target.value })} />
                                                 </div>
                                             </div>
                                         </div>
@@ -620,7 +624,10 @@ const ConsultationPage = () => {
                                                 <button
                                                     className="btn-secondary big"
                                                     style={{ flex: 1 }}
-                                                    onClick={() => printMedicalCertificate({ ...selectedApp, ...form }, form.certificateType)}
+                                                    onClick={() => {
+                                                        const docObj = doctors.find(d => d._id === form.doctorId);
+                                                        printMedicalCertificate({ ...selectedApp, ...form, doctorId: docObj || selectedApp.doctorId }, form.certificateType);
+                                                    }}
                                                 >
                                                     <Printer size={18} /> Preview & Print
                                                 </button>
@@ -703,6 +710,10 @@ const ConsultationPage = () => {
                                             <div className="input-group">
                                                 <label>BMI</label>
                                                 <input value={form.bmi} onChange={e => setForm({ ...form, bmi: e.target.value })} placeholder="22.5" />
+                                            </div>
+                                            <div className="input-group">
+                                                <label>LMP (Last Menstrual Period)</label>
+                                                <input value={form.lmp} onChange={e => setForm({ ...form, lmp: e.target.value })} placeholder="Date or N/A" />
                                             </div>
                                         </div>
                                     </div>
@@ -811,8 +822,88 @@ const ConsultationPage = () => {
                                                 </div>
                                             </div>
 
-                                    <div className="form-actions">
-                                        <button type="submit" className="btn-primary big">Complete Consultation</button>
+                                            <div className="form-section">
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                                                    <h3><FileText size={20} /> Medical Certificate</h3>
+                                                    <button 
+                                                        type="button" 
+                                                        className={`btn-${includeCertificate ? 'secondary' : 'primary'}`} 
+                                                        onClick={() => setIncludeCertificate(!includeCertificate)}
+                                                    >
+                                                        {includeCertificate ? 'Remove Certificate' : 'Issue Medical Certificate'}
+                                                    </button>
+                                                </div>
+                                                
+                                                {includeCertificate && (
+                                                    <div style={{ background: 'var(--bg-body)', padding: '1rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)' }}>
+                                                        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1rem' }}>
+                                                            <div className="cert-type-selector" style={{ display: 'flex', gap: '0.5rem', background: 'var(--bg-card)', padding: '0.25rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)' }}>
+                                                                <button type="button" className={form.certificateType === 'normal' ? 'btn-primary' : 'btn-ghost'} onClick={() => setForm({...form, certificateType: 'normal'})} style={{ padding: '0.4rem 0.75rem', fontSize: '0.8rem' }}>Normal Cert</button>
+                                                                <button type="button" className={form.certificateType === 'pathologic' ? 'btn-primary' : 'btn-ghost'} onClick={() => setForm({...form, certificateType: 'pathologic'})} style={{ padding: '0.4rem 0.75rem', fontSize: '0.8rem' }}>Pathologic Cert</button>
+                                                            </div>
+                                                        </div>
+                                                        <div className="cert-form-grid">
+                                                            <div className="input-group">
+                                                                <label>Issued For</label>
+                                                                <input value={form.issuedFor} onChange={e => setForm({ ...form, issuedFor: e.target.value })} placeholder="Purpose" />
+                                                            </div>
+                                                            {form.certificateType === 'normal' && (
+                                                                <>
+                                                                    <div className="input-group">
+                                                                        <label>Status</label>
+                                                                        <select value={form.isFit ? 'true' : 'false'} onChange={e => setForm({ ...form, isFit: e.target.value === 'true' })}>
+                                                                            <option value="true">Fit</option>
+                                                                            <option value="false">Not Fit</option>
+                                                                        </select>
+                                                                    </div>
+                                                                    <div className="input-group">
+                                                                        <label>AY</label>
+                                                                        <input value={form.validForAY} onChange={e => setForm({ ...form, validForAY: e.target.value })} placeholder="2024-2025" />
+                                                                    </div>
+                                                                    <div className="input-group">
+                                                                        <label>Semester</label>
+                                                                        <select value={form.validForSemester} onChange={e => setForm({ ...form, validForSemester: e.target.value })}>
+                                                                            <option value="">Select...</option>
+                                                                            <option value="1st">1st Sem</option>
+                                                                            <option value="2nd">2nd Sem</option>
+                                                                            <option value="Summer">Summer</option>
+                                                                        </select>
+                                                                    </div>
+                                                                </>
+                                                            )}
+                                                        </div>
+                                                        
+                                                        {form.certificateType === 'normal' && (
+                                                            <div className="grid-2" style={{ marginTop: '1rem' }}>
+                                                                <div className="input-group">
+                                                                    <label>Visual Acuity (OS)</label>
+                                                                    <input value={form.visualAcuityOS} onChange={e => setForm({ ...form, visualAcuityOS: e.target.value })} placeholder="20/20" />
+                                                                </div>
+                                                                <div className="input-group">
+                                                                    <label>Visual Acuity (OD)</label>
+                                                                    <input value={form.visualAcuityOD} onChange={e => setForm({ ...form, visualAcuityOD: e.target.value })} placeholder="20/20" />
+                                                                </div>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                    <div className="form-actions" style={{ display: 'flex', gap: '1rem' }}>
+                                        {includeCertificate && (
+                                            <button 
+                                                type="button"
+                                                className="btn-secondary big" 
+                                                style={{ flex: 1 }}
+                                                onClick={() => {
+                                                    const docObj = doctors.find(d => d._id === form.doctorId);
+                                                    printMedicalCertificate({ ...selectedApp, ...form, doctorId: docObj || selectedApp.doctorId }, form.certificateType);
+                                                }}
+                                            >
+                                                <Printer size={18} /> Preview & Print Certificate
+                                            </button>
+                                        )}
+                                        <button type="submit" className="btn-primary big" style={{ flex: includeCertificate ? 1 : 'unset', width: includeCertificate ? 'auto' : '100%' }}>Complete Consultation {includeCertificate && '& Save'}</button>
                                     </div>
                                 </form>
                             )}
@@ -915,6 +1006,8 @@ const ConsultationPage = () => {
                                     <p><strong>Email:</strong> {patientProfile.email}</p>
                                     <p><strong>Birthday:</strong> {patientProfile.birthday ? new Date(patientProfile.birthday).toLocaleDateString() : '—'}</p>
                                     <p><strong>Sex:</strong> {patientProfile.sex}</p>
+                                    {patientProfile.patientType === 'student' && <p><strong>Course:</strong> {patientProfile.course || '—'}</p>}
+                                    {patientProfile.patientType === 'faculty' && <p><strong>Department:</strong> {patientProfile.department || '—'}</p>}
                                     <p><strong>Contact:</strong> {patientProfile.contactNumber}</p>
                                     <p><strong>Address:</strong> {patientProfile.homeAddress}</p>
                                     <p><strong>Blood Type:</strong> {patientProfile.bloodType}</p>
@@ -929,11 +1022,14 @@ const ConsultationPage = () => {
                                     <p><strong>Smoker:</strong> {patientProfile.personalSocialHistory?.smoking || '—'} ({patientProfile.personalSocialHistory?.smokingSticks || 0} sticks/day)</p>
                                     <p><strong>Drinker:</strong> {patientProfile.personalSocialHistory?.drinking || '—'}</p>
 
+                                    <h4>Family History</h4>
+                                    <p><strong>Conditions:</strong> {Object.entries(patientProfile.familyHistory || {}).filter(([k, v]) => v && k !== 'otherSpecify' && k !== '_id').map(([k]) => k === 'other' ? (patientProfile.familyHistory.otherSpecify ? `Other: ${patientProfile.familyHistory.otherSpecify}` : 'Other') : k.charAt(0).toUpperCase() + k.slice(1).replace(/([A-Z])/g, ' $1')).join(', ') || '—'}</p>
+
                                     <h4>Past Medical History</h4>
-                                    <p><strong>Illnesses:</strong> {Object.entries(patientProfile.pastMedicalHistory || {}).filter(([_, v]) => v).map(([k]) => k).join(', ') || '—'}</p>
+                                    <p><strong>Illnesses:</strong> {Object.entries(patientProfile.pastMedicalHistory || {}).filter(([k, v]) => v && k !== 'otherSpecify' && k !== '_id').map(([k]) => k === 'other' ? (patientProfile.pastMedicalHistory.otherSpecify ? `Other: ${patientProfile.pastMedicalHistory.otherSpecify}` : 'Other') : k.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())).join(', ') || '—'}</p>
 
                                     <h4>Immunization</h4>
-                                    <p><strong>Vaccines:</strong> {Object.entries(patientProfile.immunization || {}).filter(([_, v]) => v).map(([k]) => k).join(', ') || '—'}</p>
+                                    <p><strong>Vaccines:</strong> {Object.entries(patientProfile.immunization || {}).filter(([k, v]) => v && k !== 'otherSpecify' && k !== '_id').map(([k]) => k === 'other' ? (patientProfile.immunization.otherSpecify ? `Other: ${patientProfile.immunization.otherSpecify}` : 'Other') : k.replace(/([A-Z])/g, ' $1').trim()).join(', ') || '—'}</p>
                                 </div>
                             </div>
                             <div className="modal-footer">
