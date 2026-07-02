@@ -113,8 +113,7 @@ const getPatientAppointments = async (req, res) => {
     // Include management and medicinesPrescribed so the patient view shows consultation details
     const appointments = await Appointment.find({ patientId: requestedPatientId })
       .populate('doctorId', 'firstName lastName')
-      .populate('patientId', 'firstName lastName email contactNumber age sex homeAddress')
-      .select('appointmentDate status purpose reasonForVisit typeOfVisit diagnosis management externalPrescription p_age p_sex p_address medicinesPrescribed consultationCompletedAt rescheduleReason doctorId')
+      .populate('patientId', 'firstName lastName email contactNumber age sex homeAddress civilStatus')
       .sort({ appointmentDate: -1 })
       .lean();
 
@@ -136,9 +135,8 @@ const getAllAppointments = async (req, res) => {
     const limit = parseInt(req.query.limit, 10) || 20;
 
     const appointments = await Appointment.find()
-      .populate('patientId', 'firstName lastName email contactNumber role patientType course department college avatar age sex homeAddress')
+      .populate('patientId', 'firstName lastName email contactNumber role patientType course department college avatar age sex homeAddress civilStatus')
       .populate('doctorId', 'firstName lastName')
-      .select('appointmentDate status purpose typeOfVisit patientId doctorId version additionalNotes')
       .sort({ appointmentDate: -1 })
       .skip(page * limit)
       .limit(limit)

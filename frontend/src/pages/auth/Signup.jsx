@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { useTheme } from '../../context/ThemeContext';
 import Recaptcha from '../../components/ui/Recaptcha';
 import CourseSelect from '../../components/ui/CourseSelect';
 import { toast } from 'react-toastify';
@@ -10,7 +9,7 @@ import './Auth.css';
 import buildingImg from '../../assets/building.png';
 import googleLogo from '../../assets/google-logo.png';
 import logo from '../../assets/logo.png';
-
+ 
 const Signup = () => {
     const [form, setForm] = useState({
         firstName: '',
@@ -28,16 +27,9 @@ const Signup = () => {
     });
     const [recaptchaToken, setRecaptchaToken] = useState('');
     const [loading, setLoading] = useState(false);
-
+ 
     const { login } = useAuth();
-    const { setForceLightMode } = useTheme();
     const navigate = useNavigate();
-
-    // Force Light Mode on Signup page
-    useEffect(() => {
-        setForceLightMode(true);
-        return () => setForceLightMode(false);
-    }, [setForceLightMode]);
 
     const handleChange = (e) => {
         setForm({ ...form, [e.target.name]: e.target.value });

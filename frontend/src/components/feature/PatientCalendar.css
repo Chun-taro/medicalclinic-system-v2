@@ -152,7 +152,7 @@
 }
 
 .feedback-card {
-    background: white;
+    background: var(--bg-card);
     width: 100%;
     max-width: 500px;
     border-radius: var(--radius-lg);

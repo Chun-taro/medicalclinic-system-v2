@@ -2,16 +2,11 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { useTheme } from '../../context/ThemeContext';
 import logo from '../../assets/logo.png';
-import { Shield, Clock, Heart, ArrowRight, ArrowDown, LogIn, Download } from 'lucide-react';
+import { Shield, Clock, Heart, ArrowRight, ArrowDown, LogIn, Download, Sun, Moon } from 'lucide-react';
 import './Home.css';
 
 const Home = () => {
-    const { setForceLightMode } = useTheme();
-
-    React.useEffect(() => {
-        setForceLightMode(true);
-        return () => setForceLightMode(false);
-    }, [setForceLightMode]);
+    const { isDarkMode, toggleTheme } = useTheme();
 
     return (
         <div className="home-container">
@@ -26,6 +21,14 @@ const Home = () => {
                     <div className="nav-links">
                         <a href="#features" className="nav-link">Features</a>
                         <a href="#mobile-app" className="nav-link">Mobile App</a>
+                        <button
+                            className="icon-btn theme-toggle"
+                            onClick={toggleTheme}
+                            title={isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+                            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                        >
+                            {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
+                        </button>
                         <Link to="/login" className="nav-portal-btn">
                             Login to Portal
                         </Link>

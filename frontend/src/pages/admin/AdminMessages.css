@@ -87,6 +87,59 @@
     z-index: 1;
 }
 
+.empty-chat-placeholder {
+    max-width: 420px;
+    text-align: center;
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+}
+
+.empty-chat-icon-glow {
+    width: 96px;
+    height: 96px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, rgba(13, 148, 136, 0.1) 0%, rgba(14, 165, 233, 0.1) 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1rem;
+    border: 1px solid rgba(13, 148, 136, 0.2);
+    box-shadow: 0 8px 24px rgba(13, 148, 136, 0.15);
+    animation: pulseGlow 3s ease-in-out infinite alternate;
+}
+
+.empty-chat-icon {
+    color: var(--primary);
+}
+
+.empty-chat-placeholder h3 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-main);
+    margin: 0;
+}
+
+.empty-chat-placeholder p {
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin: 0;
+}
+
+@keyframes pulseGlow {
+    0% {
+        transform: scale(1);
+        box-shadow: 0 8px 24px rgba(13, 148, 136, 0.15);
+    }
+    100% {
+        transform: scale(1.05);
+        box-shadow: 0 12px 32px rgba(13, 148, 136, 0.3);
+    }
+}
+
 /* Hide fallback when a channel is active */
 .str-chat-channel.str-chat__channel .no-channel-selected {
     display: none;
@@ -253,19 +306,36 @@
 
 .custom-channel-preview {
     display: flex;
-    padding: 1rem;
+    padding: 1.25rem 1rem;
     gap: 12px;
     cursor: pointer;
     border-bottom: 1px solid var(--border);
-    transition: background-color 0.2s;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+}
+
+.custom-channel-preview::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: linear-gradient(to bottom, var(--primary), var(--secondary));
+    transform: scaleY(0);
+    transition: transform 0.25s ease;
 }
 
 .custom-channel-preview:hover {
-    background-color: var(--bg-body);
+    background-color: var(--primary-light);
 }
 
 .custom-channel-preview.active {
     background-color: var(--primary-light);
+}
+
+.custom-channel-preview.active::before {
+    transform: scaleY(1);
 }
 
 .preview-content {

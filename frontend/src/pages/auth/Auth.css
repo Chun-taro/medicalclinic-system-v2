@@ -87,7 +87,13 @@
 .auth-card {
     width: 100%;
     max-width: 480px;
-    padding: 2rem;
+    padding: 2.5rem;
+    background: var(--glass-bg);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
 }
 
 .auth-header {
@@ -129,6 +135,8 @@
     border-radius: var(--radius-md);
     font-size: 1rem;
     transition: all 0.2s;
+    background-color: var(--bg-card);
+    color: var(--text-main);
 }
 
 .form-control:focus {
@@ -174,8 +182,8 @@
 }
 
 .btn-google:hover {
-    background-color: #f8fafc;
-    border-color: #cbd5e1;
+    background-color: var(--primary-light);
+    border-color: var(--border);
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
     transform: translateY(-1px);
 }

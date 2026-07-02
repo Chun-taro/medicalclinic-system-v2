@@ -89,6 +89,34 @@ const Header = ({ toggleSidebar }) => {
         }
     };
 
+    const handleNotificationClick = async (notif) => {
+        try {
+            // Mark as read if it's not already
+            if (!notif.read) {
+                await markAsRead(notif._id);
+            }
+
+            // Close the notification dropdown
+            setShowNotifications(false);
+
+            // Redirect based on notification type and user role
+            if (notif.type === 'appointment') {
+                const rolePathMap = {
+                    patient: '/patient-appointments',
+                    admin: '/admin-appointments',
+                    superadmin: '/superadmin-appointments'
+                };
+                
+                const path = rolePathMap[role?.toLowerCase()];
+                if (path) {
+                    navigate(path);
+                }
+            }
+        } catch (err) {
+            console.error('Error handling notification click:', err);
+        }
+    };
+
     const markAllAsRead = async () => {
         try {
             // Assuming backend supports this or loop
@@ -162,7 +190,7 @@ const Header = ({ toggleSidebar }) => {
                                 ) : (
                                     <ul className="notif-list">
                                         {notifications.slice(0, 5).map(n => (
-                                            <li key={n._id} className={`notif-item ${n.read ? 'read' : 'unread'}`} onClick={() => markAsRead(n._id)}>
+                                            <li key={n._id} className={`notif-item ${n.read ? 'read' : 'unread'}`} onClick={() => handleNotificationClick(n)}>
                                                 <div className="notif-text">{n.message}</div>
                                                 <div className="notif-time">{new Date(n.timestamp).toLocaleDateString()}</div>
                                             </li>

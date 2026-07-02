@@ -131,6 +131,7 @@ const AdminDashboard = () => {
 
     const chartOptions = {
         responsive: true,
+        maintainAspectRatio: false,
         plugins: {
             legend: {
                 position: 'bottom',
@@ -209,8 +210,9 @@ const AdminDashboard = () => {
                 </div>
             </div>
 
-            <div className="dashboard-grid">
-                <div className="dashboard-col-left">
+            <div className="dashboard-grid-v2">
+                {/* Row 1: Operations & Schedule (Main View) */}
+                <div className="dashboard-row row-main">
                     <div className="card">
                         <h3>Calendar</h3>
                         <AdminCalendar
@@ -220,38 +222,7 @@ const AdminDashboard = () => {
                         />
                     </div>
 
-
-                </div>
-
-                <div className="dashboard-col-right">
                     <div className="card">
-                        <h3>Metrics Overview</h3>
-                        <div className="chart-container">
-                            <Bar data={metricsChartData} options={chartOptions} />
-                        </div>
-                    </div>
-
-                    <div className="card mt-4">
-                        <h3>Appointments per Course</h3>
-                        <div className="chart-container" style={{ height: '240px', position: 'relative' }}>
-                            <Doughnut data={courseChartData} options={doughnutOptions} />
-                            <div style={{
-                                position: 'absolute',
-                                top: '50%',
-                                left: '33%', // Adjusted because legend is on the right
-                                transform: 'translate(-50%, -50%)',
-                                textAlign: 'center',
-                                pointerEvents: 'none'
-                            }}>
-                                <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Total</div>
-                                <div style={{ fontSize: '1.25rem', fontWeight: 'bold', color: 'var(--text-main)' }}>
-                                    {Object.values(stats.courseStats).reduce((a, b) => a + b, 0)}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="card mt-4">
                         <h3>Appointments for {selectedDate.toDateString()}</h3>
                         {selectedAppointments.length === 0 ? (
                             <p className="text-muted text-center py-4">No appointments scheduled.</p>
@@ -279,6 +250,36 @@ const AdminDashboard = () => {
                                 ))}
                             </div>
                         )}
+                    </div>
+                </div>
+
+                {/* Row 2: Analytics & Metrics */}
+                <div className="dashboard-row row-analytics">
+                    <div className="card">
+                        <h3>Metrics Overview</h3>
+                        <div className="chart-container">
+                            <Bar data={metricsChartData} options={chartOptions} />
+                        </div>
+                    </div>
+
+                    <div className="card">
+                        <h3>Appointments per Course</h3>
+                        <div className="chart-container" style={{ height: '240px', position: 'relative' }}>
+                            <Doughnut data={courseChartData} options={doughnutOptions} />
+                            <div style={{
+                                position: 'absolute',
+                                top: '50%',
+                                left: '33%', // Adjusted because legend is on the right
+                                transform: 'translate(-50%, -50%)',
+                                textAlign: 'center',
+                                pointerEvents: 'none'
+                            }}>
+                                <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Total</div>
+                                <div style={{ fontSize: '1.25rem', fontWeight: 'bold', color: 'var(--text-main)' }}>
+                                    {Object.values(stats.courseStats).reduce((a, b) => a + b, 0)}
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

@@ -3,6 +3,8 @@
  * Supports both Normal (MC-F-001A) and Pathologic (MC-F-001B) versions.
  */
 
+import buksuLogo from '../assets/buksu-logo-min.png';
+
 export const printMedicalCertificate = (appointment, type = 'normal') => {
     const isNormal = type === 'normal';
     const patient = appointment.patientId || {};
@@ -21,7 +23,7 @@ export const printMedicalCertificate = (appointment, type = 'normal') => {
     const doc = iframe.contentWindow.document;
 
     const styles = `
-        @page { size: 8.5in 11in; margin: 0; }
+        @page { size: 8.5in 11in; margin: 0mm !important; }
         body { 
             margin: 0; 
             padding: 0.5in; 
@@ -279,13 +281,13 @@ export const printMedicalCertificate = (appointment, type = 'normal') => {
     const html = `
         <html>
             <head>
-                <title>Medical Certificate - ${patient.firstName} ${patient.lastName}</title>
+                <title> </title>
                 <style>${styles}</style>
             </head>
             <body>
                 <div class="cert-container">
                     <div class="header">
-                        <img src="/logo.png" class="logo" />
+                        <img src="${buksuLogo}" class="logo" />
                         <div class="header-text">
                             <p class="univ-name">BUKIDNON STATE UNIVERSITY</p>
                             <p class="univ-details">Malaybalay City, Bukidnon 8700</p>

@@ -25,7 +25,7 @@
 }
 
 .notification-card {
-    background: white;
+    background: var(--bg-card);
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-sm);
     padding: 1.5rem;
@@ -100,7 +100,7 @@
     text-align: center;
     padding: 4rem 2rem;
     color: var(--text-muted);
-    background: #f9fafb;
+    background: var(--bg-body);
     border-radius: var(--radius-lg);
     border: 2px dashed var(--border);
 }

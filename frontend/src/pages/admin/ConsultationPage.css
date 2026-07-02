@@ -787,6 +787,12 @@
     .overrides-grid {
         grid-template-columns: 1fr 1fr;
     }
+
+    .cert-header-preview {
+        flex-direction: column;
+        gap: 1rem;
+        padding: 1rem;
+    }
 }
 
 @media (max-width: 480px) {
@@ -828,23 +834,110 @@
 .cert-preview {
     max-width: 100% !important;
 }
-/* Warnings */
+
+/* Warnings & Validation Highlights */
 .has-warning input, 
 .has-warning textarea, 
 .has-warning select {
-    border-color: #f39c12 !important;
-    background: rgba(243, 156, 18, 0.05) !important;
+    border-color: #f59e0b !important;
+    background: #fffbeb !important;
+    color: #92400e !important;
+    box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.1) !important;
+}
+
+.dark-mode .has-warning input, 
+.dark-mode .has-warning textarea, 
+.dark-mode .has-warning select {
+    border-color: #eab308 !important;
+    background: rgba(234, 179, 8, 0.12) !important;
+    color: #fef08a !important;
+    box-shadow: 0 0 0 2px rgba(234, 179, 8, 0.15) !important;
+}
+
+/* Focused Warning Inputs get a stronger ring */
+.has-warning input:focus, 
+.has-warning textarea:focus, 
+.has-warning select:focus {
+    border-color: #d97706 !important;
+    box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.25) !important;
+}
+
+.dark-mode .has-warning input:focus, 
+.dark-mode .has-warning textarea:focus, 
+.dark-mode .has-warning select:focus {
+    border-color: #facc15 !important;
+    box-shadow: 0 0 0 3px rgba(250, 204, 21, 0.3) !important;
 }
 
 .warning-text {
-    color: #f39c12 !important;
-    font-size: 0.65rem;
-    font-weight: bold;
+    color: #d97706 !important;
+    font-size: 0.72rem;
+    font-weight: 600;
     margin-left: 0.5rem;
     text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.dark-mode .warning-text {
+    color: #facc15 !important;
 }
 
 .has-warning label {
-    color: #f39c12 !important;
+    color: #b45309 !important;
+    font-weight: 600;
 }
 
+.dark-mode .has-warning label {
+    color: #facc15 !important;
+}
+
+/* Medical Certificate Header Preview */
+.cert-header-preview {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1.5rem;
+    margin: 1.5rem 0 2rem 0;
+    padding: 1.5rem;
+    background: var(--bg-body);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border);
+    position: relative;
+}
+
+.cert-header-logo {
+    width: 70px;
+    height: 70px;
+    object-fit: contain;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.15));
+}
+
+.cert-header-text {
+    text-align: center;
+    flex: 1;
+}
+
+.cert-header-text h2 {
+    font-size: 1.25rem;
+    font-weight: 800;
+    margin: 0 0 4px 0;
+    color: var(--text-main);
+    letter-spacing: 0.5px;
+}
+
+.cert-header-text .univ-details,
+.cert-header-text .univ-contact {
+    font-size: 0.8rem;
+    margin: 2px 0;
+    color: var(--text-muted);
+}
+
+.cert-main-title {
+    margin-top: 1rem;
+    font-size: 1.3rem;
+    font-weight: 800;
+    text-decoration: underline;
+    color: var(--primary);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}

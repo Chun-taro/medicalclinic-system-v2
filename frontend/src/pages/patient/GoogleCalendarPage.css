@@ -32,7 +32,7 @@
 }
 
 .calendar-event-card {
-    background: white;
+    background: var(--bg-card);
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-sm);
     padding: 1.5rem;
@@ -81,7 +81,7 @@
 .oauth-connect {
     text-align: center;
     padding: 4rem 2rem;
-    background: white;
+    background: var(--bg-card);
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-sm);
 }
@@ -102,10 +102,10 @@
     justify-content: center;
     gap: 0.75rem;
     padding: 0.875rem 1.5rem;
-    background-color: white;
-    border: 1px solid #e2e8f0;
+    background-color: var(--bg-card);
+    border: 1px solid var(--border);
     border-radius: var(--radius-md);
-    color: #475569;
+    color: var(--text-main);
     font-weight: 600;
     font-size: 0.95rem;
     text-decoration: none;
@@ -115,8 +115,8 @@
 }
 
 .btn-google:hover {
-    background-color: #f8fafc;
-    border-color: #cbd5e1;
+    background-color: var(--primary-light);
+    border-color: var(--border);
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
     transform: translateY(-1px);
 }

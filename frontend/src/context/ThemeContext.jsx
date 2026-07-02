@@ -6,7 +6,10 @@ export const ThemeProvider = ({ children }) => {
     // Keep track of user's persistent preference
     const [isDarkMode, setIsDarkMode] = useState(() => {
         const saved = localStorage.getItem('theme');
-        return saved === 'dark';
+        if (saved !== null) {
+            return saved === 'dark';
+        }
+        return true; // Default to dark mode
     });
 
     // Temporary override for specific pages like Login/Home

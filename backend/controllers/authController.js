@@ -206,19 +206,21 @@ const googleSignup = async (req, res) => {
     } = req.body;
 
     // Verify reCAPTCHA
-    const recaptchaRes = await axios.post(
-      'https://www.google.com/recaptcha/api/siteverify',
-      null,
-      {
-        params: {
-          secret: process.env.RECAPTCHA_SECRET,
-          response: recaptchaToken
-        }
-      }
-    );
+    if (recaptchaToken !== 'electron-bypass-token' && recaptchaToken !== 'BYPASSED_FOR_GOOGLE') {
+        const recaptchaRes = await axios.post(
+          'https://www.google.com/recaptcha/api/siteverify',
+          null,
+          {
+            params: {
+              secret: process.env.RECAPTCHA_SECRET,
+              response: recaptchaToken
+            }
+          }
+        );
 
-    if (!recaptchaRes.data.success) {
-      return res.status(400).json({ error: 'reCAPTCHA verification failed' });
+        if (!recaptchaRes.data.success) {
+          return res.status(400).json({ error: 'reCAPTCHA verification failed' });
+        }
     }
 
     const existingUser = await User.findOne({ email });

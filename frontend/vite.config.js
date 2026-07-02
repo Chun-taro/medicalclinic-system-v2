@@ -4,6 +4,7 @@ import path from 'path';
 
 // https://vitejs.dev/config/
 export default defineConfig({
+  base: './',
   plugins: [react()],
   resolve: {
     alias: {
@@ -13,17 +14,17 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'https://localhost:5000',
+        target: 'http://localhost:5000',
         changeOrigin: true,
         secure: false,
       },
       '/socket.io': {
-        target: 'https://localhost:5000',
+        target: 'http://localhost:5000',
         ws: true,
         secure: false,
       },
       '/uploads': {
-        target: 'https://localhost:5000',
+        target: 'http://localhost:5000',
         changeOrigin: true,
         secure: false,
       },

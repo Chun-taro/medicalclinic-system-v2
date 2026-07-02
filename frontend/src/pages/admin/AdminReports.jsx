@@ -3,6 +3,8 @@ import api from '../../services/api'; // Ensure this points to your configured A
 import { toast } from 'react-toastify';
 import { FileText, Search, Calendar, ChevronDown, ChevronRight, Download, Printer, Activity, Heart, Thermometer, Wind, Stethoscope, User, Clock, FileBadge, X } from 'lucide-react';
 import './AdminReports.css';
+import buksuLogo from '../../assets/buksu-logo-min.png';
+import { paginatePrescriptionText } from '../../utils/paginatePrescription';
 
 const AdminReports = () => {
     const [consultations, setConsultations] = useState([]);
@@ -126,6 +128,8 @@ const AdminReports = () => {
     };
 
     const handlePrintPrescription = (item) => {
+        const pages = paginatePrescriptionText(item.externalPrescription || 'No prescription text provided.');
+
         // Create a hidden iframe for clean printing
         const iframe = document.createElement('iframe');
         iframe.style.position = 'fixed';
@@ -137,6 +141,51 @@ const AdminReports = () => {
         document.body.appendChild(iframe);
 
         const doc = iframe.contentWindow.document;
+
+        const pagesHtml = pages.map((pageText, pageIdx) => `
+            <div class="prescription-page">
+                <div class="slip-header">
+                    <img src="${buksuLogo}" width="45" height="45" />
+                    <div class="slip-titles">
+                        <h2>BUKIDNON STATE UNIVERSITY</h2>
+                        <p>Malaybalay City, Bukidnon 8700</p>
+                        <p>Tel (088) 813-5661; Fax (088) 813-2717</p>
+                    </div>
+                </div>
+                <span class="slip-doc-type">PRESCRIPTION SLIP</span>
+                
+                <div class="slip-patient-data">
+                    <div class="slip-row">
+                        <span class="fill-line"><b>Name:</b> ${item.patientId?.firstName} ${item.patientId?.lastName}</span>
+                        <span style="min-width: 60px;"><b>Age:</b> ${item.p_age || item.patientId?.age || '—'}</span>
+                        <span style="min-width: 60px;"><b>Sex:</b> ${item.p_sex || item.patientId?.sex || '—'}</span>
+                    </div>
+                    <div class="slip-row">
+                        <span class="fill-line"><b>Address:</b> ${item.p_address || item.patientId?.homeAddress || '—'}</span>
+                        <span style="min-width: 100px;"><b>Date:</b> ${new Date(item.consultationCompletedAt || item.appointmentDate).toLocaleDateString()}</span>
+                    </div>
+                </div>
+
+                <div class="rx-content">
+                    <div class="rx-symbol">Rx</div>
+                    <div class="rx-body">${pageText}</div>
+                </div>
+
+                <div class="slip-footer">
+                    <div class="physician">
+                        <div class="sig-line">Dr. ${item.doctorId?.firstName || ''} ${item.doctorId?.lastName || '________________'}</div>
+                        <p>University Physician</p>
+                    </div>
+                    <div class="metadata">
+                        <span>Doc Code: OSS-F-MC-009</span>
+                        <span>Rev No: 03</span>
+                        <span>Issue Date: 09/28/2020</span>
+                        <span>Page ${pageIdx + 1} of ${pages.length}</span>
+                    </div>
+                </div>
+            </div>
+        `).join('\n');
+
         const html = `
             <html>
                 <head>
@@ -145,13 +194,26 @@ const AdminReports = () => {
                         @page { size: 4.25in 5.5in; margin: 0; }
                         body { 
                             margin: 0; 
-                            padding: 0.3in; 
+                            padding: 0; 
                             font-family: 'Times New Roman', serif;
+                            background: white;
+                        }
+                        .prescription-page {
                             width: 4.25in;
                             height: 5.5in;
+                            padding: 0.15in 0.3in 0.15in 0.3in;
                             box-sizing: border-box;
                             display: flex;
                             flex-direction: column;
+                            justify-content: flex-start;
+                            align-items: flex-start;
+                            position: relative;
+                            page-break-after: always;
+                            background: white;
+                            overflow: hidden;
+                        }
+                        .prescription-page:last-child {
+                            page-break-after: avoid;
                         }
                         .slip-header {
                             display: flex;
@@ -160,6 +222,7 @@ const AdminReports = () => {
                             border-bottom: 2px solid black;
                             padding-bottom: 10px;
                             margin-bottom: 15px;
+                            width: 100%;
                         }
                         .slip-titles {
                             flex: 1;
@@ -168,13 +231,13 @@ const AdminReports = () => {
                         .slip-titles h2 { margin: 0; font-size: 14px; }
                         .slip-titles p { margin: 2px 0; font-size: 10px; }
                         .slip-doc-type { margin-top: 5px; font-size: 12px; font-weight: bold; text-decoration: underline; text-align: center; width: 100%; display: block; }
-                        .slip-patient-data { margin-bottom: 15px; font-size: 11px; }
+                        .slip-patient-data { margin-bottom: 15px; font-size: 11px; width: 100%; }
                         .slip-row { display: flex; gap: 20px; border-bottom: 1px solid black; margin-bottom: 8px; padding-bottom: 2px; }
                         .fill-line { flex: 1; }
-                        .rx-content { flex: 1; position: relative; margin-top: 20px; }
+                        .rx-content { flex: 1; position: relative; margin-top: 20px; width: 100%; }
                         .rx-symbol { font-size: 40px; font-weight: bold; position: absolute; top: -5px; }
                         .rx-body { padding-top: 30px; padding-left: 15px; font-size: 14px; line-height: 1.5; white-space: pre-wrap; }
-                        .slip-footer { border-top: 2px solid black; padding-top: 15px; margin-top: auto; }
+                        .slip-footer { border-top: 2px solid black; padding-top: 15px; margin-top: auto; width: 100%; }
                         .physician { text-align: center; margin-left: auto; width: 220px; }
                         .sig-line { border-bottom: 1px solid black; font-weight: bold; font-size: 14px; padding-bottom: 2px; }
                         .physician p { margin: 2px 0; font-size: 10px; }
@@ -182,45 +245,7 @@ const AdminReports = () => {
                     </style>
                 </head>
                 <body>
-                    <div class="slip-header">
-                        <img src="/logo.png" width="45" height="45" />
-                        <div class="slip-titles">
-                            <h2>BUKIDNON STATE UNIVERSITY</h2>
-                            <p>Malaybalay City, Bukidnon 8700</p>
-                            <p>Tel (088) 813-5661; Fax (088) 813-2717</p>
-                        </div>
-                    </div>
-                    <span class="slip-doc-type">PRESCRIPTION SLIP</span>
-                    
-                    <div class="slip-patient-data">
-                        <div class="slip-row">
-                            <span class="fill-line"><b>Name:</b> ${item.patientId?.firstName} ${item.patientId?.lastName}</span>
-                            <span style="min-width: 60px;"><b>Age:</b> ${item.p_age || item.patientId?.age || '—'}</span>
-                            <span style="min-width: 60px;"><b>Sex:</b> ${item.p_sex || item.patientId?.sex || '—'}</span>
-                        </div>
-                        <div class="slip-row">
-                            <span class="fill-line"><b>Address:</b> ${item.p_address || item.patientId?.homeAddress || '—'}</span>
-                            <span style="min-width: 100px;"><b>Date:</b> ${new Date(item.consultationCompletedAt || item.appointmentDate).toLocaleDateString()}</span>
-                        </div>
-                    </div>
-
-                    <div class="rx-content">
-                        <div class="rx-symbol">Rx</div>
-                        <div class="rx-body">${item.externalPrescription || 'No prescription text provided.'}</div>
-                    </div>
-
-                    <div class="slip-footer">
-                        <div class="physician">
-                            <div class="sig-line">Dr. ${item.doctorId?.firstName} ${item.doctorId?.lastName || '________________'}</div>
-                            <p>University Physician</p>
-                        </div>
-                        <div class="metadata">
-                            <span>Doc Code: OSS-F-MC-009</span>
-                            <span>Rev No: 03</span>
-                            <span>Issue Date: 09/28/2020</span>
-                            <span>Page 1 of 1</span>
-                        </div>
-                    </div>
+                    ${pagesHtml}
                 </body>
             </html>
         `;
@@ -229,6 +254,7 @@ const AdminReports = () => {
         doc.close();
 
         iframe.onload = () => {
+            iframe.contentWindow.focus();
             iframe.contentWindow.print();
             setTimeout(() => document.body.removeChild(iframe), 1000);
         };

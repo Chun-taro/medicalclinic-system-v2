@@ -55,7 +55,7 @@ const courseList = [
 
 const allCoursesFlat = courseList.flatMap(c => c.courses);
 
-const CourseSelect = ({ value, onChange, name, className, disabled, required = false }) => {
+const CourseSelect = ({ value, onChange, name, id, className, disabled, required = false }) => {
     const [isOther, setIsOther] = useState(false);
     
     // Check if the current value is NOT in the list (meaning it's a custom "Other" value)
@@ -86,6 +86,7 @@ const CourseSelect = ({ value, onChange, name, className, disabled, required = f
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', width: '100%' }}>
             {!isOther ? (
                 <select
+                    id={id}
                     name={name}
                     className={className}
                     value={value || ''}
@@ -107,6 +108,7 @@ const CourseSelect = ({ value, onChange, name, className, disabled, required = f
             ) : (
                 <div style={{ display: 'flex', gap: '0.5rem', width: '100%' }}>
                     <input
+                        id={id}
                         type="text"
                         name={name}
                         className={className}

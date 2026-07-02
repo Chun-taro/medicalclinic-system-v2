@@ -9,7 +9,7 @@ import {
     MessageInput, 
     Thread 
 } from 'stream-chat-react';
-import { Search } from 'lucide-react';
+import { Search, MessageSquare } from 'lucide-react';
 import { useChat } from '../../context/ChatContext';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
@@ -200,7 +200,13 @@ const AdminMessagesContent = () => {
                 </Channel>
                 {!activeChannel && (
                     <div className="no-channel-selected">
-                        <p>Select a conversation or start a new one</p>
+                        <div className="empty-chat-placeholder">
+                            <div className="empty-chat-icon-glow">
+                                <MessageSquare size={48} className="empty-chat-icon" />
+                            </div>
+                            <h3>Clinic Message Portal</h3>
+                            <p>Select a patient conversation from the list to start messaging, or search for a patient on the sidebar to initiate a new thread.</p>
+                        </div>
                     </div>
                 )}
             </div>

@@ -34,3 +34,8 @@ tmp/
 test-*.js
 debug-*.js
 *.debug.txt
+
+# Large archives
+project.tar.gz
+project.zip
+dist-electron/

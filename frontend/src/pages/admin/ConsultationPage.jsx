@@ -9,6 +9,9 @@ import {
 import { printMedicalCertificate } from '../../utils/printCertificate';
 import { useAuth } from '../../context/AuthContext';
 import './ConsultationPage.css';
+import buksuLogo from '../../assets/buksu-logo-min.png';
+import showConfirm from '../../utils/showConfirm';
+import { paginatePrescriptionText } from '../../utils/paginatePrescription';
 
 const ConsultationPage = () => {
     const { user: currentUser } = useAuth();
@@ -201,6 +204,8 @@ const ConsultationPage = () => {
         const doctor = doctors.find(d => d._id === form.doctorId);
         const doctorName = doctor ? `Dr. ${doctor.firstName} ${doctor.lastName}` : '________________';
 
+        const pages = paginatePrescriptionText(form.externalPrescription || '');
+
         // Create a hidden iframe for clean printing
         const iframe = document.createElement('iframe');
         iframe.style.position = 'fixed';
@@ -212,21 +217,79 @@ const ConsultationPage = () => {
         document.body.appendChild(iframe);
 
         const doc = iframe.contentWindow.document;
+        
+        const pagesHtml = pages.map((pageText, pageIdx) => `
+            <div class="prescription-page">
+                <div class="slip-header">
+                    <img src="${buksuLogo}" width="45" height="45" />
+                    <div class="slip-titles">
+                        <h2>BUKIDNON STATE UNIVERSITY</h2>
+                        <p>Malaybalay City, Bukidnon 8700</p>
+                        <p>Tel (088) 813-5661; Fax (088) 813-2717</p>
+                    </div>
+                </div>
+                <span class="slip-doc-type">PRESCRIPTION SLIP</span>
+                
+                <div class="slip-patient-data">
+                    <div class="slip-row">
+                        <span class="fill-line"><b>Name:</b> ${selectedApp?.patientId?.firstName} ${selectedApp?.patientId?.lastName}</span>
+                        <span style="min-width: 60px;"><b>Age:</b> ${form.p_age || '—'}</span>
+                        <span style="min-width: 60px;"><b>Sex:</b> ${form.p_sex || '—'}</span>
+                    </div>
+                    <div class="slip-row">
+                        <span class="fill-line"><b>Address:</b> ${form.p_address || '—'}</span>
+                        <span style="min-width: 100px;"><b>Date:</b> ${new Date().toLocaleDateString()}</span>
+                    </div>
+                </div>
+
+                <div class="rx-content">
+                    <div class="rx-symbol">Rx</div>
+                    <div class="rx-body">${pageText}</div>
+                </div>
+
+                <div class="slip-footer">
+                    <div class="physician">
+                        <div class="sig-line">${doctorName}</div>
+                        <p>University Physician</p>
+                    </div>
+                    <div class="metadata">
+                        <span>Doc Code: OSS-F-MC-009</span>
+                        <span>Rev No: 03</span>
+                        <span>Issue Date: 09/28/2020</span>
+                        <span>Page ${pageIdx + 1} of ${pages.length}</span>
+                    </div>
+                </div>
+            </div>
+        `).join('\n');
+
         const html = `
             <html>
                 <head>
-                    <title>Prescription - ${selectedApp?.patientId?.firstName} ${selectedApp?.patientId?.lastName}</title>
+                    <title> </title>
                     <style>
-                        @page { size: 4.25in 5.5in; margin: 0; }
+                        @page { size: 4.25in 5.5in; margin: 0mm !important; }
                         body { 
                             margin: 0; 
-                            padding: 0.3in; 
+                            padding: 0; 
                             font-family: 'Times New Roman', serif;
+                            background: white;
+                        }
+                        .prescription-page {
                             width: 4.25in;
                             height: 5.5in;
+                            padding: 0.15in 0.3in 0.15in 0.3in;
                             box-sizing: border-box;
                             display: flex;
                             flex-direction: column;
+                            justify-content: flex-start;
+                            align-items: flex-start;
+                            position: relative;
+                            page-break-after: always;
+                            background: white;
+                            overflow: hidden;
+                        }
+                        .prescription-page:last-child {
+                            page-break-after: avoid;
                         }
                         .slip-header {
                             display: flex;
@@ -235,6 +298,7 @@ const ConsultationPage = () => {
                             border-bottom: 2px solid black;
                             padding-bottom: 10px;
                             margin-bottom: 15px;
+                            width: 100%;
                         }
                         .slip-titles {
                             flex: 1;
@@ -243,13 +307,13 @@ const ConsultationPage = () => {
                         .slip-titles h2 { margin: 0; font-size: 14px; }
                         .slip-titles p { margin: 2px 0; font-size: 10px; }
                         .slip-doc-type { margin-top: 5px; font-size: 12px; font-weight: bold; text-decoration: underline; text-align: center; width: 100%; display: block; }
-                        .slip-patient-data { margin-bottom: 15px; font-size: 11px; }
+                        .slip-patient-data { margin-bottom: 15px; font-size: 11px; width: 100%; }
                         .slip-row { display: flex; gap: 20px; border-bottom: 1px solid black; margin-bottom: 8px; padding-bottom: 2px; }
                         .fill-line { flex: 1; }
-                        .rx-content { flex: 1; position: relative; margin-top: 20px; }
+                        .rx-content { flex: 1; position: relative; margin-top: 20px; width: 100%; }
                         .rx-symbol { font-size: 40px; font-weight: bold; position: absolute; top: -5px; }
                         .rx-body { padding-top: 30px; padding-left: 15px; font-size: 14px; line-height: 1.5; white-space: pre-wrap; }
-                        .slip-footer { border-top: 2px solid black; padding-top: 15px; margin-top: auto; }
+                        .slip-footer { border-top: 2px solid black; padding-top: 15px; margin-top: auto; width: 100%; }
                         .physician { text-align: center; margin-left: auto; width: 220px; }
                         .sig-line { border-bottom: 1px solid black; font-weight: bold; font-size: 14px; padding-bottom: 2px; }
                         .physician p { margin: 2px 0; font-size: 10px; }
@@ -257,45 +321,7 @@ const ConsultationPage = () => {
                     </style>
                 </head>
                 <body>
-                    <div class="slip-header">
-                        <img src="/logo.png" width="45" height="45" />
-                        <div class="slip-titles">
-                            <h2>BUKIDNON STATE UNIVERSITY</h2>
-                            <p>Malaybalay City, Bukidnon 8700</p>
-                            <p>Tel (088) 813-5661; Fax (088) 813-2717</p>
-                        </div>
-                    </div>
-                    <span class="slip-doc-type">PRESCRIPTION SLIP</span>
-                    
-                    <div class="slip-patient-data">
-                        <div class="slip-row">
-                            <span class="fill-line"><b>Name:</b> ${selectedApp?.patientId?.firstName} ${selectedApp?.patientId?.lastName}</span>
-                            <span style="min-width: 60px;"><b>Age:</b> ${form.p_age || '—'}</span>
-                            <span style="min-width: 60px;"><b>Sex:</b> ${form.p_sex || '—'}</span>
-                        </div>
-                        <div class="slip-row">
-                            <span class="fill-line"><b>Address:</b> ${form.p_address || '—'}</span>
-                            <span style="min-width: 100px;"><b>Date:</b> ${new Date().toLocaleDateString()}</span>
-                        </div>
-                    </div>
-
-                    <div class="rx-content">
-                        <div class="rx-symbol">Rx</div>
-                        <div class="rx-body">${form.externalPrescription || ''}</div>
-                    </div>
-
-                    <div class="slip-footer">
-                        <div class="physician">
-                            <div class="sig-line">${doctorName}</div>
-                            <p>University Physician</p>
-                        </div>
-                        <div class="metadata">
-                            <span>Doc Code: OSS-F-MC-009</span>
-                            <span>Rev No: 03</span>
-                            <span>Issue Date: 09/28/2020</span>
-                            <span>Page 1 of 1</span>
-                        </div>
-                    </div>
+                    ${pagesHtml}
                 </body>
             </html>
         `;
@@ -311,20 +337,177 @@ const ConsultationPage = () => {
         }, 500);
     };
 
+    const validateAndFocus = (requiredFields) => {
+        const fieldLabels = {
+            bloodPressure: "Blood Pressure",
+            temperature: "Temperature",
+            pulseRate: "Pulse Rate / Heart Rate",
+            respiratoryRate: "Respiratory Rate",
+            height: "Height",
+            weight: "Weight",
+            doctorId: "Attending Doctor",
+            diagnosis: "Diagnosis / Doctor's Note",
+            issuedFor: "Issued For",
+            p_age: "Age",
+            p_sex: "Sex",
+            p_civilStatus: "Civil Status",
+            p_address: "Address",
+            p_course: "Course",
+            validForAY: "Academic Year (AY)",
+            validForSemester: "Semester"
+        };
+
+        const missing = requiredFields.filter(f => {
+            const val = form[f];
+            // Treat empty dropdown option "" or empty string as missing
+            return !val || (typeof val === 'string' && val.trim() === '');
+        });
+
+        if (missing.length > 0) {
+            const missingNames = missing.map(f => fieldLabels[f] || f);
+            toast.error(
+                <div style={{ textAlign: 'left' }}>
+                    <strong>Please fill in all required fields:</strong>
+                    <ul style={{ margin: '5px 0 0', paddingLeft: '15px', fontSize: '0.85rem' }}>
+                        {missingNames.map((name, i) => (
+                            <li key={i}>{name}</li>
+                        ))}
+                    </ul>
+                </div>,
+                { autoClose: 5000 }
+            );
+
+            // Focus and scroll to the first missing element
+            const firstMissing = missing[0];
+            setTimeout(() => {
+                const element = document.getElementById(firstMissing);
+                if (element) {
+                    element.focus();
+                    element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }, 100);
+
+            return false;
+        }
+        return true;
+    };
+
+    const validateForPrint = async (requiredFields) => {
+        const fieldLabels = {
+            bloodPressure: "Blood Pressure",
+            temperature: "Temperature",
+            pulseRate: "Pulse Rate / Heart Rate",
+            respiratoryRate: "Respiratory Rate",
+            height: "Height",
+            weight: "Weight",
+            doctorId: "Attending Doctor",
+            diagnosis: "Diagnosis / Doctor's Note",
+            issuedFor: "Issued For",
+            p_age: "Age",
+            p_sex: "Sex",
+            p_civilStatus: "Civil Status",
+            p_address: "Address",
+            p_course: "Course",
+            validForAY: "Academic Year (AY)",
+            validForSemester: "Semester"
+        };
+
+        const missing = requiredFields.filter(f => {
+            const val = form[f];
+            return !val || (typeof val === 'string' && val.trim() === '');
+        });
+
+        if (missing.length > 0) {
+            const missingNames = missing.map(f => fieldLabels[f] || f);
+            const confirmMsg = (
+                <div style={{ textAlign: 'left' }}>
+                    <span style={{ fontWeight: 600 }}>Warning: The following fields are not filled:</span>
+                    <ul style={{ margin: '6px 0', paddingLeft: '1.25rem', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+                        {missingNames.map((name, i) => (
+                            <li key={i}>{name}</li>
+                        ))}
+                    </ul>
+                    <span style={{ fontWeight: 600 }}>Are you sure you want to print without filling all the field text?</span>
+                </div>
+            );
+            
+            const confirmed = await showConfirm(confirmMsg);
+            if (!confirmed) {
+                const firstMissing = missing[0];
+                setTimeout(() => {
+                    const element = document.getElementById(firstMissing);
+                    if (element) {
+                        element.focus();
+                        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                }, 100);
+                return false;
+            }
+        }
+        return true;
+    };
+
+    const handlePreviewPrescriptionClick = async () => {
+        const required = ['externalPrescription', 'p_age', 'p_sex', 'p_address', 'doctorId'];
+        const fieldLabels = {
+            externalPrescription: "Prescribed Medicines",
+            p_age: "Age",
+            p_sex: "Sex",
+            p_address: "Address",
+            doctorId: "Attending Doctor"
+        };
+
+        const missing = required.filter(f => !form[f] || (typeof form[f] === 'string' && form[f].trim() === ''));
+
+        if (missing.length > 0) {
+            const missingNames = missing.map(f => fieldLabels[f] || f);
+            const confirmMsg = (
+                <div style={{ textAlign: 'left' }}>
+                    <span style={{ fontWeight: 600 }}>Warning: The following fields are not filled:</span>
+                    <ul style={{ margin: '6px 0', paddingLeft: '1.25rem', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+                        {missingNames.map((name, i) => (
+                            <li key={i}>{name}</li>
+                        ))}
+                    </ul>
+                    <span style={{ fontWeight: 600 }}>Are you sure you want to preview & print the prescription anyway?</span>
+                </div>
+            );
+
+            const confirmed = await showConfirm(confirmMsg);
+            if (!confirmed) {
+                const firstMissing = missing[0];
+                setTimeout(() => {
+                    const element = document.getElementById(firstMissing);
+                    if (element) {
+                        element.focus();
+                        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                }, 100);
+                return;
+            }
+        }
+        setShowPrescriptionModal(true);
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         
         // Validation
-        const requiredVitals = ['bloodPressure', 'temperature', 'pulseRate', 'respiratoryRate', 'height', 'weight'];
-        const missingVitals = requiredVitals.filter(f => !form[f]);
-        
-        if (missingVitals.length > 0) {
-            toast.error('Please fill in all Vital Signs before completing.');
-            return;
+        const required = ['bloodPressure', 'temperature', 'pulseRate', 'respiratoryRate', 'height', 'weight', 'doctorId', 'diagnosis'];
+        if (includeCertificate) {
+            required.push('issuedFor', 'p_age', 'p_sex', 'p_address', 'p_civilStatus', 'p_course');
+            if (form.certificateType === 'normal') {
+                required.push('validForAY', 'validForSemester');
+            }
         }
 
-        if (!form.diagnosis) {
-            toast.error('Please enter a Diagnosis/Doctor\'s Note.');
+        if (!validateAndFocus(required)) return;
+
+        const confirmMsg = includeCertificate 
+            ? "Are you sure you want to complete this consultation and save the medical certificate?" 
+            : "Are you sure you want to complete this consultation?";
+        const confirmed = await showConfirm(confirmMsg);
+        if (!confirmed) {
             return;
         }
 
@@ -475,10 +658,20 @@ const ConsultationPage = () => {
                                             </div>
                                         </div>
 
+                                        <div className="cert-header-preview">
+                                            <img src={buksuLogo} className="cert-header-logo" alt="BukSU Logo" />
+                                            <div className="cert-header-text">
+                                                <h2>BUKIDNON STATE UNIVERSITY</h2>
+                                                <p className="univ-details">Malaybalay City, Bukidnon 8700</p>
+                                                <p className="univ-contact">Tel (088) 813-5661 to 5663; TeleFax: (088) 813-2717, www.buksu.edu.ph</p>
+                                                <div className="cert-main-title">MEDICAL CERTIFICATE</div>
+                                            </div>
+                                        </div>
+
                                         <div className="cert-form-grid">
-                                            <div className="input-group">
-                                                <label>Issued For</label>
-                                                <input value={form.issuedFor} onChange={e => setForm({ ...form, issuedFor: e.target.value })} placeholder="Purpose" />
+                                            <div className={`input-group ${!form.issuedFor ? 'has-warning' : ''}`}>
+                                                <label>Issued For {!form.issuedFor && <span className="warning-text">(Empty)</span>}</label>
+                                                <input id="issuedFor" value={form.issuedFor} onChange={e => setForm({ ...form, issuedFor: e.target.value })} placeholder="Purpose" />
                                             </div>
                                             {form.certificateType === 'normal' && (
                                                 <>
@@ -489,13 +682,13 @@ const ConsultationPage = () => {
                                                             <option value="false">Not Fit</option>
                                                         </select>
                                                     </div>
-                                                    <div className="input-group">
-                                                        <label>AY</label>
-                                                        <input value={form.validForAY} onChange={e => setForm({ ...form, validForAY: e.target.value })} placeholder="2024-2025" />
+                                                    <div className={`input-group ${!form.validForAY ? 'has-warning' : ''}`}>
+                                                        <label>AY {!form.validForAY && <span className="warning-text">(Empty)</span>}</label>
+                                                        <input id="validForAY" value={form.validForAY} onChange={e => setForm({ ...form, validForAY: e.target.value })} placeholder="2024-2025" />
                                                     </div>
-                                                    <div className="input-group">
-                                                        <label>Semester</label>
-                                                        <select value={form.validForSemester} onChange={e => setForm({ ...form, validForSemester: e.target.value })}>
+                                                    <div className={`input-group ${!form.validForSemester ? 'has-warning' : ''}`}>
+                                                        <label>Semester {!form.validForSemester && <span className="warning-text">(Empty)</span>}</label>
+                                                        <select id="validForSemester" value={form.validForSemester} onChange={e => setForm({ ...form, validForSemester: e.target.value })}>
                                                             <option value="">Select...</option>
                                                             <option value="1st">1st Sem</option>
                                                             <option value="2nd">2nd Sem</option>
@@ -511,23 +704,23 @@ const ConsultationPage = () => {
                                             <div className="overrides-grid">
                                                 <div className={`input-group ${!form.p_age ? 'has-warning' : ''}`}>
                                                     <label>Age {!form.p_age && <span className="warning-text">(Empty)</span>}</label>
-                                                    <input value={form.p_age} onChange={e => setForm({ ...form, p_age: e.target.value })} placeholder="Age" />
+                                                    <input id="p_age" value={form.p_age} onChange={e => setForm({ ...form, p_age: e.target.value })} placeholder="Age" />
                                                 </div>
                                                 <div className={`input-group ${!form.p_sex ? 'has-warning' : ''}`}>
                                                     <label>Sex {!form.p_sex && <span className="warning-text">(Empty)</span>}</label>
-                                                    <input value={form.p_sex} onChange={e => setForm({ ...form, p_sex: e.target.value })} placeholder="Sex" />
+                                                    <input id="p_sex" value={form.p_sex} onChange={e => setForm({ ...form, p_sex: e.target.value })} placeholder="Sex" />
                                                 </div>
                                                 <div className={`input-group ${!form.p_civilStatus ? 'has-warning' : ''}`}>
                                                     <label>Civil Status {!form.p_civilStatus && <span className="warning-text">(Empty)</span>}</label>
-                                                    <input value={form.p_civilStatus} onChange={e => setForm({ ...form, p_civilStatus: e.target.value })} placeholder="Single" />
+                                                    <input id="p_civilStatus" value={form.p_civilStatus} onChange={e => setForm({ ...form, p_civilStatus: e.target.value })} placeholder="Single" />
                                                 </div>
                                                 <div className={`input-group ${!form.p_address ? 'has-warning' : ''}`}>
                                                     <label>Resident of {!form.p_address && <span className="warning-text">(Empty)</span>}</label>
-                                                    <input value={form.p_address} onChange={e => setForm({ ...form, p_address: e.target.value })} placeholder="Address" />
+                                                    <input id="p_address" value={form.p_address} onChange={e => setForm({ ...form, p_address: e.target.value })} placeholder="Address" />
                                                 </div>
                                                 <div className={`input-group ${!form.p_course ? 'has-warning' : ''}`}>
                                                     <label>Taking up (Course) {!form.p_course && <span className="warning-text">(Empty)</span>}</label>
-                                                    <CourseSelect name="p_course" value={form.p_course} onChange={e => setForm({ ...form, p_course: e.target.value })} />
+                                                    <CourseSelect id="p_course" name="p_course" value={form.p_course} onChange={e => setForm({ ...form, p_course: e.target.value })} />
                                                 </div>
                                             </div>
                                         </div>
@@ -537,27 +730,27 @@ const ConsultationPage = () => {
                                             <div className="vitals-grid">
                                                 <div className={`input-group ${!form.bloodPressure ? 'has-warning' : ''}`}>
                                                     <label>BP {!form.bloodPressure && <span className="warning-text">(Empty)</span>}</label>
-                                                    <input value={form.bloodPressure} onChange={e => setForm({ ...form, bloodPressure: e.target.value })} placeholder="120/80" />
+                                                    <input id="bloodPressure" value={form.bloodPressure} onChange={e => setForm({ ...form, bloodPressure: e.target.value })} placeholder="120/80" />
                                                 </div>
                                                 <div className={`input-group ${!form.temperature ? 'has-warning' : ''}`}>
                                                     <label>Temp (°C) {!form.temperature && <span className="warning-text">(Empty)</span>}</label>
-                                                    <input value={form.temperature} onChange={e => setForm({ ...form, temperature: e.target.value })} placeholder="36.5" />
+                                                    <input id="temperature" value={form.temperature} onChange={e => setForm({ ...form, temperature: e.target.value })} placeholder="36.5" />
                                                 </div>
                                                 <div className={`input-group ${!form.pulseRate ? 'has-warning' : ''}`}>
                                                     <label>PR (bpm) {!form.pulseRate && <span className="warning-text">(Empty)</span>}</label>
-                                                    <input value={form.pulseRate} onChange={e => setForm({ ...form, pulseRate: e.target.value })} placeholder="72" />
+                                                    <input id="pulseRate" value={form.pulseRate} onChange={e => setForm({ ...form, pulseRate: e.target.value })} placeholder="72" />
                                                 </div>
                                                 <div className={`input-group ${!form.respiratoryRate ? 'has-warning' : ''}`}>
                                                     <label>RR (cpm) {!form.respiratoryRate && <span className="warning-text">(Empty)</span>}</label>
-                                                    <input value={form.respiratoryRate} onChange={e => setForm({ ...form, respiratoryRate: e.target.value })} placeholder="18" />
+                                                    <input id="respiratoryRate" value={form.respiratoryRate} onChange={e => setForm({ ...form, respiratoryRate: e.target.value })} placeholder="18" />
                                                 </div>
                                                 <div className={`input-group ${!form.height ? 'has-warning' : ''}`}>
                                                     <label>Height (cm) {!form.height && <span className="warning-text">(Empty)</span>}</label>
-                                                    <input value={form.height} onChange={e => setForm({ ...form, height: e.target.value })} placeholder="170" />
+                                                    <input id="height" value={form.height} onChange={e => setForm({ ...form, height: e.target.value })} placeholder="170" />
                                                 </div>
                                                 <div className={`input-group ${!form.weight ? 'has-warning' : ''}`}>
                                                     <label>Weight (kg) {!form.weight && <span className="warning-text">(Empty)</span>}</label>
-                                                    <input value={form.weight} onChange={e => setForm({ ...form, weight: e.target.value })} placeholder="65" />
+                                                    <input id="weight" value={form.weight} onChange={e => setForm({ ...form, weight: e.target.value })} placeholder="65" />
                                                 </div>
                                                 <div className="input-group">
                                                     <label>BMI</label>
@@ -586,9 +779,9 @@ const ConsultationPage = () => {
                                                 </div>
                                             ) : (
                                                 <div className="grid-2">
-                                                    <div className="input-group">
-                                                        <label>Diagnosis (Pathologic)</label>
-                                                        <textarea rows={3} value={form.diagnosis} onChange={e => setForm({ ...form, diagnosis: e.target.value })} placeholder="Enter clinical diagnosis..." />
+                                                    <div className={`input-group ${!form.diagnosis ? 'has-warning' : ''}`}>
+                                                        <label>Diagnosis (Pathologic) {!form.diagnosis && <span className="warning-text">(Empty)</span>}</label>
+                                                        <textarea id="diagnosis" rows={3} value={form.diagnosis} onChange={e => setForm({ ...form, diagnosis: e.target.value })} placeholder="Enter clinical diagnosis..." />
                                                     </div>
                                                     <div className="input-group">
                                                         <label>Remarks</label>
@@ -606,12 +799,13 @@ const ConsultationPage = () => {
                                         </div>
 
                                         <div className="cert-actions" style={{ borderTop: '1px solid var(--border)', paddingTop: '2rem', marginTop: '2rem' }}>
-                                            <div className="doctor-assignment" style={{ marginBottom: '1.5rem', width: '100%', maxWidth: '300px' }}>
-                                                <label style={{ display: 'block', textAlign: 'left', marginBottom: '0.5rem', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Assign Attending Doctor</label>
+                                            <div className={`input-group doctor-assignment ${!form.doctorId ? 'has-warning' : ''}`} style={{ marginBottom: '1.5rem', width: '100%', maxWidth: '300px' }}>
+                                                <label style={{ display: 'block', textAlign: 'left', marginBottom: '0.5rem', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Assign Attending Doctor {!form.doctorId && <span className="warning-text">(Empty)</span>}</label>
                                                 <select
+                                                    id="doctorId"
                                                     value={form.doctorId}
                                                     onChange={e => setForm({ ...form, doctorId: e.target.value })}
-                                                    style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)' }}
+                                                    style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)', background: 'var(--bg-card)', color: 'var(--text-main)' }}
                                                     required
                                                 >
                                                     <option value="">Select Doctor...</option>
@@ -624,7 +818,16 @@ const ConsultationPage = () => {
                                                 <button
                                                     className="btn-secondary big"
                                                     style={{ flex: 1 }}
-                                                    onClick={() => {
+                                                    onClick={async () => {
+                                                        const required = ['bloodPressure', 'temperature', 'pulseRate', 'respiratoryRate', 'height', 'weight', 'doctorId', 'issuedFor', 'p_age', 'p_sex', 'p_civilStatus', 'p_address', 'p_course'];
+                                                        if (form.certificateType === 'pathologic') {
+                                                            required.push('diagnosis');
+                                                        } else {
+                                                            required.push('validForAY', 'validForSemester');
+                                                        }
+
+                                                        if (!await validateForPrint(required)) return;
+
                                                         const docObj = doctors.find(d => d._id === form.doctorId);
                                                         printMedicalCertificate({ ...selectedApp, ...form, doctorId: docObj || selectedApp.doctorId }, form.certificateType);
                                                     }}
@@ -634,22 +837,17 @@ const ConsultationPage = () => {
                                                 <button
                                                     className="btn-primary big"
                                                     style={{ flex: 1 }}
-                                                    disabled={!form.doctorId}
                                                     onClick={async () => {
                                                         // Validation for Certificate
-                                                        const requiredVitals = ['bloodPressure', 'temperature', 'pulseRate', 'respiratoryRate', 'height', 'weight'];
-                                                        const requiredCert = ['p_age', 'p_sex', 'p_address', 'p_course', 'p_civilStatus', 'issuedFor'];
-                                                        
-                                                        const missingVitals = requiredVitals.filter(f => !form[f]);
-                                                        const missingCert = requiredCert.filter(f => !form[f]);
-
-                                                        if (missingVitals.length > 0 || missingCert.length > 0) {
-                                                            toast.error('Please fill in all Vitals and Certificate Information fields.');
-                                                            return;
+                                                        const required = ['bloodPressure', 'temperature', 'pulseRate', 'respiratoryRate', 'height', 'weight', 'doctorId', 'issuedFor', 'p_age', 'p_sex', 'p_civilStatus', 'p_address', 'p_course'];
+                                                        if (form.certificateType === 'pathologic') {
+                                                            required.push('diagnosis');
                                                         }
 
-                                                        if (form.certificateType === 'pathologic' && !form.diagnosis) {
-                                                            toast.error('Diagnosis is required for Pathologic certificates.');
+                                                        if (!validateAndFocus(required)) return;
+
+                                                        const confirmed = await showConfirm("Are you sure you want to complete and save this medical certificate?");
+                                                        if (!confirmed) {
                                                             return;
                                                         }
 
@@ -679,29 +877,29 @@ const ConsultationPage = () => {
                                     <div className="form-section">
                                         <h3><Activity size={20} /> Vitals & Measurements</h3>
                                         <div className="grid-2">
-                                            <div className="input-group">
-                                                <label>Blood Pressure</label>
-                                                <input value={form.bloodPressure} onChange={e => setForm({ ...form, bloodPressure: e.target.value })} placeholder="e.g. 120/80" />
+                                            <div className={`input-group ${!form.bloodPressure ? 'has-warning' : ''}`}>
+                                                <label>Blood Pressure {!form.bloodPressure && <span className="warning-text">(Empty)</span>}</label>
+                                                <input id="bloodPressure" value={form.bloodPressure} onChange={e => setForm({ ...form, bloodPressure: e.target.value })} placeholder="e.g. 120/80" />
                                             </div>
-                                            <div className="input-group">
-                                                <label>Temperature (°C)</label>
-                                                <input value={form.temperature} onChange={e => setForm({ ...form, temperature: e.target.value })} placeholder="36.5" />
+                                            <div className={`input-group ${!form.temperature ? 'has-warning' : ''}`}>
+                                                <label>Temperature (°C) {!form.temperature && <span className="warning-text">(Empty)</span>}</label>
+                                                <input id="temperature" value={form.temperature} onChange={e => setForm({ ...form, temperature: e.target.value })} placeholder="36.5" />
                                             </div>
-                                            <div className="input-group">
-                                                <label>Heart Rate / PR (bpm)</label>
-                                                <input value={form.pulseRate} onChange={e => setForm({ ...form, pulseRate: e.target.value })} placeholder="72" />
+                                            <div className={`input-group ${!form.pulseRate ? 'has-warning' : ''}`}>
+                                                <label>Heart Rate / PR (bpm) {!form.pulseRate && <span className="warning-text">(Empty)</span>}</label>
+                                                <input id="pulseRate" value={form.pulseRate} onChange={e => setForm({ ...form, pulseRate: e.target.value })} placeholder="72" />
                                             </div>
-                                            <div className="input-group">
-                                                <label>Respiratory Rate (cpm)</label>
-                                                <input value={form.respiratoryRate} onChange={e => setForm({ ...form, respiratoryRate: e.target.value })} placeholder="18" />
+                                            <div className={`input-group ${!form.respiratoryRate ? 'has-warning' : ''}`}>
+                                                <label>Respiratory Rate (cpm) {!form.respiratoryRate && <span className="warning-text">(Empty)</span>}</label>
+                                                <input id="respiratoryRate" value={form.respiratoryRate} onChange={e => setForm({ ...form, respiratoryRate: e.target.value })} placeholder="18" />
                                             </div>
-                                            <div className="input-group">
-                                                <label>Height (cm)</label>
-                                                <input value={form.height} onChange={e => setForm({ ...form, height: e.target.value })} placeholder="170" />
+                                            <div className={`input-group ${!form.height ? 'has-warning' : ''}`}>
+                                                <label>Height (cm) {!form.height && <span className="warning-text">(Empty)</span>}</label>
+                                                <input id="height" value={form.height} onChange={e => setForm({ ...form, height: e.target.value })} placeholder="170" />
                                             </div>
-                                            <div className="input-group">
-                                                <label>Weight (kg)</label>
-                                                <input value={form.weight} onChange={e => setForm({ ...form, weight: e.target.value })} placeholder="65" />
+                                            <div className={`input-group ${!form.weight ? 'has-warning' : ''}`}>
+                                                <label>Weight (kg) {!form.weight && <span className="warning-text">(Empty)</span>}</label>
+                                                <input id="weight" value={form.weight} onChange={e => setForm({ ...form, weight: e.target.value })} placeholder="65" />
                                             </div>
                                             <div className="input-group">
                                                 <label>Sat (%)</label>
@@ -720,9 +918,10 @@ const ConsultationPage = () => {
 
                                     <div className="form-section">
                                         <h3><Stethoscope size={20} /> Clinician Assignment</h3>
-                                        <div className="input-group full">
-                                            <label>Attending Doctor</label>
+                                        <div className={`input-group full ${!form.doctorId ? 'has-warning' : ''}`}>
+                                            <label>Attending Doctor {!form.doctorId && <span className="warning-text">(Empty)</span>}</label>
                                             <select
+                                                id="doctorId"
                                                 value={form.doctorId}
                                                 onChange={e => setForm({ ...form, doctorId: e.target.value })}
                                                 required
@@ -744,11 +943,11 @@ const ConsultationPage = () => {
                                                 <h3><FileText size={20} /> Assessment</h3>
                                                 <div className={`input-group full ${!form.diagnosis ? 'has-warning' : ''}`}>
                                                     <label>Doctor's Note / Diagnosis {!form.diagnosis && <span className="warning-text">(Empty)</span>}</label>
-                                                    <textarea rows={3} value={form.diagnosis} onChange={e => setForm({ ...form, diagnosis: e.target.value })} required placeholder="Enter clinical assessment or doctor's observations..." />
+                                                    <textarea id="diagnosis" rows={3} value={form.diagnosis} onChange={e => setForm({ ...form, diagnosis: e.target.value })} required placeholder="Enter clinical assessment or doctor's observations..." />
                                                 </div>
                                                 <div className={`input-group full ${!form.management ? 'has-warning' : ''}`}>
                                                     <label>Home Instructions / Management {!form.management && <span className="warning-text">(Empty)</span>}</label>
-                                                    <textarea rows={3} value={form.management} onChange={e => setForm({ ...form, management: e.target.value })} placeholder="Enter at-home care instructions..." />
+                                                    <textarea id="management" rows={3} value={form.management} onChange={e => setForm({ ...form, management: e.target.value })} placeholder="Enter at-home care instructions..." />
                                                 </div>
                                                 <div className="input-group full">
                                                     <label>Additional Remarks</label>
@@ -759,32 +958,33 @@ const ConsultationPage = () => {
                                             <div className="form-section">
                                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
                                                     <h3><FileText size={20} /> View or generate the Prescription</h3>
-                                                    <button type="button" className="btn-secondary" onClick={() => setShowPrescriptionModal(true)} disabled={!form.externalPrescription}>
+                                                    <button type="button" className="btn-secondary" onClick={handlePreviewPrescriptionClick}>
                                                         <Printer size={18} /> Preview & Print
                                                     </button>
                                                 </div>
-                                                <div className="input-group full">
-                                                    <label>Prescribed Medicines (External/Printable)</label>
+                                                <div className={`input-group full ${!form.externalPrescription ? 'has-warning' : ''}`}>
+                                                    <label>Prescribed Medicines (External/Printable) {!form.externalPrescription && <span className="warning-text">(Empty)</span>}</label>
                                                     <textarea 
+                                                        id="externalPrescription"
                                                         rows={4} 
-                                                        value={form.externalPrescription} 
+                                                        value={form.externalPrescription || ''} 
                                                         onChange={e => setForm({ ...form, externalPrescription: e.target.value })} 
                                                         placeholder="Enter medicines to be printed on the prescription slip..."
                                                     />
                                                 </div>
                                                 <div className="grid-3" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 2fr', gap: '1rem', marginTop: '1rem' }}>
-                                                <div className={`input-group ${!form.p_age ? 'has-warning' : ''}`}>
-                                                    <label>Age {!form.p_age && <span className="warning-text">(Empty)</span>}</label>
-                                                    <input value={form.p_age} onChange={e => setForm({ ...form, p_age: e.target.value })} placeholder="Age" />
-                                                </div>
-                                                <div className={`input-group ${!form.p_sex ? 'has-warning' : ''}`}>
-                                                    <label>Sex {!form.p_sex && <span className="warning-text">(Empty)</span>}</label>
-                                                    <input value={form.p_sex} onChange={e => setForm({ ...form, p_sex: e.target.value })} placeholder="Sex" />
-                                                </div>
-                                                <div className={`input-group ${!form.p_address ? 'has-warning' : ''}`}>
-                                                    <label>Address {!form.p_address && <span className="warning-text">(Empty)</span>}</label>
-                                                    <input value={form.p_address} onChange={e => setForm({ ...form, p_address: e.target.value })} placeholder="Address" />
-                                                </div>
+                                                    <div className={`input-group ${!form.p_age ? 'has-warning' : ''}`}>
+                                                        <label>Age {!form.p_age && <span className="warning-text">(Empty)</span>}</label>
+                                                        <input id="p_age" value={form.p_age} onChange={e => setForm({ ...form, p_age: e.target.value })} placeholder="Age" />
+                                                    </div>
+                                                    <div className={`input-group ${!form.p_sex ? 'has-warning' : ''}`}>
+                                                        <label>Sex {!form.p_sex && <span className="warning-text">(Empty)</span>}</label>
+                                                        <input id="p_sex" value={form.p_sex} onChange={e => setForm({ ...form, p_sex: e.target.value })} placeholder="Sex" />
+                                                    </div>
+                                                    <div className={`input-group ${!form.p_address ? 'has-warning' : ''}`}>
+                                                        <label>Address {!form.p_address && <span className="warning-text">(Empty)</span>}</label>
+                                                        <input id="p_address" value={form.p_address} onChange={e => setForm({ ...form, p_address: e.target.value })} placeholder="Address" />
+                                                    </div>
                                                 </div>
                                             </div>
 
@@ -843,9 +1043,9 @@ const ConsultationPage = () => {
                                                             </div>
                                                         </div>
                                                         <div className="cert-form-grid">
-                                                            <div className="input-group">
-                                                                <label>Issued For</label>
-                                                                <input value={form.issuedFor} onChange={e => setForm({ ...form, issuedFor: e.target.value })} placeholder="Purpose" />
+                                                            <div className={`input-group ${!form.issuedFor ? 'has-warning' : ''}`}>
+                                                                <label>Issued For {!form.issuedFor && <span className="warning-text">(Empty)</span>}</label>
+                                                                <input id="issuedFor" value={form.issuedFor} onChange={e => setForm({ ...form, issuedFor: e.target.value })} placeholder="Purpose" />
                                                             </div>
                                                             {form.certificateType === 'normal' && (
                                                                 <>
@@ -856,13 +1056,13 @@ const ConsultationPage = () => {
                                                                             <option value="false">Not Fit</option>
                                                                         </select>
                                                                     </div>
-                                                                    <div className="input-group">
-                                                                        <label>AY</label>
-                                                                        <input value={form.validForAY} onChange={e => setForm({ ...form, validForAY: e.target.value })} placeholder="2024-2025" />
+                                                                    <div className={`input-group ${!form.validForAY ? 'has-warning' : ''}`}>
+                                                                        <label>AY {!form.validForAY && <span className="warning-text">(Empty)</span>}</label>
+                                                                        <input id="validForAY" value={form.validForAY} onChange={e => setForm({ ...form, validForAY: e.target.value })} placeholder="2024-2025" />
                                                                     </div>
-                                                                    <div className="input-group">
-                                                                        <label>Semester</label>
-                                                                        <select value={form.validForSemester} onChange={e => setForm({ ...form, validForSemester: e.target.value })}>
+                                                                    <div className={`input-group ${!form.validForSemester ? 'has-warning' : ''}`}>
+                                                                        <label>Semester {!form.validForSemester && <span className="warning-text">(Empty)</span>}</label>
+                                                                        <select id="validForSemester" value={form.validForSemester} onChange={e => setForm({ ...form, validForSemester: e.target.value })}>
                                                                             <option value="">Select...</option>
                                                                             <option value="1st">1st Sem</option>
                                                                             <option value="2nd">2nd Sem</option>
@@ -871,6 +1071,32 @@ const ConsultationPage = () => {
                                                                     </div>
                                                                 </>
                                                             )}
+                                                        </div>
+
+                                                        <div className="patient-overrides" style={{ marginTop: '1rem' }}>
+                                                            <h3>Certificate Information (Fillable)</h3>
+                                                            <div className="overrides-grid">
+                                                                <div className={`input-group ${!form.p_age ? 'has-warning' : ''}`}>
+                                                                    <label>Age {!form.p_age && <span className="warning-text">(Empty)</span>}</label>
+                                                                    <input id="p_age" value={form.p_age} onChange={e => setForm({ ...form, p_age: e.target.value })} placeholder="Age" />
+                                                                </div>
+                                                                <div className={`input-group ${!form.p_sex ? 'has-warning' : ''}`}>
+                                                                    <label>Sex {!form.p_sex && <span className="warning-text">(Empty)</span>}</label>
+                                                                    <input id="p_sex" value={form.p_sex} onChange={e => setForm({ ...form, p_sex: e.target.value })} placeholder="Sex" />
+                                                                </div>
+                                                                <div className={`input-group ${!form.p_civilStatus ? 'has-warning' : ''}`}>
+                                                                    <label>Civil Status {!form.p_civilStatus && <span className="warning-text">(Empty)</span>}</label>
+                                                                    <input id="p_civilStatus" value={form.p_civilStatus} onChange={e => setForm({ ...form, p_civilStatus: e.target.value })} placeholder="Single" />
+                                                                </div>
+                                                                <div className={`input-group ${!form.p_address ? 'has-warning' : ''}`}>
+                                                                    <label>Resident of {!form.p_address && <span className="warning-text">(Empty)</span>}</label>
+                                                                    <input id="p_address" value={form.p_address} onChange={e => setForm({ ...form, p_address: e.target.value })} placeholder="Address" />
+                                                                </div>
+                                                                <div className={`input-group ${!form.p_course ? 'has-warning' : ''}`}>
+                                                                    <label>Taking up (Course) {!form.p_course && <span className="warning-text">(Empty)</span>}</label>
+                                                                    <CourseSelect id="p_course" name="p_course" value={form.p_course} onChange={e => setForm({ ...form, p_course: e.target.value })} />
+                                                                </div>
+                                                            </div>
                                                         </div>
                                                         
                                                         {form.certificateType === 'normal' && (
@@ -895,7 +1121,16 @@ const ConsultationPage = () => {
                                                 type="button"
                                                 className="btn-secondary big" 
                                                 style={{ flex: 1 }}
-                                                onClick={() => {
+                                                onClick={async () => {
+                                                    const required = ['bloodPressure', 'temperature', 'pulseRate', 'respiratoryRate', 'height', 'weight', 'doctorId', 'issuedFor', 'p_age', 'p_sex', 'p_civilStatus', 'p_address', 'p_course'];
+                                                    if (form.certificateType === 'pathologic') {
+                                                        required.push('diagnosis');
+                                                    } else {
+                                                        required.push('validForAY', 'validForSemester');
+                                                    }
+
+                                                    if (!await validateForPrint(required)) return;
+
                                                     const docObj = doctors.find(d => d._id === form.doctorId);
                                                     printMedicalCertificate({ ...selectedApp, ...form, doctorId: docObj || selectedApp.doctorId }, form.certificateType);
                                                 }}
@@ -1048,60 +1283,62 @@ const ConsultationPage = () => {
                             <h3>Prescription Preview</h3>
                             <button className="close-btn" onClick={() => setShowPrescriptionModal(false)}><X size={24} /></button>
                         </div>
-                        <div className="modal-body printable-area">
-                            <div className="prescription-slip">
-                                <header className="slip-header">
-                                    <div className="slip-logo-placeholder">
-                                        {/* You can put BSU Logo here */}
-                                        <img src="/logo.png" alt="BSU Logo" style={{ width: '60px', height: '60px' }} />
-                                    </div>
-                                    <div className="slip-titles">
-                                        <h2>BUKIDNON STATE UNIVERSITY</h2>
-                                        <p>Malaybalay City, Bukidnon 8700</p>
-                                        <p>Tel (088) 813-5661 to 5663; TeleFax (088) 813-2717</p>
-                                        <p>www.buksu.edu.ph</p>
-                                        <h3 className="slip-doc-type">PRESCRIPTION SLIP</h3>
-                                    </div>
-                                </header>
-
-                                <div className="slip-patient-data">
-                                    <div className="slip-row">
-                                        <span className="fill-line"><strong>Name:</strong> {selectedApp.patientId?.firstName} {selectedApp.patientId?.lastName}</span>
-                                        <span className="fixed"><strong>Age:</strong> {form.p_age || '—'}</span>
-                                        <span className="fixed"><strong>Sex:</strong> {form.p_sex || '—'}</span>
-                                    </div>
-                                    <div className="slip-row">
-                                        <span className="fill-line"><strong>Address:</strong> {form.p_address || '—'}</span>
-                                        <span className="fixed"><strong>Date:</strong> {new Date().toLocaleDateString()}</span>
-                                    </div>
-                                </div>
-
-                                <div className="slip-content">
-                                    <div className="rx-symbol">Rx</div>
-                                    <div className="rx-body">
-                                        {form.externalPrescription.split('\n').map((line, i) => (
-                                            <p key={i}>{line}</p>
-                                        ))}
-                                    </div>
-                                </div>
-
-                                <footer className="slip-footer">
-                                    <div className="physician-signature">
-                                        <div className="sig-line">
-                                            <strong>{doctors.find(d => d._id === form.doctorId) ? `Dr. ${doctors.find(d => d._id === form.doctorId).firstName} ${doctors.find(d => d._id === form.doctorId).lastName}` : 'Dr. ____________________'}</strong>
+                        <div className="modal-body printable-area" style={{ display: 'flex', flexDirection: 'column', gap: '2rem', alignItems: 'center' }}>
+                            {paginatePrescriptionText(form.externalPrescription || '').map((pageText, index, arr) => (
+                                <div key={index} className="prescription-slip" style={{ marginBottom: index === arr.length - 1 ? 0 : '1.5rem' }}>
+                                    <header className="slip-header">
+                                        <div className="slip-logo-placeholder">
+                                            {/* You can put BSU Logo here */}
+                                            <img src={buksuLogo} alt="BSU Logo" style={{ width: '60px', height: '60px' }} />
                                         </div>
-                                        <p>University Physician</p>
+                                        <div className="slip-titles">
+                                            <h2>BUKIDNON STATE UNIVERSITY</h2>
+                                            <p>Malaybalay City, Bukidnon 8700</p>
+                                            <p>Tel (088) 813-5661 to 5663; TeleFax (088) 813-2717</p>
+                                            <p>www.buksu.edu.ph</p>
+                                            <h3 className="slip-doc-type">PRESCRIPTION SLIP</h3>
+                                        </div>
+                                    </header>
+
+                                    <div className="slip-patient-data">
+                                        <div className="slip-row">
+                                            <span className="fill-line"><strong>Name:</strong> {selectedApp.patientId?.firstName} {selectedApp.patientId?.lastName}</span>
+                                            <span className="fixed"><strong>Age:</strong> {form.p_age || '—'}</span>
+                                            <span className="fixed"><strong>Sex:</strong> {form.p_sex || '—'}</span>
+                                        </div>
+                                        <div className="slip-row">
+                                            <span className="fill-line"><strong>Address:</strong> {form.p_address || '—'}</span>
+                                            <span className="fixed"><strong>Date:</strong> {new Date().toLocaleDateString()}</span>
+                                        </div>
                                     </div>
-                                    
-                                    <div className="slip-metadata">
-                                        <div className="meta-item">Document Code:<br/>OSS-F-MC-009</div>
-                                        <div className="meta-item">Revision No:<br/>03</div>
-                                        <div className="meta-item">Issue No:<br/>01</div>
-                                        <div className="meta-item">Issue Date:<br/>09/28/2020</div>
-                                        <div className="meta-item">Page No:<br/>1 of 1</div>
+
+                                    <div className="slip-content">
+                                        <div className="rx-symbol">Rx</div>
+                                        <div className="rx-body">
+                                            {pageText.split('\n').map((line, i) => (
+                                                <p key={i}>{line}</p>
+                                            ))}
+                                        </div>
                                     </div>
-                                </footer>
-                            </div>
+
+                                    <footer className="slip-footer">
+                                        <div className="physician-signature">
+                                            <div className="sig-line">
+                                                <strong>{doctors.find(d => d._id === form.doctorId) ? `Dr. ${doctors.find(d => d._id === form.doctorId).firstName} ${doctors.find(d => d._id === form.doctorId).lastName}` : 'Dr. ____________________'}</strong>
+                                            </div>
+                                            <p>University Physician</p>
+                                        </div>
+                                        
+                                        <div className="slip-metadata">
+                                            <div className="meta-item">Document Code:<br/>OSS-F-MC-009</div>
+                                            <div className="meta-item">Revision No:<br/>03</div>
+                                            <div className="meta-item">Issue No:<br/>01</div>
+                                            <div className="meta-item">Issue Date:<br/>09/28/2020</div>
+                                            <div className="meta-item">Page No:<br/>{index + 1} of {arr.length}</div>
+                                        </div>
+                                    </footer>
+                                </div>
+                            ))}
                         </div>
                         <div className="modal-footer">
                             <button className="btn-secondary" onClick={() => setShowPrescriptionModal(false)}>Close</button>

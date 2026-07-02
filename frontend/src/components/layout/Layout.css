@@ -90,18 +90,19 @@
     border-radius: var(--radius-md);
     color: var(--text-secondary);
     font-weight: 500;
-    transition: all 0.2s ease;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .nav-link:hover {
     background-color: var(--primary-light);
     color: var(--primary);
+    transform: translateX(3px);
 }
 
 .nav-link.active {
-    background-color: var(--primary);
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
     color: white;
-    box-shadow: var(--shadow-sm);
+    box-shadow: 0 4px 12px rgba(13, 148, 136, 0.25);
 }
 
 .sidebar-footer {
@@ -176,9 +177,11 @@
 
 /* Header */
 .header {
-    height: 56px;
-    background-color: var(--bg-card);
-    border-bottom: 1px solid var(--border);
+    height: 64px;
+    background: var(--glass-bg);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--glass-border);
     display: flex;
     align-items: center;
     justify-content: space-between;

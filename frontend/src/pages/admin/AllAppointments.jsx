@@ -184,6 +184,76 @@ const AllAppointments = () => {
         }
     };
 
+    const handlePrintCertificate = async (apt, type) => {
+        const isNormal = type === 'normal';
+        const required = [
+            { key: 'bloodPressure', label: 'Blood Pressure' },
+            { key: 'temperature', label: 'Temperature' },
+            { key: 'pulseRate', label: 'Pulse Rate / Heart Rate' },
+            { key: 'respiratoryRate', label: 'Respiratory Rate' },
+            { key: 'height', label: 'Height' },
+            { key: 'weight', label: 'Weight' },
+            { key: 'p_age', label: 'Age' },
+            { key: 'p_sex', label: 'Sex' },
+            { key: 'p_civilStatus', label: 'Civil Status' },
+            { key: 'p_address', label: 'Address' },
+            { key: 'p_course', label: 'Course' }
+        ];
+
+        const missing = [];
+
+        const purposeVal = apt.issuedFor || apt.purpose;
+        if (!purposeVal || (typeof purposeVal === 'string' && purposeVal.trim() === '')) {
+            missing.push('Issued For');
+        }
+
+        required.forEach(f => {
+            const val = apt[f.key];
+            if (!val || (typeof val === 'string' && val.trim() === '')) {
+                missing.push(f.label);
+            }
+        });
+
+        if (isNormal) {
+            if (!apt.validForAY || (typeof apt.validForAY === 'string' && apt.validForAY.trim() === '')) {
+                missing.push('Academic Year (AY)');
+            }
+            if (!apt.validForSemester || (typeof apt.validForSemester === 'string' && apt.validForSemester.trim() === '')) {
+                missing.push('Semester');
+            }
+        } else {
+            if (!apt.diagnosis || (typeof apt.diagnosis === 'string' && apt.diagnosis.trim() === '')) {
+                missing.push('Diagnosis');
+            }
+        }
+
+        const doctor = apt.doctorId || {};
+        if (!doctor.firstName && !doctor.lastName) {
+            missing.push('Attending Doctor');
+        }
+
+        if (missing.length > 0) {
+            const confirmMsg = (
+                <div style={{ textAlign: 'left' }}>
+                    <span style={{ fontWeight: 600 }}>Warning: The following fields are not filled:</span>
+                    <ul style={{ margin: '6px 0', paddingLeft: '1.25rem', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+                        {missing.map((name, i) => (
+                            <li key={i}>{name}</li>
+                        ))}
+                    </ul>
+                    <span style={{ fontWeight: 600 }}>Are you sure you want to print without filling all the field text?</span>
+                </div>
+            );
+            const confirmed = await showConfirm(confirmMsg);
+            if (!confirmed) {
+                return;
+            }
+        }
+
+        printMedicalCertificate(apt, type);
+        setShowCertModal(false);
+    };
+
     if (loading) return <div className="loading-spinner-container"><div className="loading-spinner"></div></div>;
 
     return (
@@ -363,10 +433,7 @@ const AllAppointments = () => {
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                                 <button 
                                     className="cert-choice-card" 
-                                    onClick={() => {
-                                        printMedicalCertificate(selectedAptForCert, 'normal');
-                                        setShowCertModal(false);
-                                    }}
+                                    onClick={() => handlePrintCertificate(selectedAptForCert, 'normal')}
                                     style={{
                                         display: 'flex',
                                         flexDirection: 'column',
@@ -388,10 +455,7 @@ const AllAppointments = () => {
                                 </button>
                                 <button 
                                     className="cert-choice-card" 
-                                    onClick={() => {
-                                        printMedicalCertificate(selectedAptForCert, 'pathologic');
-                                        setShowCertModal(false);
-                                    }}
+                                    onClick={() => handlePrintCertificate(selectedAptForCert, 'pathologic')}
                                     style={{
                                         display: 'flex',
                                         flexDirection: 'column',

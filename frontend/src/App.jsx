@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { AuthProvider } from './context/AuthContext';
@@ -42,7 +42,7 @@ function App() {
     <ThemeProvider>
       <AuthProvider>
         <ChatProvider>
-          <BrowserRouter>
+          <HashRouter>
             <Routes>
               {/* Public Routes */}
               <Route element={<MainLayout />}>
@@ -119,7 +119,7 @@ function App() {
               <Route path="*" element={<MainLayout><NotFound /></MainLayout>} />
             </Routes>
             <ToastContainer position="top-right" autoClose={3000} />
-          </BrowserRouter>
+          </HashRouter>
         </ChatProvider>
       </AuthProvider>
     </ThemeProvider>

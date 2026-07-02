@@ -55,7 +55,7 @@ if (sslOptions.key && sslOptions.cert) {
 
 // CORS configuration for Socket.IO and Express
 const CORS_OPTIONS = {
-  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+  origin: true,
   credentials: true
 };
 
@@ -83,6 +83,7 @@ app.use(helmet({
       imgSrc: ["'self'", "data:", "https://res.cloudinary.com", "https://*.stream-io-api.com", "https://api.qrserver.com"],
     },
   },
+  hsts: false,
 })); // security headers
 
 // Global rate limiting (all API routes)

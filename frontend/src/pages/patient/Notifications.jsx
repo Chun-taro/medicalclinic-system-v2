@@ -1,4 +1,6 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
 import './Notifications.css';
 import { Bell, Check, Calendar, Clock } from 'lucide-react';
@@ -7,6 +9,8 @@ import { toast } from 'react-toastify';
 const Notifications = () => {
     const [notifications, setNotifications] = useState([]);
     const [loading, setLoading] = useState(true);
+    const navigate = useNavigate();
+    const { role } = useAuth();
 
     const fetchNotifications = async () => {
         try {
@@ -38,6 +42,29 @@ const Notifications = () => {
         }
     };
 
+    const handleNotificationClick = async (notif) => {
+        try {
+            if (!notif.read) {
+                await markAsRead(notif._id);
+            }
+
+            if (notif.type === 'appointment') {
+                const rolePathMap = {
+                    patient: '/patient-appointments',
+                    admin: '/admin-appointments',
+                    superadmin: '/superadmin-appointments'
+                };
+                
+                const path = rolePathMap[role?.toLowerCase()];
+                if (path) {
+                    navigate(path);
+                }
+            }
+        } catch (err) {
+            console.error('Error handling notification click:', err);
+        }
+    };
+
     const syncToCalendar = async (id) => {
         try {
             const res = await api.post(`/calendar/sync-notification/${id}`);
@@ -65,7 +92,12 @@ const Notifications = () => {
             ) : (
                 <div className="notifications-list">
                     {notifications.map((n) => (
-                        <div key={n._id} className={`notification-card ${n.read ? 'read' : 'unread'}`}>
+                        <div 
+                            key={n._id} 
+                            className={`notification-card ${n.read ? 'read' : 'unread'}`}
+                            onClick={() => handleNotificationClick(n)}
+                            style={{ cursor: 'pointer' }}
+                        >
                             <div className="notif-content">
                                 <div className="notif-message">
                                     <span className="notif-status-badge">{n.status}</span> {n.message}
